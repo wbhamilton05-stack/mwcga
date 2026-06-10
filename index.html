@@ -1222,21 +1222,32 @@ async function syncFromFeed() {
 }
 
 // ============================================================================
-// 7.5  CLOUD SYNC (jsonblob.com — free, no signup, ~30-day retention)
+// 7.5  CLOUD SYNC (Firebase Realtime Database — project mwcga-c2e5e)
 // ============================================================================
-const CLOUD_API = 'https://jsonblob.com/api/jsonBlob';
+const CLOUD_API = 'https://mwcga-c2e5e-default-rtdb.firebaseio.com/games';
 let _cloudPushTimer = null;
 let _cloudPullTimer = null;
 
 function cloudConfigured() { return !!state.cloudGameId; }
 
 function stripCloudKeys(s) {
-  // Don't store cloud meta inside the cloud blob — avoids recursion confusion
+  // Don't store cloud meta inside the cloud blob — avoids recursion confusion.
+  // Also drop matches/lastSync: they come from the public score feed, so each
+  // device re-fetches them itself — keeps the cloud payload tiny and ensures a
+  // stale device can never clobber fresher feed data. scoreOverrides DO sync.
   const copy = { ...s };
   delete copy.cloudGameId;
   delete copy.cloudLastPushed;
   delete copy.cloudLastPulled;
+  delete copy.matches;
+  delete copy.lastSync;
   return copy;
+}
+
+function newGameId() {
+  const a = new Uint8Array(10);
+  crypto.getRandomValues(a);
+  return 'wc' + Array.from(a, (b) => (b % 36).toString(36)).join('');
 }
 
 let _pushInFlight = false;
@@ -1246,16 +1257,14 @@ let _lastSeenSavedAt = null;
 async function createCloudGame() {
   toast('Creating cloud game…');
   try {
+    const id = newGameId();
     const payload = { v: 1, savedAt: new Date().toISOString(), state: stripCloudKeys(state) };
-    const res = await fetch(CLOUD_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    const res = await fetch(`${CLOUD_API}/${id}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const loc = res.headers.get('Location') || res.headers.get('location');
-    if (!loc) throw new Error('Could not read Location header (CORS issue?)');
-    const id = loc.split('/').pop();
     state.cloudGameId = id;
     state.cloudLastPushed = payload.savedAt;
     _lastSeenSavedAt = payload.savedAt;
@@ -1275,14 +1284,15 @@ async function joinCloudGame(id, opts = {}) {
   id = (id || '').trim();
   if (!id) { toast('Enter a game code or paste a share link.', true); return false; }
   // Allow pasting a share URL — extract the ID
-  const m = id.match(/(?:jsonBlob\/|[?&]game=)([A-Za-z0-9_-]+)/);
+  const m = id.match(/[?&]game=([A-Za-z0-9_-]+)/) || id.match(/\b(wc[a-z0-9]{10})\b/);
   if (m) id = m[1];
   if (!opts.silent) toast('Joining cloud game…');
   try {
-    const res = await fetch(`${CLOUD_API}/${id}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' — game code not found');
+    const res = await fetch(`${CLOUD_API}/${id}.json`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' — could not reach cloud');
     const payload = await res.json();
-    if (!payload || !payload.state) throw new Error('Unexpected payload from cloud.');
+    if (payload === null) throw new Error('Game code not found.');
+    if (!payload.state) throw new Error('Unexpected payload from cloud.');
     // Warn if user already has a draft locally
     const hasLocal = state.players && state.players.length > 0 && state.cloudGameId !== id;
     if (hasLocal && !opts.overwriteSilently) {
@@ -1290,8 +1300,11 @@ async function joinCloudGame(id, opts = {}) {
         return false;
       }
     }
-    // Adopt remote state — preserve cloud connection metadata
+    // Adopt remote state — preserve cloud connection metadata + local feed data
+    const localMatches = state.matches, localLastSync = state.lastSync;
     state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
+    state.matches = localMatches || [];
+    state.lastSync = localLastSync || null;
     state.cloudGameId = id;
     state.cloudLastPulled = new Date().toISOString();
     _lastSeenSavedAt = payload.savedAt || null;
@@ -1312,7 +1325,7 @@ async function pushToCloud() {
   _pushInFlight = true;
   try {
     const payload = { v: 1, savedAt: new Date().toISOString(), state: stripCloudKeys(state) };
-    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}`, {
+    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1335,7 +1348,7 @@ async function pullFromCloud(opts = {}) {
   if (!cloudConfigured()) return false;
   if (_pushInFlight) return false; // don't pull mid-push
   try {
-    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}`, { cache: 'no-store' });
+    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}.json`, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const payload = await res.json();
     if (!payload || !payload.state) return false;
@@ -1347,7 +1360,10 @@ async function pullFromCloud(opts = {}) {
       return false;
     }
     const cloudGameId = state.cloudGameId;
+    const localMatches = state.matches, localLastSync = state.lastSync;
     state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
+    state.matches = localMatches || [];
+    state.lastSync = localLastSync || null;
     state.cloudGameId = cloudGameId;
     state.cloudLastPulled = new Date().toISOString();
     _lastSeenSavedAt = payload.savedAt || null;
