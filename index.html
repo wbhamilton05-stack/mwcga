@@ -772,6 +772,21 @@ function saveState(opts = {}) {
 // ============================================================================
 // 3.  MATCH KEY / ROUND PARSER
 // ============================================================================
+// Display helper: convert "HH:MM UTC±X" stadium-local kickoff times to US
+// Central time (CDT = UTC-5 across the whole Jun-Jul 2026 tournament window).
+function centralTime(timeStr) {
+  if (!timeStr) return '';
+  const m = String(timeStr).match(/^(\d{1,2}):(\d{2})\s*UTC([+-]\d+)$/);
+  if (!m) return timeStr;
+  let total = (parseInt(m[1], 10) + (-5 - parseInt(m[3], 10))) * 60 + parseInt(m[2], 10);
+  let dayNote = '';
+  if (total < 0) { total += 1440; dayNote = ' (prev. day)'; }
+  if (total >= 1440) { total -= 1440; dayNote = ' (next day)'; }
+  const hh = Math.floor(total / 60), mm = total % 60;
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, '0')} ${hh >= 12 ? 'PM' : 'AM'} CT${dayNote}`;
+}
+
 function matchKey(m) {
   // Stable identifier for a match
   if (m.num) return 'k' + m.num;
@@ -1618,7 +1633,7 @@ function renderMatchCard(m, showOwners = true) {
 
   // Meta row
   card.appendChild(el('div', { class: 'match-meta' },
-    el('span', {}, `${m.date} · ${m.time || ''} · ${m.ground || ''}`),
+    el('span', {}, `${m.date} · ${centralTime(m.time) || ''} · ${m.ground || ''}`),
     el('span', {},
       el('span', { class: 'badge' + (round !== 'group' ? ' ko' : '') }, ROUND_NAME[round]),
       mult > 1 ? el('span', { class: 'badge', style: 'margin-left:6px; background: var(--accent); color: #1a1a1a; border-color: var(--accent);' }, `×${mult}`) : null,
