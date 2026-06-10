@@ -409,7 +409,7 @@
   .team-row.spoiler { border-style: dashed; border-color: var(--spoiler); opacity: 0.85; }
   .team-row .flag   { font-size: 18px; margin-right: 5px; flex-shrink: 0; }
   .team-row .name   { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .team-row .odds   { color: var(--muted); font-size: 10px; margin-right: 5px; font-weight: 700; flex-shrink: 0; }
+  .team-row .odds   { color: var(--muted); font-size: 11px; margin-right: 5px; font-weight: 700; flex-shrink: 0; }
 
   /* ── SEED BADGE ── */
   .seed-badge {
@@ -417,7 +417,7 @@
     align-items: center;
     padding: 2px 6px;
     border-radius: 999px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.3px;
     text-transform: uppercase;
@@ -432,7 +432,7 @@
     border-radius: 999px;
     padding: 0 3px;
     margin-right: 3px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   /* ── OWNER TAG & PICK BUTTON ── */
@@ -695,8 +695,10 @@ const SEED_LABEL = {
   4: { text: 'Underdog',  color: '#1a1a1a', bg: '#cbd5e0' },              // gray
 };
 
-// openfootball uses placeholder names from when the playoffs hadn't happened.
-// Map them to the actual qualified teams.
+// Feed-name normalization: openfootball placeholder names from before the
+// playoffs, plus spelling differences between the feed and our TEAMS table.
+// Verified against the live 2026 feed — without the four spelling entries,
+// 12 group matches would never receive scores.
 const PLAYOFF_MAP = {
   'UEFA Path A winner': 'Bosnia-Herzegovina',
   'UEFA Path B winner': 'Sweden',
@@ -705,6 +707,10 @@ const PLAYOFF_MAP = {
   'IC Path 1 winner':   'Congo DR',
   'IC Path 2 winner':   'Iraq',
   'USA':                'United States',
+  'Turkey':             'Türkiye',
+  'Czech Republic':     'Czechia',
+  'DR Congo':           'Congo DR',
+  'Bosnia & Herzegovina': 'Bosnia-Herzegovina',
 };
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
@@ -762,11 +768,20 @@ function loadState() {
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
 }
+let _storageWarned = false;
 function saveState(opts = {}) {
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify(state));
-    if (!opts.skipCloudPush) debouncedCloudPush();
-  } catch (e) { console.error('saveState error', e); }
+  } catch (e) {
+    console.error('saveState error', e);
+    if (!_storageWarned) {
+      _storageWarned = true;
+      toast('⚠️ Could not save on this device (storage blocked or full). Cloud sync still works while this page stays open.', true);
+    }
+  }
+  // The cloud push must run even if local storage failed — during the draft
+  // the cloud copy is the one the family sees.
+  if (!opts.skipCloudPush) debouncedCloudPush();
 }
 
 // ============================================================================
@@ -785,6 +800,12 @@ function centralTime(timeStr) {
   const hh = Math.floor(total / 60), mm = total % 60;
   const h12 = hh % 12 === 0 ? 12 : hh % 12;
   return `${h12}:${String(mm).padStart(2, '0')} ${hh >= 12 ? 'PM' : 'AM'} CT${dayNote}`;
+}
+
+// Local calendar date as YYYY-MM-DD. new Date().toISOString() is UTC, which
+// flips to "tomorrow" at 7 PM Central — wrong for "today's games" and gates.
+function localDateStr(d = new Date()) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 function matchKey(m) {
@@ -939,15 +960,32 @@ const SCHEDULE_2026 = [
   { round:'Final', date:'2026-07-19', time:'15:00 UTC-4', team1:'W101', team2:'W102', ground:'New York/NJ' },
 ];
 
-// Initialise state.matches if empty
-if (!state.matches || state.matches.length === 0) {
-  state.matches = SCHEDULE_2026.map(m => ({
-    ...m,
-    key: matchKey(m),
-    score1: null, score2: null, pens1: null, pens2: null,
-  }));
-  saveState();
+// Initialise state.matches if empty, and rebuild whenever the embedded
+// schedule changes (SCHEDULE_VERSION bump) — otherwise schedule corrections
+// in future deploys would never reach devices that already have matches
+// cached in localStorage. Existing scores are preserved by match key.
+const SCHEDULE_VERSION = 2;
+if (!state.matches || state.matches.length === 0 || state.scheduleVersion !== SCHEDULE_VERSION) {
+  const oldByKey = {};
+  (state.matches || []).forEach(m => { oldByKey[m.key || matchKey(m)] = m; });
+  state.matches = SCHEDULE_2026.map(m => {
+    const key = matchKey(m);
+    const old = oldByKey[key];
+    return {
+      ...m,
+      key,
+      // Keep resolved team names if the old entry had real teams in this slot
+      team1: (old && TEAMS[mapTeamName(old.team1)]) ? old.team1 : m.team1,
+      team2: (old && TEAMS[mapTeamName(old.team2)]) ? old.team2 : m.team2,
+      score1: old ? old.score1 : null, score2: old ? old.score2 : null,
+      pens1: old ? old.pens1 : null, pens2: old ? old.pens2 : null,
+    };
+  });
+  state.scheduleVersion = SCHEDULE_VERSION;
+  saveState({ skipCloudPush: true });
 }
+// Family-entered scores (synced via the cloud) sit on top of the local schedule
+applyScoreOverrides();
 
 // ============================================================================
 // 5.  DRAFT ENGINE
@@ -1000,7 +1038,8 @@ function toggleSeat(i) {
   const s = deviceSeats();
   const ix = s.indexOf(i);
   if (ix >= 0) s.splice(ix, 1); else s.push(i);
-  localStorage.setItem(SEATS_KEY, JSON.stringify(s));
+  try { localStorage.setItem(SEATS_KEY, JSON.stringify(s)); }
+  catch (e) { toast('Could not save the seat claim on this device.', true); }
   renderAll();
 }
 function deviceMayPick(playerIdx) {
@@ -1018,11 +1057,30 @@ async function pickTeam(teamName) {
   if (_pickBusy) return; // double-tap guard
   _pickBusy = true;
   try {
+    // Confirm before committing — a pick is permanent and propagates to every
+    // household within seconds, and two of the drafters are kids.
+    const intended = currentPick();
+    if (!intended) return;
+    const who = state.players[intended.playerIdx];
+    if (!confirm(`Draft ${teamName} for ${who ? who.name : 'this player'}?`)) return;
     // LIVE-DRAFT SAFETY: re-sync with the cloud before committing, so a stale
-    // device can't overwrite someone else's pick.
+    // device can't overwrite someone else's pick. Fails CLOSED: if a fresh
+    // read of the cloud isn't possible right now, the pick is not committed.
     if (cloudConfigured()) {
       const before = state.draftPickIdx;
-      await pullFromCloud();
+      const ok = await pullFromCloud({ force: true, quiet: true });
+      if (!ok) {
+        if (_pushFailed && !_pushInFlight) {
+          // Earlier data from this device is still unsynced — a fresh tap is a
+          // better retry trigger than the backoff clock. Land it now.
+          if (_pushRetryTimer) { clearTimeout(_pushRetryTimer); _pushRetryTimer = null; }
+          pushToCloud();
+        }
+        toast(_lastPullInvalid
+          ? 'The cloud game data looks corrupted — picks are paused. Tell the commissioner (a backup restore fixes this).'
+          : 'Could not verify with the cloud — check your connection and tap the pick again.', true);
+        return;
+      }
       if (state.draftPickIdx !== before) {
         toast('Draft updated from another house — board refreshed. Check whose turn it is!', true);
         renderAll();
@@ -1129,7 +1187,8 @@ function scoreMatch(m) {
     let advancer = null;
     if (s1 > s2) advancer = 1;
     else if (s2 > s1) advancer = 2;
-    else if (m.pens1 != null && m.pens2 != null) {
+    else if (m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
+      // Equal pens is a typo, not a result — award no advance bonus until fixed.
       advancer = Number(m.pens1) > Number(m.pens2) ? 1 : 2;
     }
     if (advancer === 1) { pts1 += 3; breakdown1.push({ label: 'Advanced', pts: 3 }); }
@@ -1176,14 +1235,19 @@ function teamPoints(teamName) {
 // ============================================================================
 const FEED_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 
-async function syncFromFeed() {
-  toast('🦅 Pulling the latest scores…');
+async function syncFromFeed(opts = {}) {
+  // Button onclick passes a click event as the first arg — treat it as loud.
+  const quiet = opts && opts.quiet === true;
+  if (!quiet) toast('🦅 Pulling the latest scores…');
   try {
     const res = await fetch(FEED_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    if (!data || !Array.isArray(data.matches)) throw new Error('Unexpected feed shape');
     let updated = 0, resolved = 0;
     data.matches.forEach(remote => {
+      // One malformed feed entry must never abort the whole sync mid-loop.
+      try {
       const t1 = mapTeamName(remote.team1);
       const t2 = mapTeamName(remote.team2);
 
@@ -1199,6 +1263,16 @@ async function syncFromFeed() {
           mapTeamName(m.team2) === t2
         );
       }
+      if (!local) {
+        // The 3rd-place match and the Final carry no num in the feed, and once
+        // either side resolves its placeholders ("W101" → real team) the
+        // date+teams match above breaks forever. They're unique per date, so
+        // match them by date + round instead.
+        const rRound = roundOf(remote);
+        if (rRound === 'third' || rRound === 'final') {
+          local = state.matches.find(m => m.date === remote.date && roundOf(m) === rRound);
+        }
+      }
       if (!local) return;
 
       // If the remote has resolved actual team names while local still has
@@ -1210,11 +1284,14 @@ async function syncFromFeed() {
         local.team2 = t2; resolved++;
       }
 
-      // Pull scores in either supported schema
-      if (remote.score && typeof remote.score.ft !== 'undefined') {
-        local.score1 = remote.score.ft[0];
-        local.score2 = remote.score.ft[1];
-        if (remote.score.p) { local.pens1 = remote.score.p[0]; local.pens2 = remote.score.p[1]; }
+      // Pull scores in either supported schema. In openfootball, score.ft is
+      // the 90-minute score — for knockout games that went to extra time the
+      // result that counts is score.et (e.g. 2022 Final: ft 2-2, et 3-3, p 4-2).
+      if (remote.score && Array.isArray(remote.score.ft)) {
+        const fin = Array.isArray(remote.score.et) ? remote.score.et : remote.score.ft;
+        local.score1 = fin[0];
+        local.score2 = fin[1];
+        if (Array.isArray(remote.score.p)) { local.pens1 = remote.score.p[0]; local.pens2 = remote.score.p[1]; }
         updated++;
       } else if (typeof remote.score1 !== 'undefined' && remote.score1 !== null) {
         local.score1 = remote.score1;
@@ -1222,17 +1299,25 @@ async function syncFromFeed() {
         if (remote.pens1 != null) { local.pens1 = remote.pens1; local.pens2 = remote.pens2; }
         updated++;
       }
+      } catch (err) { console.warn('feed entry skipped', err, remote); }
     });
+    // Manually entered scores (synced via scoreOverrides) beat the feed.
+    applyScoreOverrides();
     state.lastSync = new Date().toISOString();
-    saveState();
-    renderAll();
+    // Feed data never goes to the cloud (matches/lastSync are stripped from the
+    // payload), so a feed sync must never schedule a full-state cloud push —
+    // on a stale device that push could overwrite the family's newer state.
+    saveState({ skipCloudPush: true });
+    // Quiet background syncs only re-render when something actually changed —
+    // a 10-minute re-render would wipe half-typed score inputs.
+    if (updated || resolved || !quiet) renderAll();
     const parts = [];
     if (updated) parts.push(`${updated} result${updated !== 1 ? 's' : ''}`);
     if (resolved) parts.push(`${resolved} bracket slot${resolved !== 1 ? 's' : ''} resolved`);
-    toast('Synced. ' + (parts.length ? parts.join(', ') + '.' : 'No new updates.'));
+    if (!quiet) toast('Synced. ' + (parts.length ? parts.join(', ') + '.' : 'No new updates.'));
   } catch (e) {
     console.error('sync failed', e);
-    toast('Sync failed: ' + e.message + '. Enter scores manually below.', true);
+    if (!quiet) toast('Sync failed: ' + e.message + '. Enter scores manually below.', true);
   }
 }
 
@@ -1256,6 +1341,9 @@ function stripCloudKeys(s) {
   delete copy.cloudLastPulled;
   delete copy.matches;
   delete copy.lastSync;
+  // Device-local, tied to the code build — must never travel through the
+  // cloud (old clients would round-trip it into their own localStorage).
+  delete copy.scheduleVersion;
   return copy;
 }
 
@@ -1268,6 +1356,49 @@ function newGameId() {
 let _pushInFlight = false;
 let _pickBusy = false;
 let _lastSeenSavedAt = null;
+let _pullInFlight = false;          // one pull at a time (focus + visibility both fire)
+let _lastPullInvalid = false;       // last pull reached the cloud but the blob failed validation
+let _pushFailed = false;            // local state never reached the cloud (e.g. offline pick)
+let _pushRetryTimer = null;
+let _pushRetryDelay = 2000;
+let _lastCloudContactAt = Date.now(); // last successful HTTP exchange with the cloud
+
+// The cloud blob is world-writable and the game id travels in share links —
+// never adopt a payload that doesn't look like a real game. Rejecting keeps
+// local state, so the failure mode is "no sync", never "corrupted draft".
+// (Firebase strips empty arrays/objects, so players/rosters may be absent.)
+function validCloudState(s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return false;
+  const players = s.players ?? [];
+  if (!Array.isArray(players) || players.length > 8) return false;
+  if (!players.every(p => p && typeof p === 'object' && typeof p.name === 'string')) return false;
+  if (!Number.isInteger(s.draftPickIdx) || s.draftPickIdx < 0 || s.draftPickIdx > 48) return false;
+  if (s.draftPickIdx >= 48 && s.draftComplete !== true) return false; // idx 48 without completion would crash renderDraft
+  if (s.rosters != null && typeof s.rosters !== 'object') return false;
+  return true;
+}
+
+// All cloud requests get a hard timeout — a TCP-black-holed request would
+// otherwise hold _pushInFlight/_pullInFlight for minutes and stall the draft.
+function fetchWithTimeout(url, opts = {}, ms = 10000) {
+  const ctrl = new AbortController();
+  const tmo = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(tmo));
+}
+
+// Manual scores entered on any device live in state.scoreOverrides, which
+// syncs through the cloud blob; the matches list itself stays device-local.
+// Re-apply overrides on top of local matches after every pull / feed sync.
+function applyScoreOverrides() {
+  if (!state.scoreOverrides || !Array.isArray(state.matches)) return;
+  Object.entries(state.scoreOverrides).forEach(([key, o]) => {
+    if (!o || typeof o !== 'object') return;
+    const m = state.matches.find(x => (x.key || matchKey(x)) === key);
+    if (!m) return;
+    m.score1 = o.score1 ?? null; m.score2 = o.score2 ?? null;
+    m.pens1 = o.pens1 ?? null;  m.pens2 = o.pens2 ?? null;
+  });
+}
 
 async function createCloudGame() {
   toast('Creating cloud game…');
@@ -1307,7 +1438,7 @@ async function joinCloudGame(id, opts = {}) {
     if (!res.ok) throw new Error('HTTP ' + res.status + ' — could not reach cloud');
     const payload = await res.json();
     if (payload === null) throw new Error('Game code not found.');
-    if (!payload.state) throw new Error('Unexpected payload from cloud.');
+    if (!payload.state || !validCloudState(payload.state)) throw new Error('Unexpected payload from cloud.');
     // Warn if user already has a draft locally
     const hasLocal = state.players && state.players.length > 0 && state.cloudGameId !== id;
     if (hasLocal && !opts.overwriteSilently) {
@@ -1316,13 +1447,15 @@ async function joinCloudGame(id, opts = {}) {
       }
     }
     // Adopt remote state — preserve cloud connection metadata + local feed data
-    const localMatches = state.matches, localLastSync = state.lastSync;
+    const localMatches = state.matches, localLastSync = state.lastSync, localSchedVer = state.scheduleVersion;
     state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
     state.matches = localMatches || [];
     state.lastSync = localLastSync || null;
+    state.scheduleVersion = localSchedVer;
     state.cloudGameId = id;
     state.cloudLastPulled = new Date().toISOString();
     _lastSeenSavedAt = payload.savedAt || null;
+    applyScoreOverrides();
     saveState({ skipCloudPush: true });
     renderAll();
     startCloudPolling();
@@ -1335,12 +1468,40 @@ async function joinCloudGame(id, opts = {}) {
   }
 }
 
-async function pushToCloud() {
+const DIRTY_KEY = 'wc2026_dirty_v1'; // persists "unsynced local state" across reloads
+
+function clearDirty() {
+  _pushFailed = false;
+  _pushRetryDelay = 2000;
+  if (_pushRetryTimer) { clearTimeout(_pushRetryTimer); _pushRetryTimer = null; }
+  try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+}
+
+async function _doPushToCloud() {
   if (!cloudConfigured()) return false;
+  // RETRY SAFETY: our previous PUT may have LANDED even though its response
+  // was lost. If the cloud has since moved past us, re-pushing this snapshot
+  // would erase another house's pick — read before writing.
+  if (_pushFailed) {
+    try {
+      const probe = await fetchWithTimeout(`${CLOUD_API}/${state.cloudGameId}.json`, { cache: 'no-store' });
+      if (probe.ok) {
+        const p = await probe.json();
+        if (p && p.state && validCloudState(p.state) &&
+            typeof p.state.draftPickIdx === 'number' &&
+            p.state.draftPickIdx > (state.draftPickIdx || 0)) {
+          clearDirty();
+          toast('The draft moved on while this device was out of sync — refreshing the board.', true);
+          pullFromCloud({ force: true, quiet: true });
+          return false;
+        }
+      }
+    } catch (e) { /* cloud unreachable — the PUT below will fail and re-arm the retry */ }
+  }
   _pushInFlight = true;
   try {
     const payload = { v: 1, savedAt: new Date().toISOString(), state: stripCloudKeys(state) };
-    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}.json`, {
+    const res = await fetchWithTimeout(`${CLOUD_API}/${state.cloudGameId}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1348,51 +1509,108 @@ async function pushToCloud() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     state.cloudLastPushed = payload.savedAt;
     _lastSeenSavedAt = payload.savedAt;
+    _lastCloudContactAt = Date.now();
+    clearDirty();
     saveState({ skipCloudPush: true });
     updateCloudStatusLine();
     return true;
   } catch (e) {
     console.error('pushToCloud failed', e);
+    // Keep our word to the user: retry with backoff until this state lands.
+    // Until it does, _pushFailed also blocks pulls from silently overwriting
+    // the unsynced local data (see pullFromCloud), and the dirty flag persists
+    // so a page reload can't discard an unsynced pick either.
+    _pushFailed = true;
+    try { localStorage.setItem(DIRTY_KEY, '1'); } catch (e2) {}
+    clearTimeout(_pushRetryTimer);
+    _pushRetryTimer = setTimeout(() => { _pushRetryTimer = null; pushToCloud(); }, _pushRetryDelay);
+    _pushRetryDelay = Math.min(_pushRetryDelay * 2, 30000);
+    updateCloudStatusLine();
     return false; // transient — state stays in localStorage
   } finally {
     _pushInFlight = false;
   }
 }
 
+// All pushes are serialized through a promise chain so overlapping PUTs can't
+// land at Firebase out of order; each push snapshots state when its turn comes.
+let _pushChain = Promise.resolve(false);
+function pushToCloud() {
+  const run = () => _doPushToCloud();
+  _pushChain = _pushChain.then(run, run);
+  return _pushChain;
+}
+
 async function pullFromCloud(opts = {}) {
   if (!cloudConfigured()) return false;
   if (_pushInFlight) return false; // don't pull mid-push
+  if (_pullInFlight) {
+    // A background poll is mid-pull. Plain pulls just skip; a FORCED pull
+    // (pick verification, Sync now) must not lose that race — wait it out,
+    // then do its own fresh read.
+    if (!opts.force) return false;
+    for (let i = 0; i < 50 && _pullInFlight; i++) await new Promise(r => setTimeout(r, 100));
+    if (_pullInFlight) return false; // still stuck after 5s — fail closed
+    // The world may have changed during the wait — re-run the entry guards.
+    if (_pushInFlight || _pushFailed) return false;
+  }
+  // Local state that never reached the cloud (e.g. a pick made offline) must
+  // be pushed before anything remote is adopted — adopting first would
+  // silently delete the unsynced pick from the only place it exists.
+  if (_pushFailed) {
+    if (!_pushRetryTimer && !_pushInFlight) pushToCloud();
+    return false;
+  }
+  _pullInFlight = true;
   try {
-    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}.json`, { cache: 'no-store' });
+    const res = await fetchWithTimeout(`${CLOUD_API}/${state.cloudGameId}.json`, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const payload = await res.json();
-    if (!payload || !payload.state) return false;
-    // Skip if we've already seen this exact version (avoids re-render flicker)
-    if (!opts.force && payload.savedAt && payload.savedAt === _lastSeenSavedAt) return false;
-    // Skip if remote isn't strictly newer than what we last pushed (last-write-wins)
-    if (!opts.force && state.cloudLastPushed && payload.savedAt && payload.savedAt <= state.cloudLastPushed) {
+    _lastCloudContactAt = Date.now();
+    if (!payload || !payload.state || !validCloudState(payload.state)) {
+      if (payload) console.warn('pullFromCloud: ignoring malformed cloud payload');
+      _lastPullInvalid = !!payload;
+      return false;
+    }
+    _lastPullInvalid = false;
+    // Already seen this exact version: nothing to adopt. For forced pulls
+    // that's a SUCCESS ("the board is provably current") — and skipping the
+    // re-render keeps focus pulls from wiping half-typed inputs.
+    if (payload.savedAt && payload.savedAt === _lastSeenSavedAt) return !!opts.force;
+    // Skip if remote isn't strictly newer than what we last pushed
+    // (last-write-wins) — UNLESS the draft has visibly advanced remotely.
+    // savedAt comes from each device's wall clock, so a skewed clock must
+    // never be able to hide real draft progress from this device.
+    const remoteIdx = typeof payload.state.draftPickIdx === 'number' ? payload.state.draftPickIdx : -1;
+    const draftAdvanced = remoteIdx > (state.draftPickIdx || 0) ||
+      (!state.draftComplete && payload.state.draftComplete === true);
+    if (!opts.force && !draftAdvanced && state.cloudLastPushed && payload.savedAt && payload.savedAt <= state.cloudLastPushed) {
       _lastSeenSavedAt = payload.savedAt;
       return false;
     }
     const cloudGameId = state.cloudGameId;
-    const localMatches = state.matches, localLastSync = state.lastSync;
+    const localMatches = state.matches, localLastSync = state.lastSync, localSchedVer = state.scheduleVersion;
     state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
     state.matches = localMatches || [];
     state.lastSync = localLastSync || null;
+    state.scheduleVersion = localSchedVer;
     state.cloudGameId = cloudGameId;
     state.cloudLastPulled = new Date().toISOString();
     _lastSeenSavedAt = payload.savedAt || null;
+    applyScoreOverrides();
     saveState({ skipCloudPush: true });
     // Preserve scroll position — background pulls shouldn't yank the page around
     const y = window.scrollY;
     renderAll();
     window.scrollTo(0, y);
-    if (opts.force) toast('Synced from cloud.');
+    if (opts.force && !opts.quiet) toast('Synced from cloud.');
     return true;
   } catch (e) {
     console.error('pullFromCloud failed', e);
-    if (opts.force) toast('Pull failed: ' + e.message, true);
+    if (opts.force && !opts.quiet) toast('Pull failed: ' + e.message, true);
     return false;
+  } finally {
+    _pullInFlight = false;
   }
 }
 
@@ -1401,6 +1619,9 @@ function disconnectCloud() {
   state.cloudLastPushed = null;
   state.cloudLastPulled = null;
   stopCloudPolling();
+  if (_pushRetryTimer) { clearTimeout(_pushRetryTimer); _pushRetryTimer = null; }
+  _pushFailed = false;
+  _pushRetryDelay = 2000;
   saveState({ skipCloudPush: true });
   renderAll();
   toast('Disconnected. Your local data is unchanged.');
@@ -1428,10 +1649,19 @@ function startCloudPolling() {
     if (!cloudConfigured()) { _cloudPullTimer = null; return; }
     if (!document.hidden && !_pickBusy) {
       try { await pullFromCloud(); } catch (e) { /* transient */ }
+      // Keep the connection indicators honest even when nothing new arrived
+      updateCloudStatusLine();
+      renderScoreboard();
     }
     _cloudPullTimer = setTimeout(loop, pollMs());
   };
   _cloudPullTimer = setTimeout(loop, pollMs());
+}
+
+// True when we haven't successfully reached the cloud for ~3 poll cycles.
+function cloudLooksStale() {
+  if (!cloudConfigured()) return false;
+  return (Date.now() - _lastCloudContactAt) > (pollMs() * 3 + 5000);
 }
 
 function shareableLink() {
@@ -1441,12 +1671,18 @@ function shareableLink() {
 }
 
 function updateCloudStatusLine() {
-  const el = document.getElementById('cloud-status-text');
-  if (el && cloudConfigured()) {
-    const ts = state.cloudLastPushed || state.cloudLastPulled;
-    el.textContent = ts
-      ? `✓ Connected · last sync ${new Date(ts).toLocaleTimeString()}`
-      : '✓ Connected';
+  const line = document.getElementById('cloud-status-text');
+  if (line && cloudConfigured()) {
+    if (cloudLooksStale()) {
+      line.textContent = '⚠️ Can\'t reach the cloud — this device may be showing old picks/scores';
+      line.style.color = 'var(--accent-2)';
+    } else {
+      const ts = state.cloudLastPushed || state.cloudLastPulled;
+      line.textContent = ts
+        ? `✓ Connected · last sync ${new Date(ts).toLocaleTimeString()}`
+        : '✓ Connected';
+      line.style.color = 'var(--green)';
+    }
   }
 }
 
@@ -1508,6 +1744,30 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+// ── TURN ALERT ── buzz/flag this device when one of its claimed players goes
+// on the clock; a phone on the couch should announce its owner's turn.
+let _lastAlertedPickIdx = null;
+const BASE_TITLE = document.title;
+function maybeAlertTurn() {
+  if (!state.players || state.players.length === 0 || state.draftComplete) {
+    document.title = BASE_TITLE;
+    return;
+  }
+  const pick = currentPick();
+  const mine = pick && deviceSeats().includes(pick.playerIdx);
+  if (mine) {
+    document.title = '🔔 YOUR TURN — MWCGA';
+    if (_lastAlertedPickIdx !== state.draftPickIdx) {
+      _lastAlertedPickIdx = state.draftPickIdx;
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+      const who = state.players[pick.playerIdx];
+      toast(`⭐ ${who ? who.name : 'You'} — YOU'RE ON THE CLOCK! Group ${pick.group}.`);
+    }
+  } else {
+    document.title = BASE_TITLE;
+  }
+}
+
 function renderAll() {
   renderScoreboard();
   renderToday();
@@ -1516,6 +1776,7 @@ function renderAll() {
   renderSchedule();
   renderRosters();
   renderSettings();
+  maybeAlertTurn();
 }
 
 // ----- HEADER SCOREBOARD -----
@@ -1534,15 +1795,20 @@ function renderScoreboard() {
       el('span', { class: 'pts' }, pts + ' pts')
     ));
   });
-  // Cloud-sync indicator
+  // Cloud-sync indicator — goes loud when the cloud hasn't answered lately,
+  // so nobody trusts a frozen board.
   if (cloudConfigured()) {
+    const stale = cloudLooksStale();
     sb.appendChild(el('div', {
       class: 'score-pill',
-      title: 'Cloud-synced — all family devices see live updates',
-      style: 'background: rgba(6, 214, 160, 0.12); border-color: var(--green); color: var(--green);'
+      title: stale ? 'No answer from the cloud — this board may be out of date. Try Settings → Sync now.'
+                   : 'Cloud-synced — all family devices see live updates',
+      style: stale
+        ? 'background: rgba(178, 34, 52, 0.2); border-color: var(--accent-2); color: #ffb3bd;'
+        : 'background: rgba(6, 214, 160, 0.12); border-color: var(--green); color: var(--green);'
     },
-      el('span', {}, '🌐'),
-      el('span', { style: 'font-size: 12px;' }, 'Live')
+      el('span', {}, stale ? '📡' : '🌐'),
+      el('span', { style: 'font-size: 12px;' }, stale ? 'Reconnecting…' : 'Live')
     ));
   }
 }
@@ -1569,8 +1835,9 @@ function renderToday() {
     return;
   }
 
-  // Today / upcoming matches
-  const today = new Date().toISOString().slice(0, 10);
+  // Today / upcoming matches (viewer-local date, so evening games don't
+  // vanish from "Today" when UTC rolls over at 7 PM Central)
+  const today = localDateStr();
   const todayMatches = state.matches.filter(m => m.date === today);
   const nextMatches = state.matches
     .filter(m => m.date > today && !hasResult(m))
@@ -1714,14 +1981,24 @@ function renderMatchCard(m, showOwners = true) {
         m.score2 = s2in.value === '' ? null : Number(s2in.value);
         m.pens1 = pens1.value === '' ? null : Number(pens1.value);
         m.pens2 = pens2.value === '' ? null : Number(pens2.value);
+        // Record as a synced override so every household sees a hand-entered
+        // score (matches themselves never travel through the cloud).
+        if (!state.scoreOverrides) state.scoreOverrides = {};
+        if (m.score1 != null && m.score2 != null) {
+          state.scoreOverrides[m.key || matchKey(m)] =
+            { score1: m.score1, score2: m.score2, pens1: m.pens1, pens2: m.pens2 };
+        } else {
+          delete state.scoreOverrides[m.key || matchKey(m)];
+        }
         saveState();
         renderAll();
-        toast('Score saved.');
+        toast(cloudConfigured() ? 'Score saved — syncing to the family.' : 'Score saved.');
       }}, 'Save'));
       if (scored) {
         wrap.appendChild(el('button', { class: 'ghost', onclick: () => {
           m.score1 = null; m.score2 = null; m.pens1 = null; m.pens2 = null;
-          saveState(); renderAll(); toast('Cleared.');
+          if (state.scoreOverrides) delete state.scoreOverrides[m.key || matchKey(m)];
+          saveState(); renderAll(); toast('Cleared. The next feed sync may restore the official score.');
         }}, 'Clear'));
       }
       return wrap;
@@ -1737,10 +2014,24 @@ function renderDraft() {
   const root = $('#tab-draft');
   root.innerHTML = '';
 
+  // Loud warning when picks would stay on this device only — a family member
+  // who opened the bare URL instead of the share link must not draft into a
+  // disconnected local game.
+  if (!cloudConfigured() && state.players && state.players.length > 0 && !state.draftComplete) {
+    root.appendChild(el('div', { class: 'panel', style: 'border: 2px solid var(--accent-2); background: rgba(178,34,52,0.18);' },
+      el('div', { style: 'font-weight: 800;' }, '⚠️ NOT CONNECTED TO THE FAMILY GAME'),
+      el('div', { class: 'small', style: 'margin-top: 4px;' },
+        'Picks made here stay on THIS device only. If you meant to join the family draft, open the share link you were sent, or connect with the game code in Settings.'),
+      el('button', { style: 'margin-top: 8px;', onclick: () => switchTab('settings') }, 'Go to Settings →')
+    ));
+  }
+
   // Setup screen
   if (!state.players || state.players.length === 0) {
     const setup = el('div', { class: 'panel' },
       el('h2', {}, '🇺🇸 ROLL CALL — NAME THE PATRIOTS 🇺🇸'),
+      el('div', { class: 'sub', style: 'border-left: 3px solid var(--accent); padding-left: 8px;' },
+        'Joining the family game? DON\'T set up a new draft here — open the share link you were texted (or Settings → "Or join an existing game").'),
       el('div', { class: 'sub' }, 'Enter all four drafters below. The pick order rotates across groups using a BEAUTIFUL Latin square — each of you picks 1st, 2nd, 3rd, and 4th exactly 3 times across the 12 groups. PERFECTLY FAIR. Nobody does it better.'),
       el('div', { class: 'grid grid-2' },
         ['Patriot 1 (Red 🔴)', 'Patriot 2 (White ⚪)', 'Patriot 3 (Gold 🟡)', 'Patriot 4 (Blue 🔵)'].map((lbl, i) =>
@@ -1772,6 +2063,13 @@ function renderDraft() {
   // Draft in progress
   if (!state.draftComplete) {
     const pick = currentPick();
+    if (!pick || !state.players[pick.playerIdx]) {
+      // Defensive: a half-synced state must never crash the whole render pass.
+      root.appendChild(el('div', { class: 'panel' },
+        el('h2', {}, '⏳ Syncing draft state…'),
+        el('div', { class: 'sub' }, 'If this sticks around, tap Settings → 🔄 Sync now.')));
+      return;
+    }
     const player = state.players[pick.playerIdx];
     const groupTeams = teamsInGroup(pick.group);
     const remaining = groupTeams.filter(t => !draftedTeams().includes(t));
@@ -1782,8 +2080,12 @@ function renderDraft() {
     root.appendChild(el('div', { class: 'panel', style: 'padding: 10px 12px;' },
       el('div', { class: 'small', style: 'margin-bottom: 6px; font-weight: 700;' },
         '📱 Who picks from this device? ',
-        el('span', { style: 'font-weight: 400; color: var(--muted);' },
-          seats.length === 0 ? 'None claimed — anyone can pick here. Tap your name(s) to lock it down.' : 'Only their turns are pickable here.')),
+        el('span', { style: seats.length === 0 && cloudConfigured() ? 'font-weight: 700; color: #ffb3bd;' : 'font-weight: 400; color: var(--muted);' },
+          seats.length === 0
+            ? (cloudConfigured()
+                ? '⚠️ UNCLAIMED — this device can pick for ANYONE on their turn. Tap your name(s) now so a stray tap can\'t draft for someone else.'
+                : 'None claimed — anyone can pick here. Tap your name(s) to lock it down.')
+            : 'Only their turns are pickable here.')),
       el('div', { class: 'row', style: 'display: flex; flex-wrap: wrap; gap: 6px;' },
         state.players.map((p, i) => {
           const claimed = seats.includes(i);
@@ -1864,6 +2166,8 @@ function renderDraft() {
       el('button', { onclick: () => switchTab('rosters') }, 'View rosters'),
       el('button', { class: 'ghost', style: 'margin-left:8px;', onclick: () => {
         if (!confirm('Reset draft? This wipes the rosters but keeps scores.')) return;
+        if (cloudConfigured() &&
+            !confirm('⚠️ This is a FAMILY game — resetting wipes all 48 picks for EVERY household, not just this device. Are you absolutely sure?')) return;
         state.rosters = { 0: [], 1: [], 2: [], 3: [] };
         state.draftPickIdx = 0;
         state.spoilers = [];
@@ -1912,9 +2216,14 @@ function renderStandings() {
     return;
   }
 
-  // Leaderboard
+  // Leaderboard — competition ranking: equal points share the same rank
   const totals = state.players.map((p, i) => ({ idx: i, name: p.name, pts: totalPoints(i) }))
-    .sort((a, b) => b.pts - a.pts);
+    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
+  let _lastPts = null, _lastRank = 1;
+  totals.forEach((t, i) => {
+    t.rank = (t.pts === _lastPts) ? _lastRank : i + 1;
+    _lastPts = t.pts; _lastRank = t.rank;
+  });
 
   const standings = el('div', { class: 'panel' }, el('h2', {}, '🏆 THE LEADERBOARD — WHO\'S WINNING BIGLY 🦅'),
     el('table', {},
@@ -1926,15 +2235,15 @@ function renderStandings() {
         el('th', {}, 'Eliminated'),
       )),
       el('tbody', {},
-        totals.map((t, rank) => {
+        totals.map((t) => {
           const teams = state.rosters[t.idx] || [];
           // A team is "active" if no group-stage finale has eliminated them OR
           // they advanced to a KO round. For simplicity, mark active if they've
           // played fewer than 3 group games OR if they appear in any KO match.
           const active = teams.filter(team => teamPoints(team).games.length < 3 || stillAlive(team));
           const elim = teams.length - active.length;
-          return el('tr', { class: rank === 0 ? 'rank-1' : '' },
-            el('td', {}, '#' + (rank + 1)),
+          return el('tr', { class: t.rank === 1 ? 'rank-1' : '' },
+            el('td', {}, '#' + t.rank),
             el('td', {},
               el('span', { class: 'dot', style: `display:inline-block;width:10px;height:10px;border-radius:50%;background:${PLAYER_COLORS[t.idx]};margin-right:6px;` }),
               t.name),
@@ -2204,6 +2513,8 @@ function renderSettings() {
       el('button', { class: 'danger', onclick: resetAll }, '🗑 Reset everything'),
     )
   ));
+  // Keep the freshly rendered status line consistent with the staleness check
+  updateCloudStatusLine();
 }
 
 function exportState() {
@@ -2223,10 +2534,36 @@ function importState(e) {
   reader.onload = ev => {
     try {
       const imported = JSON.parse(ev.target.result);
-      state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...imported };
+      // Accept both formats: an app export (bare state) and a raw cloud-blob
+      // backup ({v, savedAt, state}) — importing the wrong one used to
+      // produce a broken state that then auto-pushed family-wide.
+      const candidate = (imported && imported.state && imported.savedAt) ? imported.state : imported;
+      if (!candidate || typeof candidate !== 'object' || !Array.isArray(candidate.players)) {
+        toast('That file doesn\'t look like a game backup — nothing was changed.', true);
+        return;
+      }
+      if (cloudConfigured() &&
+          !confirm('Importing replaces this device\'s game AND syncs the imported data to the whole family. Continue?')) return;
+      // Preserve device-local data across the restore: the cloud connection
+      // (a raw cloud-blob backup has no cloudGameId — stripCloudKeys removed
+      // it — and an export from another device may carry a different id) and
+      // the schedule/feed cache (cloud blobs carry no matches at all).
+      const keepId = state.cloudGameId, keepMatches = state.matches,
+            keepLastSync = state.lastSync, keepSchedVer = state.scheduleVersion;
+      state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...candidate };
+      // A connected device keeps ITS game (no silent switching); a fresh
+      // device may adopt the id carried by an app export.
+      state.cloudGameId = keepId || state.cloudGameId || null;
+      if (!state.matches || state.matches.length === 0) {
+        state.matches = keepMatches;
+        state.lastSync = keepLastSync;
+      }
+      state.scheduleVersion = keepSchedVer;
+      applyScoreOverrides();
       saveState();
+      if (cloudConfigured() && !_cloudPullTimer) startCloudPolling();
       renderAll();
-      toast('Imported successfully.');
+      toast(cloudConfigured() ? 'Imported — syncing the restored game to the family.' : 'Imported successfully.');
     } catch (err) {
       toast('Import failed: ' + err.message, true);
     }
@@ -2235,13 +2572,21 @@ function importState(e) {
 }
 
 function resetAll() {
-  if (!confirm('Reset EVERYTHING (players, rosters, scores)? This cannot be undone.')) return;
-  delete memoryStore[STATE_KEY];
+  // Resets THIS DEVICE ONLY and never pushes to the cloud — a reset must not
+  // be able to nuke the family game. Rejoining the share link restores everything.
+  if (!confirm('Reset EVERYTHING on this device (players, rosters, scores)? This cannot be undone.')) return;
+  if (cloudConfigured() &&
+      !confirm('This device is connected to the family cloud game. Resetting disconnects THIS device only — the family game stays safe in the cloud. Continue?')) return;
+  stopCloudPolling();
+  if (_pushRetryTimer) { clearTimeout(_pushRetryTimer); _pushRetryTimer = null; }
+  _pushFailed = false;
+  try { localStorage.removeItem(STATE_KEY); } catch (e) { console.warn('localStorage remove failed', e); }
   state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   state.matches = SCHEDULE_2026.map(m => ({ ...m, key: matchKey(m), score1: null, score2: null, pens1: null, pens2: null }));
-  saveState();
+  state.scheduleVersion = SCHEDULE_VERSION;
+  saveState({ skipCloudPush: true });
   renderAll();
-  toast('Reset complete.');
+  toast('Reset complete (this device only). Rejoin the family game any time with the share link.');
 }
 
 // ============================================================================
@@ -2251,6 +2596,7 @@ renderAll();
 
 // 10a. URL ?game=<id> auto-join. Pasting/clicking a share link should drop the
 // user straight into the family's shared game.
+let _urlJoinPending = false;
 (function handleUrlParams() {
   const params = new URLSearchParams(window.location.search);
   const urlGame = params.get('game');
@@ -2258,31 +2604,50 @@ renderAll();
   if (state.cloudGameId === urlGame) {
     // Already joined this game — just refresh from cloud
     startCloudPolling();
-    setTimeout(() => pullFromCloud({ force: true }), 200);
+    setTimeout(() => pullFromCloud({ force: true, quiet: true }), 200);
   } else {
-    // New game from a share link
-    setTimeout(() => joinCloudGame(urlGame), 200);
+    // New game from a share link. Block 10b's pull of the OLD game until the
+    // join finishes — otherwise old-game state could land under the new id.
+    _urlJoinPending = true;
+    setTimeout(() => { joinCloudGame(urlGame).finally(() => { _urlJoinPending = false; }); }, 200);
   }
 })();
 
 // 10b. If already connected to a cloud game from a previous visit, resume polling
-if (cloudConfigured() && !_cloudPullTimer) {
+if (cloudConfigured() && !_cloudPullTimer && !_urlJoinPending) {
   startCloudPolling();
-  // Pull once on load so the latest cloud state wins over any stale local
-  setTimeout(() => pullFromCloud(), 400);
+  // If a pick never reached the cloud before the last reload, land it FIRST —
+  // the dirty flag survives in localStorage and the read-before-write probe
+  // in _doPushToCloud keeps the catch-up push from clobbering newer state.
+  let bootDirty = false;
+  try { bootDirty = !!localStorage.getItem(DIRTY_KEY); } catch (e) {}
+  if (bootDirty) { _pushFailed = true; pushToCloud(); }
+  // Pull once on load so the latest cloud state wins over any stale local.
+  // Forced: a skewed device clock must never make this device boot stale.
+  setTimeout(() => pullFromCloud({ force: true, quiet: true }), 400);
 }
 
-// 10c. Pull from cloud whenever the tab regains focus (catches mobile resumes)
-window.addEventListener('focus', () => { if (cloudConfigured()) pullFromCloud(); });
+// 10c. Pull from cloud whenever the tab regains focus (catches mobile resumes).
+// Forced + quiet: a just-woken phone adopts the latest cloud state regardless
+// of timestamp comparisons. (If a local push is still pending, pullFromCloud
+// pushes that first instead — unsynced picks are never discarded. Never mid-pick.)
+window.addEventListener('focus', () => { if (cloudConfigured() && !_pickBusy) pullFromCloud({ force: true, quiet: true }); });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && cloudConfigured()) pullFromCloud();
+  if (document.visibilityState === 'visible' && cloudConfigured() && !_pickBusy) pullFromCloud({ force: true, quiet: true });
 });
 
+// 10c2. When the network comes back, land any state that never reached the cloud
+window.addEventListener('online', () => { if (cloudConfigured() && _pushFailed) pushToCloud(); });
+
 // 10d. Auto-sync match results from openfootball once the tournament starts
+// (local date — UTC would arm this mid-draft on the evening of June 10),
+// then keep scores fresh while the app sits open on game days.
 if (state.players && state.players.length > 0) {
-  const today = new Date().toISOString().slice(0, 10);
-  if (today >= '2026-06-11') {
-    syncFromFeed();
+  if (localDateStr() >= '2026-06-11') {
+    syncFromFeed({ quiet: true });
+    setInterval(() => {
+      if (!document.hidden && state.players && state.players.length > 0) syncFromFeed({ quiet: true });
+    }, 10 * 60 * 1000);
   }
 }
 </script>
