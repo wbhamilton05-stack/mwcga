@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇺🇸 MWCGA — Make The World Cup Great Again 🇺🇸</title>
+<style>
+  :root {
+    --bg: #0a1c4a;
+    --panel: #112a6b;
+    --panel-2: #1a3a8a;
+    --border: #2b50b0;
+    --text: #ffffff;
+    --muted: #b8c8f0;
+    --accent: #ffd700;
+    --accent-2: #b22234;
+    --green: #06d6a0;
+    --red: #b22234;
+    --blue: #3c3b6e;
+    --p1: #e63946;
+    --p2: #ffffff;
+    --p3: #ffd700;
+    --p4: #4a90e2;
+    --spoiler: #6c757d;
+    --stripe-red: #b22234;
+    --stripe-white: #ffffff;
+  }
+
+  @keyframes wave-stripes {
+    from { background-position: 0 0; }
+    to   { background-position: 60px 0; }
+  }
+  @keyframes star-twinkle {
+    0%,100% { opacity: 0.25; transform: scale(1); }
+    50%     { opacity: 0.9;  transform: scale(1.2); }
+  }
+  @keyframes patriot-glow {
+    0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.3), 0 0 40px rgba(178,34,52,0.2); }
+    50%     { box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(178,34,52,0.4); }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #0a1c4a;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── FLAG STRIPES ── */
+  .flag-stripes {
+    height: 6px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--stripe-red) 0 30px,
+      var(--stripe-white) 30px 60px
+    );
+    animation: wave-stripes 4s linear infinite;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--panel);
+    padding: 12px 16px;
+    border-bottom: 3px solid var(--accent);
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    text-shadow: 0 0 10px rgba(255,215,0,0.3);
+  }
+  h1 .accent { color: var(--accent); }
+  h1 .red    { color: var(--accent-2); }
+  h1 .star {
+    display: inline-block;
+    color: var(--accent);
+    animation: star-twinkle 2s ease-in-out infinite;
+  }
+  h1 .star:nth-child(2) { animation-delay: 0.5s; }
+  h1 .star:nth-child(3) { animation-delay: 1.0s; }
+  .subtitle {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .scoreboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .score-pill {
+    background: var(--panel-2);
+    border: 1.5px solid var(--accent);
+    padding: 5px 10px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .score-pill .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4); }
+  .score-pill .pts { color: var(--accent); font-weight: 900; }
+
+  /* ── TAB NAVIGATION — normal document flow, zero positioning ── */
+  .tab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background: #112a6b;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    display: inline-block;
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    white-space: nowrap;
+    line-height: 1.2;
+    transition: color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: #ffffff;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── TAB CONTENT ── */
+  .tab-content { padding: 16px; }
+
+  /* ── MAIN WRAPPER ── */
+  main { max-width: 680px; margin: 0 auto; }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .panel h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .panel .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  /* ── BUTTONS ── */
+  button {
+    background: var(--accent);
+    color: #0a1c4a;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 15px;
+    min-height: 44px;
+    transition: filter 0.15s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:hover  { filter: brightness(1.1); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+  button.ghost:hover { background: rgba(255,215,0,0.1); }
+  button.danger {
+    background: #6c757d;
+    color: white;
+  }
+
+  /* ── INPUTS ── */
+  input[type=text], input[type=number] {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 16px;   /* prevents iOS zoom */
+    width: 100%;
+    min-height: 44px;
+  }
+  input:focus { outline: 2px solid var(--accent); }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+  select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+
+  input[type=number].score-input {
+    width: 64px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    min-height: 52px;
+    padding: 8px 4px;
+  }
+
+  /* ── GRIDS ── */
+  .grid   { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }   /* single-column on mobile */
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 400px) {
+    .grid-2, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* ── HELPERS ── */
+  .row    { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .spacer { flex: 1; min-width: 0; }
+  .small  { font-size: 12px; color: var(--muted); }
+  .empty  { color: var(--muted); padding: 24px; text-align: center; font-size: 14px; }
+
+  .badge     { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--panel-2); border: 1px solid var(--border); }
+  .badge.ko  { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+
+  /* ── OWNER BORDERS ── */
+  .owned-p1 { border-left: 4px solid var(--p1); }
+  .owned-p2 { border-left: 4px solid var(--p2); }
+  .owned-p3 { border-left: 4px solid var(--p3); }
+  .owned-p4 { border-left: 4px solid var(--p4); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 16px; left: 10px; right: 10px;
+    text-align: center;
+    background: var(--accent);
+    color: #1a1a1a;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 14px;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s;
+  }
+  .toast.error { background: var(--accent-2); color: white; }
+
+  /* ── TODAY BANNER ── */
+  .today-banner {
+    background: var(--panel-2);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .today-banner h2 {
+    color: var(--accent);
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.3);
+  }
+  .who-roots { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .root-card { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; color: #1a1a1a; }
+
+  /* ── MATCH CARDS ── */
+  .match-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .match-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .match-team {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .match-team.right { justify-content: flex-end; text-align: right; }
+  .match-team .flag { font-size: 20px; }
+  .score {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-weight: 800;
+    font-size: 15px;
+    min-width: 56px;
+    text-align: center;
+  }
+  .score.live      { border-color: var(--green); color: var(--green); }
+  .score.scheduled { color: var(--muted); }
+  .match-extras { margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .pts-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* ── PICK-NOW BANNER ── */
+  .pick-now {
+    background: linear-gradient(135deg, var(--accent) 0%, #f5b942 50%, var(--accent-2) 150%);
+    color: #1a1a1a;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 3px solid var(--accent-2);
+    animation: patriot-glow 2s ease-in-out infinite;
+  }
+
+  /* ── GROUP CARDS ── */
+  .group-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .group-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .group-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  /* ── TEAM ROWS ── */
+  .team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    min-height: 44px;
+    flex-wrap: nowrap;
+  }
+  .team-row.drafted { opacity: 0.75; }
+  .team-row.spoiler { border-style: dashed; border-color: var(--spoiler); opacity: 0.85; }
+  .team-row .flag   { font-size: 18px; margin-right: 5px; flex-shrink: 0; }
+  .team-row .name   { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .team-row .odds   { color: var(--muted); font-size: 10px; margin-right: 5px; font-weight: 700; flex-shrink: 0; }
+
+  /* ── SEED BADGE ── */
+  .seed-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-right: 5px;
+    min-width: 60px;
+    justify-content: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .seed-badge .num {
+    background: rgba(0,0,0,0.2);
+    border-radius: 999px;
+    padding: 0 3px;
+    margin-right: 3px;
+    font-size: 8px;
+  }
+
+  /* ── OWNER TAG & PICK BUTTON ── */
+  .owner-tag {
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a1a;
+    flex-shrink: 0;
+  }
+  .pick-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    min-height: 40px;
+    flex-shrink: 0;
+  }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:hover td { background: var(--panel-2); }
+  .rank-1 td:first-child { color: var(--accent); font-weight: 800; font-size: 16px; }
+
+  /* ── MULTIPLIER BAR ── */
+  .multiplier-bar { display: flex; gap: 4px; margin-top: 8px; }
+  .multiplier-cell {
+    flex: 1;
+    text-align: center;
+    padding: 6px 2px;
+    background: var(--panel-2);
+    border-radius: 6px;
+    font-size: 9px;
+    border: 1px solid var(--border);
+  }
+  .multiplier-cell .num { color: var(--accent); font-weight: 800; font-size: 12px; display: block; margin-bottom: 2px; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .legend-item { background: var(--panel-2); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; }
+  .legend-item strong { color: var(--accent); display: block; margin-bottom: 2px; }
+
+  /* ── ROSTER ── */
+  .roster-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .roster-team {
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  /* ── DETAILS/SUMMARY ── */
+  details summary {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 8px 0;
+    color: var(--accent);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details summary:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<div class="flag-stripes"></div>
+
+<header>
+  <h1>
+    <span class="star">⭐</span>
+    <span class="red">MAKE</span>
+    <span class="accent">THE WORLD CUP</span>
+    <span class="red">GREAT AGAIN</span>
+    <span class="star">⭐</span>
+  </h1>
+  <div class="subtitle">🦅 The Most Tremendous Family Draft In History · USA · 2026 🇺🇸</div>
+  <div class="scoreboard" id="scoreboard"></div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab active" data-tab="today"     onclick="switchTab('today')">🦅 Today</button>
+  <button class="tab"        data-tab="draft"     onclick="switchTab('draft')">⭐ Draft</button>
+  <button class="tab"        data-tab="standings" onclick="switchTab('standings')">🏆 Rankings</button>
+  <button class="tab"        data-tab="schedule"  onclick="switchTab('schedule')">📅 Schedule</button>
+  <button class="tab"        data-tab="rosters"   onclick="switchTab('rosters')">🇺🇸 Rosters</button>
+  <button class="tab"        data-tab="settings"  onclick="switchTab('settings')">⚙️ Settings</button>
+</div>
+
+<main>
+  <!-- TODAY -->
+  <section id="tab-today"     class="tab-content"></section>
+
+  <!-- DRAFT -->
+  <section id="tab-draft"     class="tab-content" style="display:none"></section>
+
+  <!-- STANDINGS -->
+  <section id="tab-standings" class="tab-content" style="display:none"></section>
+
+  <!-- SCHEDULE -->
+  <section id="tab-schedule"  class="tab-content" style="display:none"></section>
+
+  <!-- ROSTERS -->
+  <section id="tab-rosters"   class="tab-content" style="display:none"></section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings"  class="tab-content" style="display:none"></section>
+</main>
+
+<script>
+/* ============================================================================
+ *  WORLD CUP 2026 — FAMILY DRAFT GAME
+ *  Single-file HTML app with embedded data + live score sync.
+ *  Data source: openfootball/worldcup.json (raw GitHub, no API key, public domain)
+ *  State persists in localStorage. Export/import to JSON for backup.
+ * ============================================================================ */
+
+// ============================================================================
+// 1.  STATIC DATA: 48 teams, groups, flags, draft seeding within each group
+// ============================================================================
+const TEAMS = {
+  // GROUP A
+  'Mexico':            { group: 'A', flag: '🇲🇽', seed: 1, tier: 3 },
+  'Czechia':           { group: 'A', flag: '🇨🇿', seed: 2, tier: 4 },
+  'South Korea':       { group: 'A', flag: '🇰🇷', seed: 3, tier: 5 },
+  'South Africa':      { group: 'A', flag: '🇿🇦', seed: 4, tier: 5 },
+  // GROUP B
+  'Switzerland':       { group: 'B', flag: '🇨🇭', seed: 1, tier: 3 },
+  'Canada':            { group: 'B', flag: '🇨🇦', seed: 2, tier: 4 },
+  'Bosnia-Herzegovina':{ group: 'B', flag: '🇧🇦', seed: 3, tier: 5 },
+  'Qatar':             { group: 'B', flag: '🇶🇦', seed: 4, tier: 5 },
+  // GROUP C
+  'Brazil':            { group: 'C', flag: '🇧🇷', seed: 1, tier: 1 },
+  'Morocco':           { group: 'C', flag: '🇲🇦', seed: 2, tier: 3 },
+  'Scotland':          { group: 'C', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', seed: 3, tier: 4 },
+  'Haiti':             { group: 'C', flag: '🇭🇹', seed: 4, tier: 5 },
+  // GROUP D
+  'United States':     { group: 'D', flag: '🇺🇸', seed: 1, tier: 3 },
+  'Türkiye':           { group: 'D', flag: '🇹🇷', seed: 2, tier: 4 },
+  'Paraguay':          { group: 'D', flag: '🇵🇾', seed: 3, tier: 4 },
+  'Australia':         { group: 'D', flag: '🇦🇺', seed: 4, tier: 4 },
+  // GROUP E
+  'Germany':           { group: 'E', flag: '🇩🇪', seed: 1, tier: 1 },
+  'Ecuador':           { group: 'E', flag: '🇪🇨', seed: 2, tier: 3 },
+  'Ivory Coast':       { group: 'E', flag: '🇨🇮', seed: 3, tier: 4 },
+  'Curaçao':           { group: 'E', flag: '🇨🇼', seed: 4, tier: 5 },
+  // GROUP F
+  'Netherlands':       { group: 'F', flag: '🇳🇱', seed: 1, tier: 2 },
+  'Japan':             { group: 'F', flag: '🇯🇵', seed: 2, tier: 3 },
+  'Sweden':            { group: 'F', flag: '🇸🇪', seed: 3, tier: 4 },
+  'Tunisia':           { group: 'F', flag: '🇹🇳', seed: 4, tier: 4 },
+  // GROUP G
+  'Belgium':           { group: 'G', flag: '🇧🇪', seed: 1, tier: 2 },
+  'Egypt':             { group: 'G', flag: '🇪🇬', seed: 2, tier: 4 },
+  'Iran':              { group: 'G', flag: '🇮🇷', seed: 3, tier: 4 },
+  'New Zealand':       { group: 'G', flag: '🇳🇿', seed: 4, tier: 5 },
+  // GROUP H
+  'Spain':             { group: 'H', flag: '🇪🇸', seed: 1, tier: 1 },
+  'Uruguay':           { group: 'H', flag: '🇺🇾', seed: 2, tier: 2 },
+  'Saudi Arabia':      { group: 'H', flag: '🇸🇦', seed: 3, tier: 5 },
+  'Cape Verde':        { group: 'H', flag: '🇨🇻', seed: 4, tier: 5 },
+  // GROUP I
+  'France':            { group: 'I', flag: '🇫🇷', seed: 1, tier: 1 },
+  'Norway':            { group: 'I', flag: '🇳🇴', seed: 2, tier: 2 },
+  'Senegal':           { group: 'I', flag: '🇸🇳', seed: 3, tier: 3 },
+  'Iraq':              { group: 'I', flag: '🇮🇶', seed: 4, tier: 5 },
+  // GROUP J
+  'Argentina':         { group: 'J', flag: '🇦🇷', seed: 1, tier: 1 },
+  'Austria':           { group: 'J', flag: '🇦🇹', seed: 2, tier: 4 },
+  'Algeria':           { group: 'J', flag: '🇩🇿', seed: 3, tier: 4 },
+  'Jordan':            { group: 'J', flag: '🇯🇴', seed: 4, tier: 5 },
+  // GROUP K
+  'Portugal':          { group: 'K', flag: '🇵🇹', seed: 1, tier: 1 },
+  'Colombia':          { group: 'K', flag: '🇨🇴', seed: 2, tier: 3 },
+  'Congo DR':          { group: 'K', flag: '🇨🇩', seed: 3, tier: 5 },
+  'Uzbekistan':        { group: 'K', flag: '🇺🇿', seed: 4, tier: 5 },
+  // GROUP L
+  'England':           { group: 'L', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', seed: 1, tier: 1 },
+  'Croatia':           { group: 'L', flag: '🇭🇷', seed: 2, tier: 2 },
+  'Ghana':             { group: 'L', flag: '🇬🇭', seed: 3, tier: 4 },
+  'Panama':            { group: 'L', flag: '🇵🇦', seed: 4, tier: 5 },
+};
+
+// Tournament-winner odds for ALL 48 teams, sourced from OddsChecker April 2026.
+// Format is fractional (UK style) since the long shots get unwieldy as +XXX.
+const TITLE_ODDS = {
+  // Title contenders
+  'Spain':              '9/2',
+  'France':             '6/1',
+  'England':            '11/2',
+  'Argentina':          '8/1',
+  'Brazil':             '8/1',
+  'Portugal':           '12/1',
+  'Germany':            '12/1',
+  'Netherlands':        '20/1',
+  // Dark horses
+  'Norway':             '25/1',
+  'Belgium':            '33/1',
+  'Switzerland':        '40/1',
+  'Colombia':           '50/1',
+  'Morocco':            '50/1',
+  'United States':      '50/1',
+  'Japan':              '66/1',
+  'Uruguay':            '80/1',
+  'Mexico':             '80/1',
+  // Outsiders
+  'Türkiye':            '100/1',
+  'Croatia':            '100/1',
+  'Ecuador':            '100/1',
+  'Senegal':            '100/1',
+  'Austria':            '150/1',
+  'Sweden':             '150/1',
+  'Paraguay':           '150/1',
+  'Canada':             '150/1',
+  // Long shots
+  'Scotland':           '250/1',
+  'Bosnia-Herzegovina': '250/1',
+  'Egypt':              '300/1',
+  'Czechia':            '300/1',
+  'Ivory Coast':        '300/1',
+  'Algeria':            '300/1',
+  'Ghana':              '400/1',
+  'Iran':               '500/1',
+  'South Korea':        '500/1',
+  'Australia':          '500/1',
+  'Tunisia':            '500/1',
+  'Congo DR':           '750/1',
+  // Deepest underdogs
+  'Qatar':              '1000/1',
+  'Saudi Arabia':       '1000/1',
+  'South Africa':       '1000/1',
+  'New Zealand':        '1500/1',
+  'Panama':             '1500/1',
+  'Iraq':               '1500/1',
+  'Cape Verde':         '2000/1',
+  'Uzbekistan':         '2000/1',
+  'Curaçao':            '2000/1',
+  'Jordan':             '2500/1',
+  'Haiti':              '3000/1',
+};
+
+// Per-seed display labels for the draft UI rank badge
+const SEED_LABEL = {
+  1: { text: 'Favorite',  color: '#1a1a1a', bg: 'var(--accent)' },        // gold
+  2: { text: 'Contender', color: '#ffffff', bg: 'var(--accent-2)' },      // red
+  3: { text: 'Mid-tier',  color: '#ffffff', bg: '#4a90e2' },              // blue
+  4: { text: 'Underdog',  color: '#1a1a1a', bg: '#cbd5e0' },              // gray
+};
+
+// openfootball uses placeholder names from when the playoffs hadn't happened.
+// Map them to the actual qualified teams.
+const PLAYOFF_MAP = {
+  'UEFA Path A winner': 'Bosnia-Herzegovina',
+  'UEFA Path B winner': 'Sweden',
+  'UEFA Path C winner': 'Türkiye',
+  'UEFA Path D winner': 'Czechia',
+  'IC Path 1 winner':   'Congo DR',
+  'IC Path 2 winner':   'Iraq',
+  'USA':                'United States',
+};
+
+const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+// Knockout-round multipliers (Fibonacci-ish: 2,3,5,8,13).
+const ROUND_MULT = {
+  'group':     1,
+  'r32':       2,
+  'r16':       3,
+  'qf':        5,
+  'sf':        8,
+  'third':     5,
+  'final':    13,
+};
+
+// Friendly name for each round
+const ROUND_NAME = {
+  group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16',
+  qf: 'Quarter-final', sf: 'Semi-final', third: '3rd-Place Match', final: 'Final',
+};
+
+// Player colors for UI
+const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
+
+// ============================================================================
+// 2.  STATE MANAGEMENT (localStorage-backed)
+// ============================================================================
+const STATE_KEY = 'wc2026_familygame_v1';
+
+const DEFAULT_STATE = {
+  players: [],          // [{ name, color, draftOrder }]
+  rosters: {},          // { playerIdx: ['Spain','Brazil',...] }
+  spoilers: [],         // teams left undrafted (one per group)
+  draftPickIdx: 0,      // 0..47 (4 players × 12 groups)
+  draftComplete: false,
+  matches: [],          // populated from openfootball + score overrides
+  scoreOverrides: {},   // { matchKey: { score1, score2, pens1, pens2 } }
+  lastSync: null,
+  hostingMode: 'rotate', // future: support different orderings
+  cloudGameId: null,     // jsonblob.com blob ID once connected to cloud
+  cloudLastPushed: null, // ISO timestamp of last successful upload
+  cloudLastPulled: null, // ISO timestamp of last successful download
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    const parsed = JSON.parse(raw);
+    return { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...parsed };
+  } catch (e) {
+    console.error('loadState error', e);
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+}
+function saveState(opts = {}) {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    if (!opts.skipCloudPush) debouncedCloudPush();
+  } catch (e) { console.error('saveState error', e); }
+}
+
+// ============================================================================
+// 3.  MATCH KEY / ROUND PARSER
+// ============================================================================
+function matchKey(m) {
+  // Stable identifier for a match
+  if (m.num) return 'k' + m.num;
+  return [m.date, m.team1, m.team2].join('|');
+}
+
+function roundOf(m) {
+  const r = (m.round || '').toLowerCase();
+  if (r.startsWith('matchday')) return 'group';
+  if (r.includes('round of 32')) return 'r32';
+  if (r.includes('round of 16')) return 'r16';
+  if (r.includes('quarter')) return 'qf';
+  if (r.includes('semi')) return 'sf';
+  if (r.includes('third')) return 'third';
+  if (r === 'final') return 'final';
+  return 'group';
+}
+
+function mapTeamName(name) {
+  if (!name) return name;
+  if (PLAYOFF_MAP[name]) return PLAYOFF_MAP[name];
+  // Knockout placeholders like "1A", "W74", "3A/B/C/D/F" — keep as-is, resolved later.
+  return name;
+}
+
+// ============================================================================
+// 4.  EMBEDDED 2026 SCHEDULE (from openfootball schema, with playoff teams resolved)
+// ============================================================================
+const SCHEDULE_2026 = [
+  // GROUP A
+  { round:'Matchday 1', date:'2026-06-11', time:'13:00 UTC-6', team1:'Mexico', team2:'South Africa', group:'A', ground:'Mexico City' },
+  { round:'Matchday 1', date:'2026-06-11', time:'20:00 UTC-6', team1:'South Korea', team2:'Czechia', group:'A', ground:'Guadalajara' },
+  { round:'Matchday 8', date:'2026-06-18', time:'12:00 UTC-4', team1:'Czechia', team2:'South Africa', group:'A', ground:'Atlanta' },
+  { round:'Matchday 8', date:'2026-06-18', time:'19:00 UTC-6', team1:'Mexico', team2:'South Korea', group:'A', ground:'Guadalajara' },
+  { round:'Matchday 14', date:'2026-06-24', time:'19:00 UTC-6', team1:'Czechia', team2:'Mexico', group:'A', ground:'Mexico City' },
+  { round:'Matchday 14', date:'2026-06-24', time:'19:00 UTC-6', team1:'South Africa', team2:'South Korea', group:'A', ground:'Monterrey' },
+  // GROUP B
+  { round:'Matchday 2', date:'2026-06-12', time:'15:00 UTC-4', team1:'Canada', team2:'Bosnia-Herzegovina', group:'B', ground:'Toronto' },
+  { round:'Matchday 3', date:'2026-06-13', time:'12:00 UTC-7', team1:'Qatar', team2:'Switzerland', group:'B', ground:'San Francisco Bay' },
+  { round:'Matchday 8', date:'2026-06-18', time:'12:00 UTC-7', team1:'Switzerland', team2:'Bosnia-Herzegovina', group:'B', ground:'Los Angeles' },
+  { round:'Matchday 8', date:'2026-06-18', time:'15:00 UTC-7', team1:'Canada', team2:'Qatar', group:'B', ground:'Vancouver' },
+  { round:'Matchday 14', date:'2026-06-24', time:'12:00 UTC-7', team1:'Switzerland', team2:'Canada', group:'B', ground:'Vancouver' },
+  { round:'Matchday 14', date:'2026-06-24', time:'12:00 UTC-7', team1:'Bosnia-Herzegovina', team2:'Qatar', group:'B', ground:'Seattle' },
+  // GROUP C
+  { round:'Matchday 3', date:'2026-06-13', time:'18:00 UTC-4', team1:'Brazil', team2:'Morocco', group:'C', ground:'New York/NJ' },
+  { round:'Matchday 3', date:'2026-06-13', time:'21:00 UTC-4', team1:'Haiti', team2:'Scotland', group:'C', ground:'Boston' },
+  { round:'Matchday 9', date:'2026-06-19', time:'18:00 UTC-4', team1:'Scotland', team2:'Morocco', group:'C', ground:'Boston' },
+  { round:'Matchday 9', date:'2026-06-19', time:'21:00 UTC-4', team1:'Brazil', team2:'Haiti', group:'C', ground:'Philadelphia' },
+  { round:'Matchday 14', date:'2026-06-24', time:'18:00 UTC-4', team1:'Scotland', team2:'Brazil', group:'C', ground:'Miami' },
+  { round:'Matchday 14', date:'2026-06-24', time:'18:00 UTC-4', team1:'Morocco', team2:'Haiti', group:'C', ground:'Atlanta' },
+  // GROUP D
+  { round:'Matchday 2', date:'2026-06-12', time:'18:00 UTC-7', team1:'United States', team2:'Paraguay', group:'D', ground:'Los Angeles' },
+  { round:'Matchday 3', date:'2026-06-13', time:'21:00 UTC-7', team1:'Australia', team2:'Türkiye', group:'D', ground:'Vancouver' },
+  { round:'Matchday 9', date:'2026-06-19', time:'12:00 UTC-7', team1:'United States', team2:'Australia', group:'D', ground:'Seattle' },
+  { round:'Matchday 9', date:'2026-06-19', time:'21:00 UTC-7', team1:'Türkiye', team2:'Paraguay', group:'D', ground:'San Francisco Bay' },
+  { round:'Matchday 15', date:'2026-06-25', time:'19:00 UTC-7', team1:'Türkiye', team2:'United States', group:'D', ground:'Los Angeles' },
+  { round:'Matchday 15', date:'2026-06-25', time:'19:00 UTC-7', team1:'Paraguay', team2:'Australia', group:'D', ground:'San Francisco Bay' },
+  // GROUP E
+  { round:'Matchday 4', date:'2026-06-14', time:'12:00 UTC-5', team1:'Germany', team2:'Curaçao', group:'E', ground:'Houston' },
+  { round:'Matchday 4', date:'2026-06-14', time:'19:00 UTC-4', team1:'Ivory Coast', team2:'Ecuador', group:'E', ground:'Philadelphia' },
+  { round:'Matchday 10', date:'2026-06-20', time:'16:00 UTC-4', team1:'Germany', team2:'Ivory Coast', group:'E', ground:'Toronto' },
+  { round:'Matchday 10', date:'2026-06-20', time:'19:00 UTC-5', team1:'Ecuador', team2:'Curaçao', group:'E', ground:'Kansas City' },
+  { round:'Matchday 15', date:'2026-06-25', time:'16:00 UTC-4', team1:'Curaçao', team2:'Ivory Coast', group:'E', ground:'Philadelphia' },
+  { round:'Matchday 15', date:'2026-06-25', time:'16:00 UTC-4', team1:'Ecuador', team2:'Germany', group:'E', ground:'New York/NJ' },
+  // GROUP F
+  { round:'Matchday 4', date:'2026-06-14', time:'15:00 UTC-5', team1:'Netherlands', team2:'Japan', group:'F', ground:'Dallas' },
+  { round:'Matchday 4', date:'2026-06-14', time:'20:00 UTC-6', team1:'Sweden', team2:'Tunisia', group:'F', ground:'Monterrey' },
+  { round:'Matchday 10', date:'2026-06-20', time:'12:00 UTC-5', team1:'Netherlands', team2:'Sweden', group:'F', ground:'Houston' },
+  { round:'Matchday 10', date:'2026-06-20', time:'22:00 UTC-6', team1:'Tunisia', team2:'Japan', group:'F', ground:'Monterrey' },
+  { round:'Matchday 15', date:'2026-06-25', time:'18:00 UTC-5', team1:'Japan', team2:'Sweden', group:'F', ground:'Dallas' },
+  { round:'Matchday 15', date:'2026-06-25', time:'18:00 UTC-5', team1:'Tunisia', team2:'Netherlands', group:'F', ground:'Kansas City' },
+  // GROUP G
+  { round:'Matchday 5', date:'2026-06-15', time:'12:00 UTC-7', team1:'Belgium', team2:'Egypt', group:'G', ground:'Seattle' },
+  { round:'Matchday 5', date:'2026-06-15', time:'18:00 UTC-7', team1:'Iran', team2:'New Zealand', group:'G', ground:'Los Angeles' },
+  { round:'Matchday 11', date:'2026-06-21', time:'12:00 UTC-7', team1:'Belgium', team2:'Iran', group:'G', ground:'Los Angeles' },
+  { round:'Matchday 11', date:'2026-06-21', time:'18:00 UTC-7', team1:'New Zealand', team2:'Egypt', group:'G', ground:'Vancouver' },
+  { round:'Matchday 16', date:'2026-06-26', time:'20:00 UTC-7', team1:'Egypt', team2:'Iran', group:'G', ground:'Seattle' },
+  { round:'Matchday 16', date:'2026-06-26', time:'20:00 UTC-7', team1:'New Zealand', team2:'Belgium', group:'G', ground:'Vancouver' },
+  // GROUP H
+  { round:'Matchday 5', date:'2026-06-15', time:'12:00 UTC-4', team1:'Spain', team2:'Cape Verde', group:'H', ground:'Atlanta' },
+  { round:'Matchday 5', date:'2026-06-15', time:'18:00 UTC-4', team1:'Saudi Arabia', team2:'Uruguay', group:'H', ground:'Miami' },
+  { round:'Matchday 11', date:'2026-06-21', time:'12:00 UTC-4', team1:'Spain', team2:'Saudi Arabia', group:'H', ground:'Atlanta' },
+  { round:'Matchday 11', date:'2026-06-21', time:'18:00 UTC-4', team1:'Uruguay', team2:'Cape Verde', group:'H', ground:'Miami' },
+  { round:'Matchday 16', date:'2026-06-26', time:'19:00 UTC-5', team1:'Cape Verde', team2:'Saudi Arabia', group:'H', ground:'Houston' },
+  { round:'Matchday 16', date:'2026-06-26', time:'18:00 UTC-6', team1:'Uruguay', team2:'Spain', group:'H', ground:'Guadalajara' },
+  // GROUP I
+  { round:'Matchday 6', date:'2026-06-16', time:'15:00 UTC-4', team1:'France', team2:'Senegal', group:'I', ground:'New York/NJ' },
+  { round:'Matchday 6', date:'2026-06-16', time:'18:00 UTC-4', team1:'Iraq', team2:'Norway', group:'I', ground:'Boston' },
+  { round:'Matchday 12', date:'2026-06-22', time:'17:00 UTC-4', team1:'France', team2:'Iraq', group:'I', ground:'Philadelphia' },
+  { round:'Matchday 12', date:'2026-06-22', time:'20:00 UTC-4', team1:'Norway', team2:'Senegal', group:'I', ground:'New York/NJ' },
+  { round:'Matchday 16', date:'2026-06-26', time:'15:00 UTC-4', team1:'Norway', team2:'France', group:'I', ground:'Boston' },
+  { round:'Matchday 16', date:'2026-06-26', time:'15:00 UTC-4', team1:'Senegal', team2:'Iraq', group:'I', ground:'Toronto' },
+  // GROUP J
+  { round:'Matchday 6', date:'2026-06-16', time:'20:00 UTC-5', team1:'Argentina', team2:'Algeria', group:'J', ground:'Kansas City' },
+  { round:'Matchday 6', date:'2026-06-16', time:'21:00 UTC-7', team1:'Austria', team2:'Jordan', group:'J', ground:'San Francisco Bay' },
+  { round:'Matchday 12', date:'2026-06-22', time:'12:00 UTC-5', team1:'Argentina', team2:'Austria', group:'J', ground:'Dallas' },
+  { round:'Matchday 12', date:'2026-06-22', time:'20:00 UTC-7', team1:'Jordan', team2:'Algeria', group:'J', ground:'San Francisco Bay' },
+  { round:'Matchday 17', date:'2026-06-27', time:'21:00 UTC-5', team1:'Algeria', team2:'Austria', group:'J', ground:'Kansas City' },
+  { round:'Matchday 17', date:'2026-06-27', time:'21:00 UTC-5', team1:'Jordan', team2:'Argentina', group:'J', ground:'Dallas' },
+  // GROUP K
+  { round:'Matchday 7', date:'2026-06-17', time:'12:00 UTC-5', team1:'Portugal', team2:'Congo DR', group:'K', ground:'Houston' },
+  { round:'Matchday 7', date:'2026-06-17', time:'20:00 UTC-6', team1:'Uzbekistan', team2:'Colombia', group:'K', ground:'Mexico City' },
+  { round:'Matchday 13', date:'2026-06-23', time:'12:00 UTC-5', team1:'Portugal', team2:'Uzbekistan', group:'K', ground:'Houston' },
+  { round:'Matchday 13', date:'2026-06-23', time:'20:00 UTC-6', team1:'Colombia', team2:'Congo DR', group:'K', ground:'Guadalajara' },
+  { round:'Matchday 17', date:'2026-06-27', time:'19:30 UTC-4', team1:'Colombia', team2:'Portugal', group:'K', ground:'Miami' },
+  { round:'Matchday 17', date:'2026-06-27', time:'19:30 UTC-4', team1:'Congo DR', team2:'Uzbekistan', group:'K', ground:'Atlanta' },
+  // GROUP L
+  { round:'Matchday 7', date:'2026-06-17', time:'15:00 UTC-5', team1:'England', team2:'Croatia', group:'L', ground:'Dallas' },
+  { round:'Matchday 7', date:'2026-06-17', time:'19:00 UTC-4', team1:'Ghana', team2:'Panama', group:'L', ground:'Toronto' },
+  { round:'Matchday 13', date:'2026-06-23', time:'16:00 UTC-4', team1:'England', team2:'Ghana', group:'L', ground:'Boston' },
+  { round:'Matchday 13', date:'2026-06-23', time:'19:00 UTC-4', team1:'Panama', team2:'Croatia', group:'L', ground:'Toronto' },
+  { round:'Matchday 17', date:'2026-06-27', time:'17:00 UTC-4', team1:'Panama', team2:'England', group:'L', ground:'New York/NJ' },
+  { round:'Matchday 17', date:'2026-06-27', time:'17:00 UTC-4', team1:'Croatia', team2:'Ghana', group:'L', ground:'Philadelphia' },
+  // ROUND OF 32 (placeholders; resolved as group stage completes)
+  { round:'Round of 32', num:73, date:'2026-06-28', time:'12:00 UTC-7', team1:'2A', team2:'2B', ground:'Los Angeles' },
+  { round:'Round of 32', num:74, date:'2026-06-29', time:'16:30 UTC-4', team1:'1E', team2:'3A/B/C/D/F', ground:'Boston' },
+  { round:'Round of 32', num:75, date:'2026-06-29', time:'19:00 UTC-6', team1:'1F', team2:'2C', ground:'Monterrey' },
+  { round:'Round of 32', num:76, date:'2026-06-29', time:'12:00 UTC-5', team1:'1C', team2:'2F', ground:'Houston' },
+  { round:'Round of 32', num:77, date:'2026-06-30', time:'17:00 UTC-4', team1:'1I', team2:'3C/D/F/G/H', ground:'New York/NJ' },
+  { round:'Round of 32', num:78, date:'2026-06-30', time:'12:00 UTC-5', team1:'2E', team2:'2I', ground:'Dallas' },
+  { round:'Round of 32', num:79, date:'2026-06-30', time:'19:00 UTC-6', team1:'1A', team2:'3C/E/F/H/I', ground:'Mexico City' },
+  { round:'Round of 32', num:80, date:'2026-07-01', time:'12:00 UTC-4', team1:'1L', team2:'3E/H/I/J/K', ground:'Atlanta' },
+  { round:'Round of 32', num:81, date:'2026-07-01', time:'17:00 UTC-7', team1:'1D', team2:'3B/E/F/I/J', ground:'San Francisco Bay' },
+  { round:'Round of 32', num:82, date:'2026-07-01', time:'13:00 UTC-7', team1:'1G', team2:'3A/E/H/I/J', ground:'Seattle' },
+  { round:'Round of 32', num:83, date:'2026-07-02', time:'19:00 UTC-4', team1:'2K', team2:'2L', ground:'Toronto' },
+  { round:'Round of 32', num:84, date:'2026-07-02', time:'12:00 UTC-7', team1:'1H', team2:'2J', ground:'Los Angeles' },
+  { round:'Round of 32', num:85, date:'2026-07-02', time:'20:00 UTC-7', team1:'1B', team2:'3E/F/G/I/J', ground:'Vancouver' },
+  { round:'Round of 32', num:86, date:'2026-07-03', time:'18:00 UTC-4', team1:'1J', team2:'2H', ground:'Miami' },
+  { round:'Round of 32', num:87, date:'2026-07-03', time:'20:30 UTC-5', team1:'1K', team2:'3D/E/I/J/L', ground:'Kansas City' },
+  { round:'Round of 32', num:88, date:'2026-07-03', time:'13:00 UTC-5', team1:'2D', team2:'2G', ground:'Dallas' },
+  // ROUND OF 16
+  { round:'Round of 16', num:89, date:'2026-07-04', time:'17:00 UTC-4', team1:'W74', team2:'W77', ground:'Philadelphia' },
+  { round:'Round of 16', num:90, date:'2026-07-04', time:'12:00 UTC-5', team1:'W73', team2:'W75', ground:'Houston' },
+  { round:'Round of 16', num:91, date:'2026-07-05', time:'16:00 UTC-4', team1:'W76', team2:'W78', ground:'New York/NJ' },
+  { round:'Round of 16', num:92, date:'2026-07-05', time:'18:00 UTC-6', team1:'W79', team2:'W80', ground:'Mexico City' },
+  { round:'Round of 16', num:93, date:'2026-07-06', time:'14:00 UTC-5', team1:'W83', team2:'W84', ground:'Dallas' },
+  { round:'Round of 16', num:94, date:'2026-07-06', time:'17:00 UTC-7', team1:'W81', team2:'W82', ground:'Seattle' },
+  { round:'Round of 16', num:95, date:'2026-07-07', time:'12:00 UTC-4', team1:'W86', team2:'W88', ground:'Atlanta' },
+  { round:'Round of 16', num:96, date:'2026-07-07', time:'13:00 UTC-7', team1:'W85', team2:'W87', ground:'Vancouver' },
+  // QUARTERS
+  { round:'Quarter-final', num:97, date:'2026-07-09', time:'16:00 UTC-4', team1:'W89', team2:'W90', ground:'Boston' },
+  { round:'Quarter-final', num:98, date:'2026-07-10', time:'12:00 UTC-7', team1:'W93', team2:'W94', ground:'Los Angeles' },
+  { round:'Quarter-final', num:99, date:'2026-07-11', time:'17:00 UTC-4', team1:'W91', team2:'W92', ground:'Miami' },
+  { round:'Quarter-final', num:100, date:'2026-07-11', time:'20:00 UTC-5', team1:'W95', team2:'W96', ground:'Kansas City' },
+  // SEMIS
+  { round:'Semi-final', num:101, date:'2026-07-14', time:'14:00 UTC-5', team1:'W97', team2:'W98', ground:'Dallas' },
+  { round:'Semi-final', num:102, date:'2026-07-15', time:'15:00 UTC-4', team1:'W99', team2:'W100', ground:'Atlanta' },
+  // 3RD PLACE + FINAL
+  { round:'Match for third place', date:'2026-07-18', time:'17:00 UTC-4', team1:'L101', team2:'L102', ground:'Miami' },
+  { round:'Final', date:'2026-07-19', time:'15:00 UTC-4', team1:'W101', team2:'W102', ground:'New York/NJ' },
+];
+
+// Initialise state.matches if empty
+if (!state.matches || state.matches.length === 0) {
+  state.matches = SCHEDULE_2026.map(m => ({
+    ...m,
+    key: matchKey(m),
+    score1: null, score2: null, pens1: null, pens2: null,
+  }));
+  saveState();
+}
+
+// ============================================================================
+// 5.  DRAFT ENGINE
+// ============================================================================
+
+/**
+ * Build the draft pick order. Each of 12 groups gets 4 picks (one per player),
+ * so all 48 teams are drafted — no spoilers. Pick-order within each group
+ * rotates via a 4×4 Latin square repeated 3 times: each player picks at each
+ * position (1st, 2nd, 3rd, 4th) exactly 3 times across the 12 groups.
+ *
+ * Returns array of { group, pickIndex, playerIdx } in pick order — length 48.
+ */
+function buildPickOrder(playerCount = 4) {
+  const order = [];
+  // Three orthogonal 4×4 Latin squares stacked, giving 12 groups with balance
+  const baseOrders = [
+    [0,1,2,3], [1,0,3,2], [2,3,0,1], [3,2,1,0],
+    [0,2,3,1], [1,3,2,0], [2,0,1,3], [3,1,0,2],
+    [0,3,1,2], [1,2,0,3], [2,1,3,0], [3,0,2,1],
+  ];
+  GROUPS.forEach((g, gi) => {
+    const ordering = baseOrders[gi % baseOrders.length];
+    ordering.forEach((p, i) => {
+      order.push({ group: g, pickIndex: i, playerIdx: p });
+    });
+  });
+  return order;
+}
+
+function teamsInGroup(g) {
+  return Object.keys(TEAMS)
+    .filter(t => TEAMS[t].group === g)
+    .sort((a,b) => TEAMS[a].seed - TEAMS[b].seed);
+}
+
+function draftedTeams() {
+  return Object.values(state.rosters).flat();
+}
+
+// ── DEVICE SEATS ──────────────────────────────────────────────────────────
+// Which players pick from THIS device (kept local, never synced). At Mom's
+// house one shared device can claim two seats. No seats claimed = open device.
+const SEATS_KEY = 'wc2026_device_seats_v1';
+function deviceSeats() {
+  try { return JSON.parse(localStorage.getItem(SEATS_KEY)) || []; }
+  catch (e) { return []; }
+}
+function toggleSeat(i) {
+  const s = deviceSeats();
+  const ix = s.indexOf(i);
+  if (ix >= 0) s.splice(ix, 1); else s.push(i);
+  localStorage.setItem(SEATS_KEY, JSON.stringify(s));
+  renderAll();
+}
+function deviceMayPick(playerIdx) {
+  const s = deviceSeats();
+  return s.length === 0 || s.includes(playerIdx);
+}
+
+function currentPick() {
+  if (state.draftComplete) return null;
+  const order = buildPickOrder();
+  return order[state.draftPickIdx];
+}
+
+async function pickTeam(teamName) {
+  if (_pickBusy) return; // double-tap guard
+  _pickBusy = true;
+  try {
+    // LIVE-DRAFT SAFETY: re-sync with the cloud before committing, so a stale
+    // device can't overwrite someone else's pick.
+    if (cloudConfigured()) {
+      const before = state.draftPickIdx;
+      await pullFromCloud();
+      if (state.draftPickIdx !== before) {
+        toast('Draft updated from another house — board refreshed. Check whose turn it is!', true);
+        renderAll();
+        return;
+      }
+    }
+    const pick = currentPick();
+    if (!pick) return;
+    const team = TEAMS[teamName];
+    if (!team || team.group !== pick.group) {
+      toast('That team is not in the current draft group.', true);
+      return;
+    }
+    if (draftedTeams().includes(teamName)) {
+      toast('Already drafted.', true);
+      return;
+    }
+    if (!state.rosters[pick.playerIdx]) state.rosters[pick.playerIdx] = [];
+    state.rosters[pick.playerIdx].push(teamName);
+    state.draftPickIdx++;
+    // With 4 players × 12 groups, every team gets drafted — no spoilers.
+    if (state.draftPickIdx >= 48) {
+      finalizeDraft();
+    }
+    saveState({ skipCloudPush: true });
+    renderAll();
+    // Push the pick to the family IMMEDIATELY (no debounce), retry once.
+    if (cloudConfigured()) {
+      let okPush = await pushToCloud();
+      if (!okPush) okPush = await pushToCloud();
+      if (!okPush) {
+        toast('Pick saved on this device but not synced yet — will keep retrying.', true);
+        debouncedCloudPush();
+      }
+    }
+  } finally {
+    _pickBusy = false;
+  }
+}
+
+function finalizeDraft() {
+  // Sweep up any remaining undrafted teams as spoilers
+  const drafted = draftedTeams();
+  Object.keys(TEAMS).forEach(t => {
+    if (!drafted.includes(t) && !state.spoilers.includes(t)) state.spoilers.push(t);
+  });
+  state.draftComplete = true;
+  saveState();
+  toast('🏆 DRAFT COMPLETE! USA! USA! USA! May the best patriot win! 🇺🇸');
+}
+
+function ownerOfTeam(team) {
+  for (let i = 0; i < (state.players?.length || 0); i++) {
+    if ((state.rosters[i] || []).includes(team)) return i;
+  }
+  return -1;
+}
+
+// ============================================================================
+// 6.  SCORING ENGINE
+// ============================================================================
+
+/**
+ * Score a single match for both teams.
+ * Returns { team1: { ownerIdx, pts, breakdown }, team2: { ... } }
+ *
+ * Wins-based scoring (simple & clear):
+ *   Win:  3 pts  ×  round multiplier
+ *   Draw: 1 pt   ×  round multiplier  (each team)
+ *   Loss: 0 pts
+ *
+ * Knockout rounds also: +3 pts × multiplier to whoever advances
+ * (regulation winner, or penalty-shootout winner if drawn).
+ *
+ * Goals scored / clean sheets / margin of victory do NOT add points.
+ */
+function scoreMatch(m) {
+  if (m.score1 == null || m.score2 == null) return null;
+  const round = roundOf(m);
+  const mult = ROUND_MULT[round];
+  const t1 = mapTeamName(m.team1);
+  const t2 = mapTeamName(m.team2);
+
+  // Guard against bad input (e.g. user types -1)
+  const s1 = Math.max(0, Number(m.score1) || 0);
+  const s2 = Math.max(0, Number(m.score2) || 0);
+  const breakdown1 = [], breakdown2 = [];
+  let pts1 = 0, pts2 = 0;
+
+  // Result points
+  if (s1 > s2) {
+    pts1 += 3; breakdown1.push({ label: 'Win', pts: 3 });
+    breakdown2.push({ label: 'Loss', pts: 0 });
+  } else if (s2 > s1) {
+    pts2 += 3; breakdown2.push({ label: 'Win', pts: 3 });
+    breakdown1.push({ label: 'Loss', pts: 0 });
+  } else {
+    pts1 += 1; breakdown1.push({ label: 'Draw', pts: 1 });
+    pts2 += 1; breakdown2.push({ label: 'Draw', pts: 1 });
+  }
+
+  // Knockout: advance bonus to the team that moves on
+  if (round !== 'group') {
+    let advancer = null;
+    if (s1 > s2) advancer = 1;
+    else if (s2 > s1) advancer = 2;
+    else if (m.pens1 != null && m.pens2 != null) {
+      advancer = Number(m.pens1) > Number(m.pens2) ? 1 : 2;
+    }
+    if (advancer === 1) { pts1 += 3; breakdown1.push({ label: 'Advanced', pts: 3 }); }
+    if (advancer === 2) { pts2 += 3; breakdown2.push({ label: 'Advanced', pts: 3 }); }
+  }
+
+  // Apply round multiplier
+  pts1 *= mult; pts2 *= mult;
+  breakdown1.forEach(b => b.pts *= mult);
+  breakdown2.forEach(b => b.pts *= mult);
+
+  return {
+    round, mult,
+    team1: { name: t1, ownerIdx: ownerOfTeam(t1), pts: pts1, breakdown: breakdown1 },
+    team2: { name: t2, ownerIdx: ownerOfTeam(t2), pts: pts2, breakdown: breakdown2 },
+  };
+}
+
+function totalPoints(playerIdx) {
+  let total = 0;
+  state.matches.forEach(m => {
+    const s = scoreMatch(m);
+    if (!s) return;
+    if (s.team1.ownerIdx === playerIdx) total += s.team1.pts;
+    if (s.team2.ownerIdx === playerIdx) total += s.team2.pts;
+  });
+  return total;
+}
+
+function teamPoints(teamName) {
+  let total = 0;
+  const games = [];
+  state.matches.forEach(m => {
+    const s = scoreMatch(m);
+    if (!s) return;
+    if (s.team1.name === teamName) { total += s.team1.pts; games.push({m, side:1, pts: s.team1.pts, breakdown: s.team1.breakdown, round: s.round}); }
+    if (s.team2.name === teamName) { total += s.team2.pts; games.push({m, side:2, pts: s.team2.pts, breakdown: s.team2.breakdown, round: s.round}); }
+  });
+  return { total, games };
+}
+
+// ============================================================================
+// 7.  LIVE SCORE SYNC (openfootball)
+// ============================================================================
+const FEED_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+
+async function syncFromFeed() {
+  toast('🦅 Pulling the latest scores…');
+  try {
+    const res = await fetch(FEED_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    let updated = 0, resolved = 0;
+    data.matches.forEach(remote => {
+      const t1 = mapTeamName(remote.team1);
+      const t2 = mapTeamName(remote.team2);
+
+      // For knockout games, prefer matching by num (placeholders get filled in over time)
+      let local = null;
+      if (remote.num != null) {
+        local = state.matches.find(m => m.num === remote.num);
+      }
+      if (!local) {
+        local = state.matches.find(m =>
+          m.date === remote.date &&
+          mapTeamName(m.team1) === t1 &&
+          mapTeamName(m.team2) === t2
+        );
+      }
+      if (!local) return;
+
+      // If the remote has resolved actual team names while local still has
+      // placeholders (e.g. "1A" → "Mexico"), update them in place.
+      if (TEAMS[t1] && !TEAMS[mapTeamName(local.team1)]) {
+        local.team1 = t1; resolved++;
+      }
+      if (TEAMS[t2] && !TEAMS[mapTeamName(local.team2)]) {
+        local.team2 = t2; resolved++;
+      }
+
+      // Pull scores in either supported schema
+      if (remote.score && typeof remote.score.ft !== 'undefined') {
+        local.score1 = remote.score.ft[0];
+        local.score2 = remote.score.ft[1];
+        if (remote.score.p) { local.pens1 = remote.score.p[0]; local.pens2 = remote.score.p[1]; }
+        updated++;
+      } else if (typeof remote.score1 !== 'undefined' && remote.score1 !== null) {
+        local.score1 = remote.score1;
+        local.score2 = remote.score2;
+        if (remote.pens1 != null) { local.pens1 = remote.pens1; local.pens2 = remote.pens2; }
+        updated++;
+      }
+    });
+    state.lastSync = new Date().toISOString();
+    saveState();
+    renderAll();
+    const parts = [];
+    if (updated) parts.push(`${updated} result${updated !== 1 ? 's' : ''}`);
+    if (resolved) parts.push(`${resolved} bracket slot${resolved !== 1 ? 's' : ''} resolved`);
+    toast('Synced. ' + (parts.length ? parts.join(', ') + '.' : 'No new updates.'));
+  } catch (e) {
+    console.error('sync failed', e);
+    toast('Sync failed: ' + e.message + '. Enter scores manually below.', true);
+  }
+}
+
+// ============================================================================
+// 7.5  CLOUD SYNC (jsonblob.com — free, no signup, ~30-day retention)
+// ============================================================================
+const CLOUD_API = 'https://jsonblob.com/api/jsonBlob';
+let _cloudPushTimer = null;
+let _cloudPullTimer = null;
+
+function cloudConfigured() { return !!state.cloudGameId; }
+
+function stripCloudKeys(s) {
+  // Don't store cloud meta inside the cloud blob — avoids recursion confusion
+  const copy = { ...s };
+  delete copy.cloudGameId;
+  delete copy.cloudLastPushed;
+  delete copy.cloudLastPulled;
+  return copy;
+}
+
+let _pushInFlight = false;
+let _pickBusy = false;
+let _lastSeenSavedAt = null;
+
+async function createCloudGame() {
+  toast('Creating cloud game…');
+  try {
+    const payload = { v: 1, savedAt: new Date().toISOString(), state: stripCloudKeys(state) };
+    const res = await fetch(CLOUD_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const loc = res.headers.get('Location') || res.headers.get('location');
+    if (!loc) throw new Error('Could not read Location header (CORS issue?)');
+    const id = loc.split('/').pop();
+    state.cloudGameId = id;
+    state.cloudLastPushed = payload.savedAt;
+    _lastSeenSavedAt = payload.savedAt;
+    saveState({ skipCloudPush: true });
+    renderAll();
+    startCloudPolling();
+    toast('Cloud game created. Copy the share link to send to your family.');
+    return id;
+  } catch (e) {
+    console.error('createCloudGame failed', e);
+    toast('Could not create cloud game: ' + e.message, true);
+    return null;
+  }
+}
+
+async function joinCloudGame(id, opts = {}) {
+  id = (id || '').trim();
+  if (!id) { toast('Enter a game code or paste a share link.', true); return false; }
+  // Allow pasting a share URL — extract the ID
+  const m = id.match(/(?:jsonBlob\/|[?&]game=)([A-Za-z0-9_-]+)/);
+  if (m) id = m[1];
+  if (!opts.silent) toast('Joining cloud game…');
+  try {
+    const res = await fetch(`${CLOUD_API}/${id}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' — game code not found');
+    const payload = await res.json();
+    if (!payload || !payload.state) throw new Error('Unexpected payload from cloud.');
+    // Warn if user already has a draft locally
+    const hasLocal = state.players && state.players.length > 0 && state.cloudGameId !== id;
+    if (hasLocal && !opts.overwriteSilently) {
+      if (!confirm('Joining this cloud game will replace your local draft and scores with the family\'s shared game. Continue?')) {
+        return false;
+      }
+    }
+    // Adopt remote state — preserve cloud connection metadata
+    state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
+    state.cloudGameId = id;
+    state.cloudLastPulled = new Date().toISOString();
+    _lastSeenSavedAt = payload.savedAt || null;
+    saveState({ skipCloudPush: true });
+    renderAll();
+    startCloudPolling();
+    if (!opts.silent) toast('Joined! Updates will sync automatically across devices.');
+    return true;
+  } catch (e) {
+    console.error('joinCloudGame failed', e);
+    if (!opts.silent) toast('Join failed: ' + e.message, true);
+    return false;
+  }
+}
+
+async function pushToCloud() {
+  if (!cloudConfigured()) return false;
+  _pushInFlight = true;
+  try {
+    const payload = { v: 1, savedAt: new Date().toISOString(), state: stripCloudKeys(state) };
+    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    state.cloudLastPushed = payload.savedAt;
+    _lastSeenSavedAt = payload.savedAt;
+    saveState({ skipCloudPush: true });
+    updateCloudStatusLine();
+    return true;
+  } catch (e) {
+    console.error('pushToCloud failed', e);
+    return false; // transient — state stays in localStorage
+  } finally {
+    _pushInFlight = false;
+  }
+}
+
+async function pullFromCloud(opts = {}) {
+  if (!cloudConfigured()) return false;
+  if (_pushInFlight) return false; // don't pull mid-push
+  try {
+    const res = await fetch(`${CLOUD_API}/${state.cloudGameId}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const payload = await res.json();
+    if (!payload || !payload.state) return false;
+    // Skip if we've already seen this exact version (avoids re-render flicker)
+    if (!opts.force && payload.savedAt && payload.savedAt === _lastSeenSavedAt) return false;
+    // Skip if remote isn't strictly newer than what we last pushed (last-write-wins)
+    if (!opts.force && state.cloudLastPushed && payload.savedAt && payload.savedAt <= state.cloudLastPushed) {
+      _lastSeenSavedAt = payload.savedAt;
+      return false;
+    }
+    const cloudGameId = state.cloudGameId;
+    state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.state };
+    state.cloudGameId = cloudGameId;
+    state.cloudLastPulled = new Date().toISOString();
+    _lastSeenSavedAt = payload.savedAt || null;
+    saveState({ skipCloudPush: true });
+    // Preserve scroll position — background pulls shouldn't yank the page around
+    const y = window.scrollY;
+    renderAll();
+    window.scrollTo(0, y);
+    if (opts.force) toast('Synced from cloud.');
+    return true;
+  } catch (e) {
+    console.error('pullFromCloud failed', e);
+    if (opts.force) toast('Pull failed: ' + e.message, true);
+    return false;
+  }
+}
+
+function disconnectCloud() {
+  state.cloudGameId = null;
+  state.cloudLastPushed = null;
+  state.cloudLastPulled = null;
+  stopCloudPolling();
+  saveState({ skipCloudPush: true });
+  renderAll();
+  toast('Disconnected. Your local data is unchanged.');
+}
+
+function debouncedCloudPush() {
+  if (!cloudConfigured()) return;
+  clearTimeout(_cloudPushTimer);
+  _cloudPushTimer = setTimeout(pushToCloud, 1500);
+}
+
+function pollMs() {
+  // Draft night needs near-live updates; afterwards a lazy poll is plenty.
+  const drafting = state.players && state.players.length > 0 && !state.draftComplete;
+  return drafting ? 4000 : 45000;
+}
+
+function stopCloudPolling() {
+  if (_cloudPullTimer) { clearTimeout(_cloudPullTimer); _cloudPullTimer = null; }
+}
+
+function startCloudPolling() {
+  stopCloudPolling();
+  const loop = async () => {
+    if (!cloudConfigured()) { _cloudPullTimer = null; return; }
+    if (!document.hidden && !_pickBusy) {
+      try { await pullFromCloud(); } catch (e) { /* transient */ }
+    }
+    _cloudPullTimer = setTimeout(loop, pollMs());
+  };
+  _cloudPullTimer = setTimeout(loop, pollMs());
+}
+
+function shareableLink() {
+  if (!cloudConfigured()) return '';
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?game=${state.cloudGameId}`;
+}
+
+function updateCloudStatusLine() {
+  const el = document.getElementById('cloud-status-text');
+  if (el && cloudConfigured()) {
+    const ts = state.cloudLastPushed || state.cloudLastPulled;
+    el.textContent = ts
+      ? `✓ Connected · last sync ${new Date(ts).toLocaleTimeString()}`
+      : '✓ Connected';
+  }
+}
+
+// ============================================================================
+// 8.  RENDER HELPERS
+// ============================================================================
+function $(sel) { return document.querySelector(sel); }
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.setAttribute('style', v);
+    else if (k.startsWith('on') && typeof v === 'function') e[k] = v;
+    else if (v !== undefined && v !== null) e.setAttribute(k, v);
+  });
+  kids.flat().forEach(k => {
+    if (k == null) return;
+    if (typeof k === 'string' || typeof k === 'number') e.appendChild(document.createTextNode(k));
+    else e.appendChild(k);
+  });
+  return e;
+}
+function toast(msg, isError = false) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = el('div', { class: 'toast' + (isError ? ' error' : '') }, msg);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function ownerPill(idx) {
+  if (idx < 0) return el('span', { class: 'owner-tag', style: 'background: var(--spoiler); color: white;' }, 'Spoiler');
+  const p = state.players[idx];
+  return el('span', { class: 'owner-tag', style: `background: ${PLAYER_COLORS[idx]}` }, p ? p.name : '?');
+}
+
+function seedBadge(teamName) {
+  const seed = TEAMS[teamName]?.seed;
+  if (!seed) return null;
+  const cfg = SEED_LABEL[seed];
+  return el('span', {
+    class: 'seed-badge',
+    style: `background: ${cfg.bg}; color: ${cfg.color};`,
+    title: `#${seed} in group by tournament odds`
+  },
+    el('span', { class: 'num' }, '#' + seed),
+    cfg.text
+  );
+}
+
+// ============================================================================
+// 9.  TABS & RENDERING
+// ============================================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById('tab-' + tab.dataset.tab).style.display = '';
+  });
+});
+
+function renderAll() {
+  renderScoreboard();
+  renderToday();
+  renderDraft();
+  renderStandings();
+  renderSchedule();
+  renderRosters();
+  renderSettings();
+}
+
+// ----- HEADER SCOREBOARD -----
+function renderScoreboard() {
+  const sb = $('#scoreboard');
+  sb.innerHTML = '';
+  if (!state.players || state.players.length === 0) {
+    sb.appendChild(el('span', { class: 'small' }, 'Set up players in the Draft tab →'));
+    return;
+  }
+  state.players.forEach((p, i) => {
+    const pts = totalPoints(i);
+    sb.appendChild(el('div', { class: 'score-pill' },
+      el('span', { class: 'dot', style: `background: ${PLAYER_COLORS[i]}` }),
+      el('span', {}, p.name),
+      el('span', { class: 'pts' }, pts + ' pts')
+    ));
+  });
+  // Cloud-sync indicator
+  if (cloudConfigured()) {
+    sb.appendChild(el('div', {
+      class: 'score-pill',
+      title: 'Cloud-synced — all family devices see live updates',
+      style: 'background: rgba(6, 214, 160, 0.12); border-color: var(--green); color: var(--green);'
+    },
+      el('span', {}, '🌐'),
+      el('span', { style: 'font-size: 12px;' }, 'Live')
+    ));
+  }
+}
+
+// ----- TODAY TAB -----
+function renderToday() {
+  const root = $('#tab-today');
+  root.innerHTML = '';
+
+  if (!state.players || state.players.length === 0) {
+    root.appendChild(el('div', { class: 'panel' },
+      el('h2', {}, '🇺🇸 WELCOME, PATRIOTS! 🇺🇸'),
+      el('div', { class: 'sub', style: 'font-size: 15px; line-height: 1.6;' },
+        'This is the GREATEST family World Cup draft in HISTORY — believe me, folks. ' +
+        'Four red-blooded Americans will snake-draft 12 teams each (1 per group). ' +
+        'All 48 teams get drafted — every single match has somebody to cheer for. ' +
+        'Knockout rounds pay BIGLY: Round of 32 worth 2×, Final worth a TREMENDOUS 13×. ' +
+        'Tap the Draft tab and let\'s make this World Cup GREAT AGAIN. 🦅'),
+      el('div', { class: 'row' },
+        el('button', { onclick: () => switchTab('draft') }, '⭐ LET\'S GO! Set Up Draft →'),
+        el('button', { class: 'ghost', onclick: () => switchTab('settings') }, '📖 How Scoring Works')
+      )
+    ));
+    return;
+  }
+
+  // Today / upcoming matches
+  const today = new Date().toISOString().slice(0, 10);
+  const todayMatches = state.matches.filter(m => m.date === today);
+  const nextMatches = state.matches
+    .filter(m => m.date > today && !hasResult(m))
+    .slice(0, 5);
+
+  if (todayMatches.length > 0) {
+    const banner = el('div', { class: 'today-banner' },
+      el('h2', {}, `🦅 GAME DAY IN AMERICA · ${todayMatches.length} MATCH${todayMatches.length>1?'ES':''} 🦅`),
+      el('div', { class: 'small', style: 'font-weight:700; letter-spacing:0.5px;' }, '🇺🇸 USA · USA · USA · The cheer cards below tell you which patriot to root with 🇺🇸'));
+    root.appendChild(banner);
+    todayMatches.forEach(m => root.appendChild(renderMatchCard(m, true)));
+  } else {
+    root.appendChild(el('div', { class: 'today-banner' },
+      el('h2', {}, nextMatches.length ? '⭐ NO GAMES TODAY — STAY READY ⭐' : '🏆 TOURNAMENT COMPLETE — A TREMENDOUS RUN 🏆'),
+      el('div', { class: 'small' }, nextMatches.length ? 'Next up on the schedule:' : 'Check the Rankings tab to crown the champion!'),
+    ));
+  }
+
+  if (nextMatches.length > 0) {
+    const panel = el('div', { class: 'panel' }, el('h2', {}, 'Upcoming'));
+    nextMatches.forEach(m => panel.appendChild(renderMatchCard(m, true)));
+    root.appendChild(panel);
+  }
+
+  // Recent results
+  const recent = state.matches.filter(m => hasResult(m)).slice(-4).reverse();
+  if (recent.length > 0) {
+    const panel = el('div', { class: 'panel' }, el('h2', {}, 'Recent results'));
+    recent.forEach(m => panel.appendChild(renderMatchCard(m, false)));
+    root.appendChild(panel);
+  }
+}
+
+function hasResult(m) {
+  return m.score1 != null && m.score2 != null;
+}
+
+function switchTab(name) {
+  document.querySelector(`.tab[data-tab="${name}"]`).click();
+}
+
+// ----- MATCH CARD (reused everywhere) -----
+function renderMatchCard(m, showOwners = true) {
+  const round = roundOf(m);
+  const mult = ROUND_MULT[round];
+  const t1 = mapTeamName(m.team1);
+  const t2 = mapTeamName(m.team2);
+  const flag1 = TEAMS[t1]?.flag || '⚽';
+  const flag2 = TEAMS[t2]?.flag || '⚽';
+  const ownerIdx1 = ownerOfTeam(t1);
+  const ownerIdx2 = ownerOfTeam(t2);
+
+  const ownerClass = (() => {
+    if (ownerIdx1 < 0 && ownerIdx2 < 0) return '';
+    if (ownerIdx1 >= 0 && ownerIdx2 >= 0) return ''; // both owned: no border
+    return ownerIdx1 >= 0 ? `owned-p${ownerIdx1+1}` : `owned-p${ownerIdx2+1}`;
+  })();
+
+  const card = el('div', { class: 'match-card ' + ownerClass });
+
+  // Meta row
+  card.appendChild(el('div', { class: 'match-meta' },
+    el('span', {}, `${m.date} · ${m.time || ''} · ${m.ground || ''}`),
+    el('span', {},
+      el('span', { class: 'badge' + (round !== 'group' ? ' ko' : '') }, ROUND_NAME[round]),
+      mult > 1 ? el('span', { class: 'badge', style: 'margin-left:6px; background: var(--accent); color: #1a1a1a; border-color: var(--accent);' }, `×${mult}`) : null,
+    ),
+  ));
+
+  // Teams + score
+  const scored = hasResult(m);
+  const scoreText = scored ? `${m.score1}–${m.score2}` : (m.time ? 'TBD' : '—');
+  const teamsRow = el('div', { class: 'match-teams' },
+    el('div', { class: 'match-team' },
+      el('span', { class: 'flag' }, flag1),
+      el('span', {}, t1),
+      showOwners ? ownerPill(ownerIdx1) : null,
+    ),
+    el('div', { class: 'score' + (scored ? ' live' : ' scheduled') }, scoreText),
+    el('div', { class: 'match-team right' },
+      showOwners ? ownerPill(ownerIdx2) : null,
+      el('span', {}, t2),
+      el('span', { class: 'flag' }, flag2),
+    ),
+  );
+  card.appendChild(teamsRow);
+
+  // Pen shootout indicator
+  if (scored && m.pens1 != null && m.pens2 != null) {
+    card.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:4px;' },
+      `Pens: ${m.pens1}–${m.pens2}`));
+  }
+
+  // Score breakdown for played matches — show BOTH sides explicitly
+  // so nobody wonders why a player did or didn't get points.
+  if (scored) {
+    const s = scoreMatch(m);
+    if (s) {
+      const extras = el('div', { class: 'match-extras' });
+      const renderSide = (side, name) => {
+        if (side.ownerIdx < 0) return;
+        const breakdown = side.breakdown.map(b => b.label).join(' + ') || '—';
+        const bg = side.pts > 0 ? PLAYER_COLORS[side.ownerIdx] : 'rgba(255,255,255,0.08)';
+        const fg = side.pts > 0 ? '#1a1a1a' : 'var(--muted)';
+        const border = side.pts > 0 ? 'transparent' : 'var(--border)';
+        extras.appendChild(el('span', {
+          class: 'pts-pill',
+          style: `background: ${bg}; color: ${fg}; border: 1px solid ${border};`
+        }, `${state.players[side.ownerIdx].name}: ${side.pts > 0 ? '+' : ''}${side.pts}  ·  ${breakdown}`));
+      };
+      renderSide(s.team1, mapTeamName(m.team1));
+      renderSide(s.team2, mapTeamName(m.team2));
+      if (s.mult > 1) {
+        extras.appendChild(el('span', { class: 'pts-pill', style: 'background: var(--accent); color: #1a1a1a;' },
+          `×${s.mult} ${ROUND_NAME[s.round]} multiplier`));
+      }
+      card.appendChild(extras);
+    }
+  }
+
+  // Inline manual score entry
+  const entryRow = el('details', {},
+    el('summary', {}, scored ? '✏️ Edit score' : '➕ Enter score'),
+    (() => {
+      const wrap = el('div', { class: 'row', style: 'margin-top: 8px;' });
+      const s1in = el('input', { type: 'number', class: 'score-input', min: 0, value: m.score1 ?? '', inputmode: 'numeric' });
+      const s2in = el('input', { type: 'number', class: 'score-input', min: 0, value: m.score2 ?? '', inputmode: 'numeric' });
+      const pens1 = el('input', { type: 'number', class: 'score-input', min: 0, value: m.pens1 ?? '', placeholder: 'pens', inputmode: 'numeric' });
+      const pens2 = el('input', { type: 'number', class: 'score-input', min: 0, value: m.pens2 ?? '', placeholder: 'pens', inputmode: 'numeric' });
+      wrap.appendChild(el('span', {}, `${t1}:`));
+      wrap.appendChild(s1in);
+      wrap.appendChild(el('span', {}, `${t2}:`));
+      wrap.appendChild(s2in);
+      if (round !== 'group') {
+        wrap.appendChild(el('span', { class: 'small' }, '(pens if drawn):'));
+        wrap.appendChild(pens1);
+        wrap.appendChild(pens2);
+      }
+      wrap.appendChild(el('button', { onclick: () => {
+        m.score1 = s1in.value === '' ? null : Number(s1in.value);
+        m.score2 = s2in.value === '' ? null : Number(s2in.value);
+        m.pens1 = pens1.value === '' ? null : Number(pens1.value);
+        m.pens2 = pens2.value === '' ? null : Number(pens2.value);
+        saveState();
+        renderAll();
+        toast('Score saved.');
+      }}, 'Save'));
+      if (scored) {
+        wrap.appendChild(el('button', { class: 'ghost', onclick: () => {
+          m.score1 = null; m.score2 = null; m.pens1 = null; m.pens2 = null;
+          saveState(); renderAll(); toast('Cleared.');
+        }}, 'Clear'));
+      }
+      return wrap;
+    })()
+  );
+  card.appendChild(entryRow);
+
+  return card;
+}
+
+// ----- DRAFT TAB -----
+function renderDraft() {
+  const root = $('#tab-draft');
+  root.innerHTML = '';
+
+  // Setup screen
+  if (!state.players || state.players.length === 0) {
+    const setup = el('div', { class: 'panel' },
+      el('h2', {}, '🇺🇸 ROLL CALL — NAME THE PATRIOTS 🇺🇸'),
+      el('div', { class: 'sub' }, 'Enter all four drafters below. The pick order rotates across groups using a BEAUTIFUL Latin square — each of you picks 1st, 2nd, 3rd, and 4th exactly 3 times across the 12 groups. PERFECTLY FAIR. Nobody does it better.'),
+      el('div', { class: 'grid grid-2' },
+        ['Patriot 1 (Red 🔴)', 'Patriot 2 (White ⚪)', 'Patriot 3 (Gold 🟡)', 'Patriot 4 (Blue 🔵)'].map((lbl, i) =>
+          el('div', {},
+            el('label', {}, lbl),
+            el('input', { type: 'text', id: `p${i}-name`, placeholder: 'Name', value: ['Will', 'Dad', 'Barnes', 'Warner'][i] })
+          )
+        )
+      ),
+      el('div', { style: 'margin-top: 14px;' },
+        el('button', { onclick: () => {
+          const names = [0,1,2,3].map(i => document.getElementById(`p${i}-name`).value.trim());
+          if (names.some(n => !n)) { toast('All four patriots must be named. No exceptions!', true); return; }
+          state.players = names.map((n, i) => ({ name: n, color: PLAYER_COLORS[i] }));
+          state.rosters = { 0: [], 1: [], 2: [], 3: [] };
+          state.draftPickIdx = 0;
+          state.spoilers = [];
+          state.draftComplete = false;
+          saveState();
+          renderAll();
+          toast('🇺🇸 Patriots locked in. LET THE DRAFT BEGIN! 🦅');
+        }}, '🦅 START THE DRAFT →')
+      )
+    );
+    root.appendChild(setup);
+    return;
+  }
+
+  // Draft in progress
+  if (!state.draftComplete) {
+    const pick = currentPick();
+    const player = state.players[pick.playerIdx];
+    const groupTeams = teamsInGroup(pick.group);
+    const remaining = groupTeams.filter(t => !draftedTeams().includes(t));
+    const seats = deviceSeats();
+    const mayPick = deviceMayPick(pick.playerIdx);
+
+    // Seat claiming — which patriots pick from THIS device
+    root.appendChild(el('div', { class: 'panel', style: 'padding: 10px 12px;' },
+      el('div', { class: 'small', style: 'margin-bottom: 6px; font-weight: 700;' },
+        '📱 Who picks from this device? ',
+        el('span', { style: 'font-weight: 400; color: var(--muted);' },
+          seats.length === 0 ? 'None claimed — anyone can pick here. Tap your name(s) to lock it down.' : 'Only their turns are pickable here.')),
+      el('div', { class: 'row', style: 'display: flex; flex-wrap: wrap; gap: 6px;' },
+        state.players.map((p, i) => {
+          const claimed = seats.includes(i);
+          return el('button', {
+            class: 'ghost',
+            style: `padding: 6px 12px; font-size: 13px; border-radius: 999px;` +
+                   (claimed ? ` background: var(--accent); color: #1a1a1a; border-color: var(--accent); font-weight: 800;` : ''),
+            onclick: () => toggleSeat(i),
+          }, (claimed ? '✓ ' : '') + p.name);
+        })
+      )
+    ));
+
+    // Pick-now banner — adapts to whether this device may pick
+    root.appendChild(el('div', { class: 'pick-now', style: mayPick ? '' : 'filter: saturate(0.45); opacity: 0.92;' },
+      el('div', {},
+        el('div', { style: 'font-size: 18px;' },
+          mayPick ? `⭐ ${player.name.toUpperCase()}, YOU'RE ON THE CLOCK ⭐`
+                  : `⏳ WAITING ON ${player.name.toUpperCase()} (live — updates automatically)`),
+        el('div', { style: 'font-size: 14px; margin-top: 4px;' }, `Group ${pick.group} · Pick ${pick.pickIndex + 1} of 4 · Overall pick ${state.draftPickIdx + 1}/48`),
+        el('div', { class: 'small', style: 'color: #4a3a00; margin-top: 4px;' },
+          mayPick ? '🇺🇸 Pick one team from this group. Every team gets drafted — make America proud! 🇺🇸'
+                  : `🇺🇸 ${player.name} is picking from another house. Hold the line, patriot. 🇺🇸`)
+      )
+    ));
+
+    // Show the active group with picks
+    const activeGroupCard = el('div', { class: 'group-card active' },
+      el('div', { class: 'group-name' },
+        el('span', {}, `Group ${pick.group}`),
+        el('span', { class: 'small' }, `${remaining.length} team${remaining.length !== 1 ? 's' : ''} available`)
+      ),
+    );
+    groupTeams.forEach(t => {
+      const team = TEAMS[t];
+      const owner = ownerOfTeam(t);
+      const isDrafted = owner >= 0;
+      const row = el('div', { class: 'team-row' + (isDrafted ? ' drafted' : '') },
+        seedBadge(t),
+        el('span', { class: 'flag' }, team.flag),
+        el('span', { class: 'name' }, t),
+        TITLE_ODDS[t] ? el('span', { class: 'odds' }, TITLE_ODDS[t]) : null,
+        isDrafted
+          ? ownerPill(owner)
+          : (mayPick
+              ? el('button', { class: 'pick-btn', onclick: () => pickTeam(t) }, 'Pick')
+              : el('button', { class: 'pick-btn', disabled: 'disabled', style: 'opacity: 0.35; cursor: not-allowed;' }, `${player.name}'s turn`))
+      );
+      activeGroupCard.appendChild(row);
+    });
+    root.appendChild(activeGroupCard);
+
+    // Upcoming pick order (next 8 picks = next 2 groups)
+    const order = buildPickOrder();
+    const upcoming = order.slice(state.draftPickIdx, state.draftPickIdx + 8);
+    const upcomingPanel = el('div', { class: 'panel' },
+      el('h2', {}, 'Next picks'),
+      el('table', {},
+        el('thead', {}, el('tr', {},
+          el('th', {}, '#'), el('th', {}, 'Player'), el('th', {}, 'Group'), el('th', {}, 'Pick #'))),
+        el('tbody', {},
+          upcoming.map((p, i) => el('tr', {},
+            el('td', {}, state.draftPickIdx + i + 1),
+            el('td', {},
+              el('span', { class: 'dot', style: `display:inline-block; width:10px; height:10px; border-radius:50%; background:${PLAYER_COLORS[p.playerIdx]}; margin-right:6px;` }),
+              state.players[p.playerIdx].name),
+            el('td', {}, p.group),
+            el('td', {}, p.pickIndex + 1)
+          ))
+        )
+      )
+    );
+    root.appendChild(upcomingPanel);
+  } else {
+    root.appendChild(el('div', { class: 'panel' },
+      el('h2', {}, '🏆 DRAFT COMPLETE — TREMENDOUS WORK 🏆'),
+      el('div', { class: 'sub' }, `🇺🇸 All 48 teams drafted across 4 patriot rosters — every team has a champion. Now let's go WIN this thing! USA! USA! USA! 🇺🇸`),
+      el('button', { onclick: () => switchTab('rosters') }, 'View rosters'),
+      el('button', { class: 'ghost', style: 'margin-left:8px;', onclick: () => {
+        if (!confirm('Reset draft? This wipes the rosters but keeps scores.')) return;
+        state.rosters = { 0: [], 1: [], 2: [], 3: [] };
+        state.draftPickIdx = 0;
+        state.spoilers = [];
+        state.draftComplete = false;
+        saveState();
+        renderAll();
+      }}, 'Reset draft')
+    ));
+  }
+
+  // Show ALL group cards as overview
+  const allGroups = el('div', { class: 'panel' }, el('h2', {}, 'All groups'),
+    el('div', { class: 'grid grid-3' },
+      GROUPS.map(g => {
+        const card = el('div', { class: 'group-card' });
+        card.appendChild(el('div', { class: 'group-name' },
+          el('span', {}, `Group ${g}`)
+        ));
+        teamsInGroup(g).forEach(t => {
+          const team = TEAMS[t];
+          const owner = ownerOfTeam(t);
+          const isSpoiler = state.spoilers.includes(t);
+          const row = el('div', { class: 'team-row' + (isSpoiler ? ' spoiler' : '') + (owner >= 0 ? ' drafted' : '') },
+            seedBadge(t),
+            el('span', { class: 'flag' }, team.flag),
+            el('span', { class: 'name' }, t),
+            TITLE_ODDS[t] ? el('span', { class: 'odds' }, TITLE_ODDS[t]) : null,
+            owner >= 0 ? ownerPill(owner) : (isSpoiler ? ownerPill(-1) : el('span', { class: 'small' }, 'Available'))
+          );
+          card.appendChild(row);
+        });
+        return card;
+      })
+    )
+  );
+  root.appendChild(allGroups);
+}
+
+// ----- STANDINGS TAB -----
+function renderStandings() {
+  const root = $('#tab-standings');
+  root.innerHTML = '';
+
+  if (!state.players || state.players.length === 0) {
+    root.appendChild(el('div', { class: 'empty' }, 'Set up the draft first.'));
+    return;
+  }
+
+  // Leaderboard
+  const totals = state.players.map((p, i) => ({ idx: i, name: p.name, pts: totalPoints(i) }))
+    .sort((a, b) => b.pts - a.pts);
+
+  const standings = el('div', { class: 'panel' }, el('h2', {}, '🏆 THE LEADERBOARD — WHO\'S WINNING BIGLY 🦅'),
+    el('table', {},
+      el('thead', {}, el('tr', {},
+        el('th', {}, 'Rank'),
+        el('th', {}, 'Player'),
+        el('th', {}, 'Points'),
+        el('th', {}, 'Teams Active'),
+        el('th', {}, 'Eliminated'),
+      )),
+      el('tbody', {},
+        totals.map((t, rank) => {
+          const teams = state.rosters[t.idx] || [];
+          // A team is "active" if no group-stage finale has eliminated them OR
+          // they advanced to a KO round. For simplicity, mark active if they've
+          // played fewer than 3 group games OR if they appear in any KO match.
+          const active = teams.filter(team => teamPoints(team).games.length < 3 || stillAlive(team));
+          const elim = teams.length - active.length;
+          return el('tr', { class: rank === 0 ? 'rank-1' : '' },
+            el('td', {}, '#' + (rank + 1)),
+            el('td', {},
+              el('span', { class: 'dot', style: `display:inline-block;width:10px;height:10px;border-radius:50%;background:${PLAYER_COLORS[t.idx]};margin-right:6px;` }),
+              t.name),
+            el('td', { style: 'font-weight:800; color: var(--accent); font-size: 18px;' }, t.pts),
+            el('td', {}, active.length),
+            el('td', {}, elim || '—')
+          );
+        })
+      )
+    ));
+  root.appendChild(standings);
+
+  // Multiplier preview
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '⚡ THE KNOCKOUT LADDER — POINTS GO UP BIGLY ⚡'),
+    el('div', { class: 'sub' }, '🇺🇸 Points earned in each round get multiplied. The Final is worth 13× the group stage — never give up, never surrender, comebacks are TREMENDOUS! 🇺🇸'),
+    el('div', { class: 'multiplier-bar' },
+      ['group', 'r32', 'r16', 'qf', 'sf', 'third', 'final'].map(r =>
+        el('div', { class: 'multiplier-cell' },
+          el('span', { class: 'num' }, '×' + ROUND_MULT[r]),
+          el('span', {}, ROUND_NAME[r])
+        )
+      )
+    )
+  ));
+
+  // Player breakdowns
+  totals.forEach(t => {
+    const teams = state.rosters[t.idx] || [];
+    const teamRows = teams.map(team => {
+      const tp = teamPoints(team);
+      return { team, pts: tp.total, games: tp.games.length };
+    }).sort((a, b) => b.pts - a.pts);
+
+    const panel = el('div', { class: 'panel' },
+      el('h2', {},
+        el('span', { class: 'dot', style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${PLAYER_COLORS[t.idx]};margin-right:8px;` }),
+        `${t.name} — ${t.pts} pts`),
+      el('table', {},
+        el('thead', {}, el('tr', {},
+          el('th', {}, 'Team'),
+          el('th', {}, 'Group'),
+          el('th', {}, 'Games'),
+          el('th', {}, 'Points'))),
+        el('tbody', {},
+          teamRows.map(r => el('tr', {},
+            el('td', {}, (TEAMS[r.team]?.flag || '⚽') + ' ' + r.team),
+            el('td', {}, TEAMS[r.team]?.group || '?'),
+            el('td', {}, r.games),
+            el('td', { style: 'font-weight:700; color: var(--accent);' }, r.pts)
+          ))
+        )
+      )
+    );
+    root.appendChild(panel);
+  });
+}
+
+function stillAlive(teamName) {
+  // Heuristic: check if team appears as a played team in a KO win
+  for (const m of state.matches) {
+    const r = roundOf(m);
+    if (r === 'group') continue;
+    if (!hasResult(m)) continue;
+    const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+    if (t1 === teamName || t2 === teamName) {
+      // Did they win or advance?
+      if (m.score1 > m.score2 && t1 === teamName) return true;
+      if (m.score2 > m.score1 && t2 === teamName) return true;
+      if (m.score1 === m.score2) {
+        if (m.pens1 != null && m.pens1 > m.pens2 && t1 === teamName) return true;
+        if (m.pens2 != null && m.pens2 > m.pens1 && t2 === teamName) return true;
+      }
+    }
+  }
+  return true; // default to assuming still alive (we don't fully track elimination)
+}
+
+// ----- SCHEDULE TAB -----
+function renderSchedule() {
+  const root = $('#tab-schedule');
+  root.innerHTML = '';
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '📅 THE FULL SCHEDULE — EVERY MATCH'),
+    el('div', { class: 'row', style: 'margin-bottom: 10px;' },
+      el('button', { onclick: syncFromFeed }, '🔄 SYNC SCORES'),
+      el('span', { class: 'small' }, state.lastSync ? `Last sync: ${new Date(state.lastSync).toLocaleString()}` : 'Not yet synced'),
+      el('span', { class: 'spacer' }),
+      el('label', { style: 'margin: 0;' }, 'Filter: '),
+      (() => {
+        const sel = el('select', { id: 'sched-filter', onchange: () => renderSchedule(), style: 'background: var(--panel-2); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 6px;' },
+          el('option', { value: 'all' }, 'All matches'),
+          el('option', { value: 'upcoming' }, 'Upcoming'),
+          el('option', { value: 'played' }, 'Played'),
+          el('option', { value: 'group' }, 'Group stage'),
+          el('option', { value: 'ko' }, 'Knockouts'),
+        );
+        // remember
+        if (window._schedFilter) sel.value = window._schedFilter;
+        sel.addEventListener('change', () => window._schedFilter = sel.value);
+        return sel;
+      })()
+    )
+  ));
+
+  const filter = window._schedFilter || 'all';
+  const filtered = state.matches.filter(m => {
+    if (filter === 'upcoming') return !hasResult(m);
+    if (filter === 'played') return hasResult(m);
+    if (filter === 'group') return roundOf(m) === 'group';
+    if (filter === 'ko') return roundOf(m) !== 'group';
+    return true;
+  });
+
+  // Group by date
+  const byDate = {};
+  filtered.forEach(m => {
+    if (!byDate[m.date]) byDate[m.date] = [];
+    byDate[m.date].push(m);
+  });
+  Object.keys(byDate).sort().forEach(date => {
+    const panel = el('div', { class: 'panel' },
+      el('h2', {}, date),
+    );
+    byDate[date].forEach(m => panel.appendChild(renderMatchCard(m, true)));
+    root.appendChild(panel);
+  });
+}
+
+// ----- ROSTERS TAB -----
+function renderRosters() {
+  const root = $('#tab-rosters');
+  root.innerHTML = '';
+  if (!state.players || state.players.length === 0) {
+    root.appendChild(el('div', { class: 'empty' }, 'No rosters yet — run the draft.'));
+    return;
+  }
+
+  state.players.forEach((p, i) => {
+    const teams = (state.rosters[i] || []).sort((a, b) => TEAMS[a].group.localeCompare(TEAMS[b].group));
+    const panel = el('div', { class: 'panel' },
+      el('h2', {},
+        el('span', { class: 'dot', style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${PLAYER_COLORS[i]};margin-right:8px;` }),
+        `${p.name} — ${teams.length} teams · ${totalPoints(i)} pts`),
+      el('div', { class: 'roster-grid' },
+        teams.map(t => {
+          const tp = teamPoints(t);
+          return el('div', { class: 'roster-team' },
+            el('span', {},
+              el('span', { style: 'margin-right:8px; font-size: 18px;' }, TEAMS[t].flag),
+              t,
+              el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`)
+            ),
+            el('span', { style: 'color: var(--accent); font-weight: 700;' }, `${tp.total} pts`)
+          );
+        })
+      )
+    );
+    root.appendChild(panel);
+  });
+
+  // Spoilers
+  if (state.spoilers && state.spoilers.length > 0) {
+    const panel = el('div', { class: 'panel' },
+      el('h2', {}, '👻 THE FREE AGENTS'),
+      el('div', { class: 'sub' }, 'Nobody picked these teams. If they pull an upset, no points for anyone — but they make the tournament that much more fun to watch.'),
+      el('div', { class: 'roster-grid' },
+        state.spoilers.map(t => el('div', { class: 'roster-team', style: 'border-style: dashed;' },
+          el('span', {},
+            el('span', { style: 'margin-right:8px; font-size: 18px;' }, TEAMS[t].flag),
+            t,
+            el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`)
+          ),
+          el('span', { class: 'small' }, 'No owner')
+        ))
+      )
+    );
+    root.appendChild(panel);
+  }
+}
+
+// ----- SETTINGS TAB -----
+function renderSettings() {
+  const root = $('#tab-settings');
+  root.innerHTML = '';
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '📖 THE SCORING RULEBOOK — PURE PATRIOTISM 🇺🇸'),
+    el('div', { class: 'sub' }, 'Simple, clean, wins-based. The match result is all that matters — no goal bonuses, no clean-sheet bonuses. Win the game, win the points. Knockouts multiply BIGLY so comebacks are always alive.'),
+    el('div', { class: 'legend' },
+      el('div', { class: 'legend-item' }, el('strong', {}, '🏆 Win'), '3 pts — WINNING'),
+      el('div', { class: 'legend-item' }, el('strong', {}, '🤝 Draw'), '1 pt each — solid effort'),
+      el('div', { class: 'legend-item' }, el('strong', {}, '❌ Loss'), '0 pts — try again'),
+      el('div', { class: 'legend-item' }, el('strong', {}, '🚀 Advanced (KO only)'), '+3 — MOVING ON UP'),
+    ),
+    el('div', { style: 'margin-top: 16px; padding: 14px; background: var(--panel-2); border-radius: 8px; border-left: 4px solid var(--accent);' },
+      el('strong', { style: 'color: var(--accent);' }, '⚡ THE FIBONACCI LADDER (multiplies the points above): '),
+      el('span', { style: 'font-weight: 700;' }, 'Group ×1 → R32 ×2 → R16 ×3 → QF ×5 → SF ×8 → 3rd-place ×5 → 🏆 FINAL ×13 🏆')),
+    el('div', { style: 'margin-top: 12px;' },
+      el('strong', { style: 'color: var(--accent);' }, 'Example: '),
+      el('span', {}, 'A group-stage win = 3 pts. The same win in the Final = (3+3) × 13 = 78 pts. Going far is HUGE.')),
+  ));
+
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '🔄 LIVE SCORE FEED'),
+    el('div', { class: 'sub' }, 'Pulls scores from the openfootball data feed automatically. If the feed is slow or stale, you can always punch in scores manually in the Schedule tab — never give up control!'),
+    el('div', { class: 'row' },
+      el('button', { onclick: syncFromFeed }, '🔄 Sync now'),
+      el('span', { class: 'small' }, state.lastSync ? `Last sync: ${new Date(state.lastSync).toLocaleString()}` : 'Never synced'),
+    ),
+    el('div', { class: 'small', style: 'margin-top: 8px;' },
+      'Source: ', el('a', { href: 'https://github.com/openfootball/worldcup.json', target: '_blank', style: 'color: var(--accent);' }, 'openfootball/worldcup.json')),
+  ));
+
+  // Cloud sync panel
+  const cloudPanel = el('div', { class: 'panel' },
+    el('h2', {}, '🌐 FAMILY CLOUD SYNC — ALL DEVICES, ONE BIG WIN'),
+    el('div', { class: 'sub' }, '🇺🇸 Share one game across every phone in the family — instantly. Free, no signup, totally seamless. Picks push the moment they happen and every device refreshes every few seconds during the draft (every 45s after). NOBODY does it better. 🇺🇸'),
+  );
+  if (!cloudConfigured()) {
+    cloudPanel.appendChild(el('div', { class: 'row' },
+      el('button', { onclick: createCloudGame }, '🆕 LAUNCH CLOUD GAME'),
+    ));
+    cloudPanel.appendChild(el('details', { style: 'margin-top: 12px;' },
+      el('summary', {}, 'Or join an existing game'),
+      el('div', { style: 'margin-top: 10px;' },
+        el('label', {}, 'Game code or share link'),
+        el('input', { type: 'text', id: 'join-code-input', placeholder: 'Paste the share link or code here…' }),
+        el('div', { style: 'margin-top: 8px;' },
+          el('button', { onclick: () => joinCloudGame(document.getElementById('join-code-input').value) }, 'Join'),
+        ),
+      ),
+    ));
+  } else {
+    const link = shareableLink();
+    cloudPanel.appendChild(el('div', { id: 'cloud-status-text', style: 'color: var(--green); font-weight: 700; margin-bottom: 6px;' },
+      (() => {
+        const ts = state.cloudLastPushed || state.cloudLastPulled;
+        return ts ? `✓ Connected · last sync ${new Date(ts).toLocaleTimeString()}` : '✓ Connected';
+      })()
+    ));
+    cloudPanel.appendChild(el('div', { class: 'small', style: 'margin-bottom: 10px;' }, `Game ID: ${state.cloudGameId}`));
+    cloudPanel.appendChild(el('div', { class: 'row' },
+      el('button', { onclick: async () => {
+        try { await navigator.clipboard.writeText(link); toast('Share link copied!'); }
+        catch (e) { toast('Copy failed — long-press the link below to copy.', true); }
+      }}, '📋 Copy share link'),
+      el('button', { class: 'ghost', onclick: () => pullFromCloud({ force: true }) }, '🔄 Sync now'),
+      el('button', { class: 'danger', onclick: () => {
+        if (confirm('Disconnect from cloud? Your local data stays intact.')) disconnectCloud();
+      }}, '🔌 Disconnect'),
+    ));
+    cloudPanel.appendChild(el('div', { class: 'small', style: 'margin-top: 10px; word-break: break-all; padding: 8px; background: var(--panel-2); border-radius: 6px; border: 1px solid var(--border);' },
+      el('span', {}, 'Share this link with your family: '),
+      el('br'),
+      el('a', { href: link, style: 'color: var(--accent);' }, link)
+    ));
+  }
+  root.appendChild(cloudPanel);
+
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '💾 BACKUP & RESTORE — DEFEND YOUR DATA'),
+    el('div', { class: 'sub' }, 'Export the whole game (rosters, scores, picks) to a file you control. Re-import any time. Always keep your data SAFE — that\'s the American way.'),
+    el('div', { class: 'row' },
+      el('button', { onclick: exportState }, '⬇️ Export'),
+      el('button', { class: 'ghost', onclick: () => document.getElementById('import-file').click() }, '⬆️ Import'),
+      el('input', { type: 'file', id: 'import-file', accept: '.json', style: 'display:none;', onchange: importState }),
+      el('button', { class: 'danger', onclick: resetAll }, '🗑 Reset everything'),
+    )
+  ));
+}
+
+function exportState() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wc2026-family-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importState(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...imported };
+      saveState();
+      renderAll();
+      toast('Imported successfully.');
+    } catch (err) {
+      toast('Import failed: ' + err.message, true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetAll() {
+  if (!confirm('Reset EVERYTHING (players, rosters, scores)? This cannot be undone.')) return;
+  delete memoryStore[STATE_KEY];
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  state.matches = SCHEDULE_2026.map(m => ({ ...m, key: matchKey(m), score1: null, score2: null, pens1: null, pens2: null }));
+  saveState();
+  renderAll();
+  toast('Reset complete.');
+}
+
+// ============================================================================
+// 10.  BOOT
+// ============================================================================
+renderAll();
+
+// 10a. URL ?game=<id> auto-join. Pasting/clicking a share link should drop the
+// user straight into the family's shared game.
+(function handleUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const urlGame = params.get('game');
+  if (!urlGame) return;
+  if (state.cloudGameId === urlGame) {
+    // Already joined this game — just refresh from cloud
+    startCloudPolling();
+    setTimeout(() => pullFromCloud({ force: true }), 200);
+  } else {
+    // New game from a share link
+    setTimeout(() => joinCloudGame(urlGame), 200);
+  }
+})();
+
+// 10b. If already connected to a cloud game from a previous visit, resume polling
+if (cloudConfigured() && !_cloudPullTimer) {
+  startCloudPolling();
+  // Pull once on load so the latest cloud state wins over any stale local
+  setTimeout(() => pullFromCloud(), 400);
+}
+
+// 10c. Pull from cloud whenever the tab regains focus (catches mobile resumes)
+window.addEventListener('focus', () => { if (cloudConfigured()) pullFromCloud(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && cloudConfigured()) pullFromCloud();
+});
+
+// 10d. Auto-sync match results from openfootball once the tournament starts
+if (state.players && state.players.length > 0) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today >= '2026-06-11') {
+    syncFromFeed();
+  }
+}
+</script>
+
+</body>
+</html>
