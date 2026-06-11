@@ -1431,6 +1431,8 @@ function applyScoreOverrides() {
     if (!m) return;
     m.score1 = o.score1 ?? null; m.score2 = o.score2 ?? null;
     m.pens1 = o.pens1 ?? null;  m.pens2 = o.pens2 ?? null;
+    // Official (API-sourced) results lock the match against hand-editing.
+    m.official = o.official === true;
   });
 }
 
@@ -2063,6 +2065,16 @@ function renderMatchCard(m, showOwners = true) {
       pv.mp3 ? el('a', { href: pv.mp3, target: '_blank', rel: 'noopener',
         style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '🎙️ Listen') : null,
     ));
+  }
+
+  // Official API results are LOCKED — show a read-only badge, no edit form.
+  if (m.official) {
+    card.appendChild(el('div', {
+      class: 'small',
+      style: 'margin-top: 8px; color: var(--green); font-weight: 700;',
+      title: 'This is the official final from the live score feed and cannot be edited.'
+    }, '🔒 Official result · locked'));
+    return card;
   }
 
   // Inline manual score entry

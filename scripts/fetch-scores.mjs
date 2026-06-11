@@ -163,14 +163,20 @@ async function main() {
 
     const key = appMatchKey({ num: appMatch.num, date: appMatch.date, team1: appMatch.team1, team2: appMatch.team2 });
 
-    const override = { score1, score2 };
+    // official:true marks this as the API's authoritative final. The app locks
+    // any official score so it can no longer be hand-edited or cleared.
+    const override = { score1, score2, official: true, source: 'football-data.org', lockedAt: new Date().toISOString() };
     if (pens1 != null && pens2 != null) { override.pens1 = pens1; override.pens2 = pens2; }
 
     const prev = merged[key];
-    const same = prev && prev.score1 === override.score1 && prev.score2 === override.score2 &&
+    // "Already current" only if the existing entry has the SAME score AND is
+    // already official — otherwise we (re)write to upgrade a manual entry to an
+    // official, locked one (the official result always wins).
+    const same = prev && prev.official === true &&
+      prev.score1 === override.score1 && prev.score2 === override.score2 &&
       (prev.pens1 ?? null) === (override.pens1 ?? null) && (prev.pens2 ?? null) === (override.pens2 ?? null);
     if (same) {
-      console.log(`  = already current: ${appMatch.team1} ${score1}-${score2} ${appMatch.team2}  [${key}]`);
+      console.log(`  = already official: ${appMatch.team1} ${score1}-${score2} ${appMatch.team2}  [${key}]`);
       continue;
     }
 
