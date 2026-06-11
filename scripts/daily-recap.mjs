@@ -269,6 +269,8 @@ function seededPicker(seed) {
 async function main() {
   const today = centralDate(0), yesterday = centralDate(-1);
   const out = (k, v) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`); };
+  out('date', today);
+  out('mode', MODE);
 
   if (today < FIRST_DAY || today > LAST_DAY) {
     // PRE-TOURNAMENT SPECIAL: if the one-time kickoff preview is staged in the
