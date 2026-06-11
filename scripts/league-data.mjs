@@ -114,3 +114,102 @@ export function mdToHtml(md) {
   close();
   return out.join('\n');
 }
+
+// ── OWNER-FIRST CONTEXT ──────────────────────────────────────────────────────
+// The league's editorial rule: the four OWNERS are the franchises; nations are
+// players on their rosters. These builders turn raw results into owner
+// narratives (form, momentum, season series, upcoming stretch) for the prompts.
+
+export function normalizeFeedMatch(m) {
+  const t1 = mapName(m.team1), t2 = mapName(m.team2);
+  let s1 = null, s2 = null, p1 = null, p2 = null;
+  if (m.score && Array.isArray(m.score.ft)) {
+    const fin = Array.isArray(m.score.et) ? m.score.et : m.score.ft;
+    [s1, s2] = fin;
+    if (Array.isArray(m.score.p)) [p1, p2] = m.score.p;
+  }
+  return { date: m.date, round: roundOf(m), t1, t2, s1, s2, p1, p2, num: m.num };
+}
+
+export function matchPoints(x) {
+  if (x.s1 == null || x.s2 == null) return null;
+  const mult = ROUND_MULT[x.round];
+  let pts1 = 0, pts2 = 0, adv = 0;
+  if (x.s1 > x.s2) pts1 = 3; else if (x.s2 > x.s1) pts2 = 3; else { pts1 = 1; pts2 = 1; }
+  if (x.round !== 'group') {
+    if (x.s1 > x.s2) adv = 1; else if (x.s2 > x.s1) adv = 2;
+    else if (x.p1 != null && x.p2 != null && Number(x.p1) !== Number(x.p2)) adv = Number(x.p1) > Number(x.p2) ? 1 : 2;
+    if (adv === 1) pts1 += 3; if (adv === 2) pts2 += 3;
+  }
+  return { pts1: pts1 * mult, pts2: pts2 * mult, adv, mult };
+}
+
+export function buildOwnerContext(feed, st, today) {
+  const players = st.players.map(p => p.name);
+  const rosters = st.rosters || {};
+  const ownerOf = {};
+  players.forEach((name, i) => {
+    const teams = Array.isArray(rosters) ? (rosters[i] || []) : (rosters[String(i)] || []);
+    (teams || []).forEach(t => { if (t) ownerOf[t] = name; });
+  });
+
+  const ms = feed.matches.map(normalizeFeedMatch);
+  const done = ms.filter(x => x.s1 != null).sort((a, b) => a.date.localeCompare(b.date));
+  const totals = Object.fromEntries(players.map(p => [p, 0]));
+  const events = Object.fromEntries(players.map(p => [p, []]));
+  const h2h = {};
+
+  for (const x of done) {
+    const p = matchPoints(x);
+    const oa = ownerOf[x.t1], ob = ownerOf[x.t2];
+    if (oa) {
+      totals[oa] += p.pts1;
+      events[oa].push({ date: x.date, res: x.s1 > x.s2 ? 'W' : (x.s1 < x.s2 ? 'L' : 'D'), pts: p.pts1, line: `${x.t1} ${x.s1}-${x.s2} ${x.t2}${ob ? ` (vs ${ob})` : ''}` });
+    }
+    if (ob) {
+      totals[ob] += p.pts2;
+      events[ob].push({ date: x.date, res: x.s2 > x.s1 ? 'W' : (x.s2 < x.s1 ? 'L' : 'D'), pts: p.pts2, line: `${x.t2} ${x.s2}-${x.s1} ${x.t1}${oa ? ` (vs ${oa})` : ''}` });
+    }
+    if (oa && ob && oa !== ob) {
+      const k = [oa, ob].sort().join('|');
+      h2h[k] = h2h[k] || { draws: 0, wins: {} };
+      if (x.s1 === x.s2 && !p.adv) h2h[k].draws++;
+      else { const w = (x.s1 > x.s2 || p.adv === 1) ? oa : ob; h2h[k].wins[w] = (h2h[k].wins[w] || 0) + 1; }
+    }
+  }
+
+  const board = players.map(name => ({ name, pts: totals[name] }))
+    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
+  let lastPts = null, lastRank = 1;
+  board.forEach((b, i) => { b.rank = b.pts === lastPts ? lastRank : i + 1; lastPts = b.pts; lastRank = b.rank; });
+  const rankOf = Object.fromEntries(board.map(b => [b.name, b.rank]));
+
+  function ownerSummary(name) {
+    const ev = events[name] || [];
+    const recent = ev.slice(-5);
+    const form = recent.map(e => e.res).join('-') || 'no games yet';
+    const upcoming = ms.filter(x => x.s1 == null && x.date >= today && (ownerOf[x.t1] === name || ownerOf[x.t2] === name)).slice(0, 4)
+      .map(x => {
+        const mine = ownerOf[x.t1] === name ? x.t1 : x.t2;
+        const their = mine === x.t1 ? x.t2 : x.t1;
+        const opp = ownerOf[their];
+        return `${x.date}: ${mine} vs ${their}${opp && opp !== name ? ` (vs ${opp})` : ''}${x.round !== 'group' ? ` [${ROUND_NAME[x.round]}]` : ''}`;
+      });
+    return `${OWNER_META[name]?.emoji || ''} ${name} (${OWNER_META[name]?.nick || ''}) — rank #${rankOf[name]}, ${totals[name]} pts. ` +
+      `Form (last ${recent.length || 0}): ${form}. ` +
+      (recent.length ? `Recent: ${recent.map(e => `${e.res} ${e.line} (+${e.pts})`).join('; ')}. ` : 'The season hasn\'t started for this owner yet. ') +
+      (upcoming.length ? `Upcoming stretch: ${upcoming.join('; ')}.` : 'No upcoming fixtures found.');
+  }
+
+  function h2hSummary(a, b) {
+    const k = [a, b].sort().join('|');
+    const r = h2h[k];
+    if (!r) return `Season series ${a} vs ${b}: this is their FIRST head-to-head meeting of the tournament.`;
+    const aw = r.wins[a] || 0, bw = r.wins[b] || 0;
+    const played = aw + bw + r.draws;
+    const lead = aw > bw ? `${a} leads` : bw > aw ? `${b} leads` : 'all square';
+    return `Season series ${a} vs ${b} (game ${played + 1} of 12): ${lead} ${Math.max(aw, bw)}-${Math.min(aw, bw)}${r.draws ? ` with ${r.draws} draw(s)` : ''}.`;
+  }
+
+  return { players, ownerOf, totals, board, rankOf, ownerSummary, h2hSummary };
+}
