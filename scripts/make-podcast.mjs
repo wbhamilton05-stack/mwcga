@@ -116,10 +116,12 @@ RULES:
       },
     },
   });
-  const part = (tj.candidates?.[0]?.content?.parts || []).find(p => p.inlineData && p.inlineData.data);
-  if (!part) throw new Error('no audio in TTS response');
-  const rate = Number((part.inlineData.mimeType.match(/rate=(\d+)/) || [])[1] || 24000);
-  const pcm = Buffer.from(part.inlineData.data, 'base64');
+  // Long audio comes back CHUNKED across multiple inlineData parts — concat all
+  const audioParts = (tj.candidates?.[0]?.content?.parts || []).filter(p => p.inlineData && p.inlineData.data);
+  if (!audioParts.length) throw new Error('no audio in TTS response (finishReason: ' + (tj.candidates?.[0]?.finishReason || '?') + ')');
+  const rate = Number((audioParts[0].inlineData.mimeType.match(/rate=(\d+)/) || [])[1] || 24000);
+  const pcm = Buffer.concat(audioParts.map(p => Buffer.from(p.inlineData.data, 'base64')));
+  console.log(`audio: ${audioParts.length} chunk(s), ~${Math.round(pcm.length / (2 * rate))}s (finishReason: ${tj.candidates?.[0]?.finishReason || '?'})`);
 
   mkdirSync('podcasts', { recursive: true });
   const mp3 = `podcasts/${DATE}-${MODE}.mp3`;
