@@ -6,6 +6,7 @@
 // exits 0 with empty outputs so the email always still goes out.
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { GAME_URL, FEED_URL, buildOwnerContext } from './league-data.mjs';
 
 const out = (k, v) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`); };
 const KEY = process.env.GEMINI_API_KEY;
@@ -23,6 +24,18 @@ async function main() {
   if (!KEY) { console.log('GEMINI_API_KEY not set — skipping podcast.'); out('file', ''); out('url', ''); return; }
   if (!existsSync('recap.txt')) { console.log('no recap.txt — skipping podcast.'); out('file', ''); out('url', ''); return; }
   const briefing = readFileSync('recap.txt', 'utf8');
+
+  // Owner-first context: the owners are the franchises, nations are players.
+  let ownerBlock = '';
+  try {
+    const [gameRes, feedRes] = await Promise.all([fetch(GAME_URL), fetch(FEED_URL)]);
+    if (gameRes.ok && feedRes.ok) {
+      const OC = buildOwnerContext(await feedRes.json(), (await gameRes.json()).state, DATE);
+      ownerBlock = `\nOWNER FORM & CONTEXT (authoritative — these are the franchises; their nations are just the players. Build the narratives around the OWNERS: streaks, momentum, rivalries, the race):\n` +
+        OC.players.map(p => OC.ownerSummary(p)).join('\n') + `\n` +
+        `Season series so far: ` + [['Will','Granddad'],['Will','Barnes'],['Will','Warner'],['Granddad','Barnes'],['Granddad','Warner'],['Barnes','Warner']].map(([a,b]) => OC.h2hSummary(a,b)).join(' ') + `\n`;
+    }
+  } catch (e) { console.log('owner context unavailable (continuing):', e.message); }
 
   const API = 'https://generativelanguage.googleapis.com/v1beta';
   // Retry transient overload/rate-limit errors — a 2x-daily cron must shrug off 503s.
@@ -68,6 +81,8 @@ Sal: the analyst — dry, sharp, numbers-first, gently deflates Hank, secretly j
 
 THE LEAGUE OWNERS (use their names and nicknames often): Will "the Commissioner" (dad), Granddad "the Veteran" (74, golfs daily, ex-salesman), Barnes "the Prodigy" (12, marksman, builds video games), Warner "the Young Phenom" (10, elite game analyst). Family-friendly always; tease owners about results, never about who they are.
 
+EDITORIAL RULE — OWNER-FIRST: This show covers the four OWNERS like franchises. "Barnes drops points", "Warner extends his lead", "Granddad's rough stretch continues" — the nations (France, Brazil…) are referenced as the owners' PLAYERS who delivered or flopped. Never frame a result as country-vs-country without the owner stakes front and center.
+${ownerBlock}
 SOURCE MATERIAL (today's official briefing — every fact you state must come from it):
 ${briefing}
 
