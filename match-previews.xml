@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>MWCGA Match Previews</title>
+    <link>https://wbhamilton05-stack.github.io/mwcga/?game=wcuaw50n22xo</link>
+    <language>en-us</language>
+    <description>Every 2026 World Cup match previewed by Hank and Sal — scouting reports, family stakes, fearless predictions.</description>
+    <itunes:author>The Commissioner</itunes:author>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Sports"/>
+    <item>
+      <title>⚔️ 🔴 Will vs Warner 🔵 — Mexico vs South Africa — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-11.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-11-mexico-south-africa.mp3" length="125760" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-11-mexico-south-africa</guid>
+      <pubDate>Thu, 11 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>⚔️ ⚪ Granddad vs Barnes 🟡 — South Korea vs Czechia — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-11.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-11-south-korea-czechia.mp3" length="110976" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-11-south-korea-czechia</guid>
+      <pubDate>Thu, 11 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
