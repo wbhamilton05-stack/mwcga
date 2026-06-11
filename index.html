@@ -1358,6 +1358,8 @@ let _pickBusy = false;
 let _lastSeenSavedAt = null;
 let _pullInFlight = false;          // one pull at a time (focus + visibility both fire)
 let _lastPullInvalid = false;       // last pull reached the cloud but the blob failed validation
+let _matchPreviews = {};            // match key → {html, mp3} briefing links (loaded at boot, 10c3)
+let _matchPreviewsRaw = '';
 let _pushFailed = false;            // local state never reached the cloud (e.g. offline pick)
 let _pushRetryTimer = null;
 let _pushRetryDelay = 2000;
@@ -1956,6 +1958,18 @@ function renderMatchCard(m, showOwners = true) {
       }
       card.appendChild(extras);
     }
+  }
+
+  // Match briefing + podcast links (generated overnight by the previews cron;
+  // the manifest maps match keys → artifact paths, absent = no links shown)
+  const pv = _matchPreviews[m.key || matchKey(m)];
+  if (pv && (pv.html || pv.mp3)) {
+    card.appendChild(el('div', { style: 'display:flex; gap:14px; margin-top:6px; justify-content:center;' },
+      pv.html ? el('a', { href: pv.html, target: '_blank', rel: 'noopener',
+        style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '📰 Match Briefing') : null,
+      pv.mp3 ? el('a', { href: pv.mp3, target: '_blank', rel: 'noopener',
+        style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '🎙️ Listen') : null,
+    ));
   }
 
   // Inline manual score entry
@@ -2638,6 +2652,25 @@ document.addEventListener('visibilitychange', () => {
 
 // 10c2. When the network comes back, land any state that never reached the cloud
 window.addEventListener('online', () => { if (cloudConfigured() && _pushFailed) pushToCloud(); });
+
+// 10c3. Match-preview manifest (briefing pages + podcast episodes per match),
+// regenerated overnight by the previews cron. Re-render only when it changes.
+async function loadMatchPreviews() {
+  try {
+    const r = await fetch('matchday/index.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    const raw = await r.text();
+    if (raw === _matchPreviewsRaw) return;
+    const j = JSON.parse(raw);
+    if (j && typeof j === 'object' && !Array.isArray(j)) {
+      _matchPreviews = j;
+      _matchPreviewsRaw = raw;
+      renderAll();
+    }
+  } catch (e) { /* no previews yet — links simply don't render */ }
+}
+loadMatchPreviews();
+setInterval(loadMatchPreviews, 6 * 3600e3);
 
 // 10d. Auto-sync match results from openfootball once the tournament starts
 // (local date — UTC would arm this mid-draft on the evening of June 10),
