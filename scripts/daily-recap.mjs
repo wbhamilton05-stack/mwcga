@@ -422,6 +422,13 @@ async function main() {
     const reportDate = lateRun ? centralDate(-1) : today;
     const dayNN = Math.round((Date.parse(reportDate) - Date.parse(FIRST_DAY)) / 86400e3) + 1;
     if (lateRun) console.log(`late nightcap run (${ctHour}:00 CT) — wrapping ${reportDate} instead of ${today}`);
+    // Duplicate-send gate: the archive commit doubles as a "sent" marker, so a
+    // delayed cron can never re-send an edition a manual run already delivered.
+    if (!process.env.MWCGA_FAKE_TODAY && existsSync(`briefings/${reportDate}-night.html`)) {
+      console.log(`nightcap for ${reportDate} already sent — skipping duplicate.`);
+      out('send', 'false');
+      return;
+    }
     out('date', reportDate); // overrides the earlier emit; the archive step uses this
     const tResults = matches.filter(m => m.date === reportDate && m.s1 != null);
     const tPending = matches.filter(m => m.date === reportDate && m.s1 == null);
@@ -519,6 +526,11 @@ ${html.join('\n')}
     return;
   }
   // ── ☀️ MORNING EDITION (original) ────────────────────────────────────────
+  if (!process.env.MWCGA_FAKE_TODAY && existsSync(`briefings/${today}-morning.html`)) {
+    console.log(`morning briefing for ${today} already sent — skipping duplicate.`);
+    out('send', 'false');
+    return;
+  }
   addP(`☀️ DAY ${dayN} OF THE GREATEST TOURNAMENT EVER HELD ☀️`, true);
   addP(pick(OPENERS), true);
 
