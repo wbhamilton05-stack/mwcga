@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>MWCGA Radio</title>
+    <link>https://wbhamilton05-stack.github.io/mwcga/?game=wcuaw50n22xo</link>
+    <language>en-us</language>
+    <description>Make the World Cup Great Again — the official twice-daily show of the Hamilton family World Cup league. Hank and Sal break down every result, every feud, every point. June 11 – July 19, 2026.</description>
+    <itunes:author>The Commissioner</itunes:author>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Sports"/>
+
+  </channel>
+</rss>
