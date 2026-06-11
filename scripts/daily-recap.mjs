@@ -14,6 +14,10 @@ const GAME_URL = process.env.MWCGA_GAME_URL || 'https://mwcga-c2e5e-default-rtdb
 const FEED_URL = process.env.MWCGA_FEED_URL || 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 const SITE_URL = 'https://wbhamilton05-stack.github.io/mwcga/?game=wcuaw50n22xo';
 const FIRST_DAY = '2026-06-11', LAST_DAY = '2026-07-20';
+// Two editions share this script: the 8 AM Central MORNING briefing (preview)
+// and the 11 PM Central NIGHTCAP (same-day results). The workflow sets
+// MWCGA_MODE per cron; manual runs auto-detect by UTC hour.
+const MODE = process.env.MWCGA_MODE || (new Date().getUTCHours() < 8 ? 'night' : 'morning');
 
 const TEAMS = {
   "Mexico": {
@@ -392,9 +396,107 @@ async function main() {
   const addP = (t, bold) => { txt.push(t); html.push(`<p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;margin:6px 0;${bold ? 'font-weight:bold;' : ''}">${esc(t)}</p>`); };
 
   const dayN = Math.round((Date.parse(today) - Date.parse(FIRST_DAY)) / 86400e3) + 1;
+  const ep = (name) => { const list = EPITHET[name]; return list ? pick(list) : ''; };
+
+  // ── 🌙 NIGHTCAP EDITION ──────────────────────────────────────────────────
+  if (MODE === 'night') {
+    const tResults = matches.filter(m => m.date === today && m.s1 != null);
+    const tPending = matches.filter(m => m.date === today && m.s1 == null);
+    const tomorrow = centralDate(1);
+    const tmGames = matches.filter(m => m.date === tomorrow);
+    if (tResults.length === 0 && tPending.length === 0) {
+      console.log('No games today — no nightcap.');
+      out('send', 'false');
+      return;
+    }
+    addP(`🌙 THE MWCGA NIGHTCAP — DAY ${dayN} IS IN THE BOOKS 🌙`, true);
+    addP(pick([
+      "The stadiums are dark, the points are counted, and somebody in this family is going to sleep ANGRY tonight. Beautiful.",
+      "Before you go to bed, patriots, the numbers. Always the numbers. The most accurate numbers in late-night television.",
+      "Day " + dayN + " is OVER, folks — and what a day. Historians will write about it. The Fake News won't. We will.",
+      "Lights out at the World Cup — but first, your official, certified, absolutely tremendous end-of-day accounting.",
+    ]), true);
+
+    if (tResults.length) {
+      addH(`TONIGHT'S FINAL WHISTLES (${today})`);
+      for (const m of tResults) {
+        const p = points(m);
+        const o1 = ownerOf[m.t1], o2 = ownerOf[m.t2];
+        const score = `${m.s1}–${m.s2}` + (m.p1 != null ? ` (${m.p1}–${m.p2} pens)` : '');
+        if (m.s1 === m.s2 && !p.adv) {
+          addP(`• ${flag(m.t1)} ${m.t1} ${score} ${m.t2} ${flag(m.t2)} — ${pick(DRAW_LINES)} (${o1 != null ? players[o1] : 'Spoiler'} +${p.pts1}, ${o2 != null ? players[o2] : 'Spoiler'} +${p.pts2})`);
+        } else {
+          const w = (m.s1 > m.s2 || p.adv === 1) ? 1 : 2;
+          const [wt, lt, wo, wp] = w === 1 ? [m.t1, m.t2, o1, p.pts1] : [m.t2, m.t1, o2, p.pts2];
+          const wOdds = oddsOf(wt), lOdds = oddsOf(lt);
+          const upset = wOdds && lOdds && impliedPct(wOdds) < impliedPct(lOdds) / 4;
+          addP(`• ${flag(wt)} ${wt} (${wo != null ? players[wo] + ', ' + ep(players[wo]) : 'Spoiler'}) ${pick(WIN_WORDS)} ${lt} ${flag(lt)}, ${score}.` +
+            (upset ? ` A MASSIVE UPSET at ${wOdds} — the experts are in SHAMBLES tonight.` : '') +
+            (wo != null ? ` +${wp} points${p.mult > 1 ? ` (×${p.mult} ${ROUND_NAME[m.round]})` : ''}.` : ''));
+        }
+      }
+    }
+    if (tPending.length) {
+      addH('STILL BEING COUNTED');
+      addP(`${tPending.length} match${tPending.length > 1 ? 'es' : ''} from today ${tPending.length > 1 ? "haven't" : "hasn't"} reached the official feed yet (${tPending.map(m => `${m.t1} vs ${m.t2}`).join('; ')}). The morning briefing will have the certified finals. Slow counters. Sad!`);
+    }
+
+    // Tonight's haul — who actually got paid today
+    const haul = players.map((name, i) => {
+      let pts = 0;
+      tResults.forEach(m => {
+        const p = points(m);
+        if (ownerOf[m.t1] === i) pts += p.pts1;
+        if (ownerOf[m.t2] === i) pts += p.pts2;
+      });
+      return { name, i, pts };
+    }).sort((a, b) => b.pts - a.pts);
+    if (tResults.length) {
+      addH("TONIGHT'S HAUL — WHO GOT PAID TODAY");
+      addP(haul.map(x => `${EMOJI[x.i]} ${x.name} +${x.pts}`).join('   ·   '));
+      const top = haul[0];
+      if (top.pts > 0 && (haul.length < 2 || top.pts > haul[1].pts)) {
+        addP(`${top.name}, ${ep(top.name)}, owns the night with +${top.pts}. ${pick(["Somebody check on the others.", "The family group chat just went quiet. Very quiet.", "Tremendous day at the office.", "That's a statement, folks."])}`);
+      }
+    }
+
+    addH('THE LEADERBOARD — WHERE WE SLEEP TONIGHT');
+    const soleLeaderN = board.filter(b => b.rank === 1).length === 1;
+    for (const b of board) {
+      addP(`#${b.rank}  ${EMOJI[b.i]} ${b.name}: ${b.pts} pts${b.rank === 1 && soleLeaderN ? ' — sleeping like a champion tonight' : ''}`);
+    }
+
+    if (tmGames.length) {
+      addH('TOMORROW, WE GO AGAIN');
+      const feuds = tmGames.filter(m => ownerOf[m.t1] != null && ownerOf[m.t2] != null && ownerOf[m.t1] !== ownerOf[m.t2]);
+      const marquee = feuds[0] || tmGames[0];
+      addP(`${tmGames.length} match${tmGames.length > 1 ? 'es' : ''} tomorrow${marquee ? `, headlined by ${flag(marquee.t1)} ${marquee.t1}${ownerOf[marquee.t1] != null ? ` (${players[ownerOf[marquee.t1]]})` : ''} vs ${marquee.t2}${ownerOf[marquee.t2] != null ? ` (${players[ownerOf[marquee.t2]]})` : ''} ${flag(marquee.t2)}` : ''}. Full battle plan lands at 8 AM sharp. Sleep fast, patriots.`);
+    }
+
+    txt.push('');
+    addP(pick(CLOSERS), true);
+
+    const leaderN = board[0];
+    const subjectN = soleLeaderN
+      ? `🌙 MWCGA NIGHTCAP — DAY ${dayN}: ${leaderN.name.toUpperCase()} SLEEPS ON TOP (${leaderN.pts} PTS)`
+      : `🌙 MWCGA NIGHTCAP — DAY ${dayN}: DEADLOCKED AT THE TOP. NOBODY SLEEPS.`;
+    const fullHtmlN = `<div style="max-width:640px;margin:0 auto;border:3px solid #0a1c4a;border-radius:10px;padding:18px;background:#0a1c4a;">
+<h1 style="font-family:Arial,sans-serif;color:#ffd700;margin:0 0 2px;">🌙 MWCGA NIGHTCAP 🌙</h1>
+<div style="font-family:Arial,sans-serif;color:#b8c8f0;font-weight:bold;font-size:13px;margin-bottom:10px;">MAKE THE WORLD CUP GREAT AGAIN · DAY ${dayN} COMPLETE · ${today}</div>
+<div style="background:#fffdf5;border-radius:8px;padding:4px 14px;">
+${html.join('\n')}
+</div></div>`;
+    writeFileSync('recap.html', fullHtmlN);
+    writeFileSync('recap.txt', txt.join('\n'));
+    out('send', 'true');
+    out('subject', subjectN);
+    console.log('SUBJECT: ' + subjectN + '\n');
+    console.log(txt.join('\n'));
+    return;
+  }
+  // ── ☀️ MORNING EDITION (original) ────────────────────────────────────────
   addP(`☀️ DAY ${dayN} OF THE GREATEST TOURNAMENT EVER HELD ☀️`, true);
   addP(pick(OPENERS), true);
-  const ep = (name) => { const list = EPITHET[name]; return list ? pick(list) : ''; };
 
   if (yResults.length) {
     addH(`YESTERDAY'S TREMENDOUS RESULTS (${yesterday})`);
