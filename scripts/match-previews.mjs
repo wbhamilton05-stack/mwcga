@@ -53,6 +53,9 @@ async function main() {
   const models = await gem.models();
   const pick = (prefs, pred) => prefs.find(p => models.includes(p)) || models.find(pred);
   const textModel = pick(['gemini-3.1-flash', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-flash-latest'], m => /^gemini-[\d.]+-flash$/.test(m));
+  // 2.5-series models burn output tokens on "thinking" by default — turn it off
+  // for content generation or short caps starve the actual text.
+  const thinkCfg = /2\.5/.test(textModel) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
   const ttsModel = pick(['gemini-3.1-flash-tts', 'gemini-3-flash-tts', 'gemini-2.5-flash-tts', 'gemini-2.5-flash-preview-tts'], m => m.includes('tts'));
   console.log(`using text=${textModel}, tts=${ttsModel}`);
 
@@ -98,7 +101,7 @@ STRUCTURE (use these exact markdown headers, with the real owner names/emojis):
 ## 🔮 THE VERDICT — confident scoreline + which OWNER walks away happy and what the leaderboard looks like if it lands
 
 RULES: 350-500 words. Use your knowledge of these national teams' real stars and styles; if unsure about a current-squad detail, lean on established stars and team identity — NEVER invent injuries, transfers, or lineups. Family-friendly.` }] }],
-        generationConfig: { temperature: 0.85, maxOutputTokens: 1600 },
+        generationConfig: { temperature: 0.85, maxOutputTokens: 4000, ...thinkCfg },
       });
       const md = (bj.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
       if (!md) throw new Error('empty briefing');
@@ -122,10 +125,11 @@ ${mdToHtml(md)}
 ${ctx}
 
 Cover, OWNER-FIRST: open with Hank framing this as ${sameOwner ? `${o1} against himself — a civil war` : `${o1} vs ${o2}`} (the teams are just their players); each owner's form/momentum from the context above; the season series; then Sal's tactical point with two or three real players by name; the points on the line; and a fast scoreline prediction from each host, stated as which OWNER wins. Open with Hank naming the owners first, the teams second; end with both saying "M-W-C-G-A!". Same accuracy rules: real stars only, never invent injuries.` }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 1200 },
+        generationConfig: { temperature: 0.9, maxOutputTokens: 4000, ...thinkCfg },
       });
       const script = (sj.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
       if (!script || !script.includes('Hank:')) throw new Error('empty/unusable script');
+      console.log(`  script: ${script.split(/\s+/).length} words`);
 
       const tj = await gem.call(`models/${ttsModel}:generateContent`, {
         contents: [{ parts: [{ text: `TTS this sports-radio conversation. Hank is energetic and booming; Sal is dry and wry:\n\n${script}` }] }],
