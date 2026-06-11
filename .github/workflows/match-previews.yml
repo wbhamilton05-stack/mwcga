@@ -1,0 +1,41 @@
+name: MWCGA Match Previews
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # 2:00 AM Central — overnight previews for today's slate
+  workflow_dispatch:
+    inputs:
+      fake_today:
+        description: 'Override date for testing (YYYY-MM-DD), blank = real today'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # commits briefing pages, episodes, manifest, and the previews feed
+
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Generate match previews
+        id: gen
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MWCGA_FAKE_TODAY: ${{ inputs.fake_today }}
+        run: node scripts/match-previews.mjs
+
+      - name: Publish
+        if: steps.gen.outputs.count != '0'
+        run: |
+          git config user.name "mwcga-radio"
+          git config user.email "actions@users.noreply.github.com"
+          git add matchday podcasts/matches match-previews.xml 2>/dev/null || true
+          git commit -m "previews: $(date -u +%F) slate (${{ steps.gen.outputs.count }} new)" || echo "nothing to commit"
+          git pull --rebase origin main || true
+          git push || echo "push failed (non-fatal)"
