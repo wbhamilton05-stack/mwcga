@@ -231,7 +231,7 @@ const EPITHET = {
   'Will': ['the Commissioner', 'the League Architect', 'Mr. Big League himself'],
   'Granddad': ['the Veteran', 'the Wise One', 'the Original Patriot'],
   'Barnes': ['the Prodigy', 'the Boy Genius', 'the Future of the Franchise'],
-  'Warner': ['the Young Phenom', 'the 7-Year-Old Wonder', 'the Youngest GM in History'],
+  'Warner': ['the Young Phenom', 'the Double-Digit Destroyer', 'the Youngest GM in History'],
 };
 
 const ROUND_MULT = { group: 1, r32: 2, r16: 3, qf: 5, sf: 8, third: 5, final: 13 };
