@@ -49,3 +49,16 @@ ${items}
 `;
 writeFileSync('podcast.xml', rss);
 console.log(`podcast.xml rebuilt with ${eps.length} episode(s)`);
+
+// Briefing archive index — the game UI reads this to offer past briefings
+try {
+  const briefs = readdirSync('briefings')
+    .filter(f => /^\d{4}-\d{2}-\d{2}-(morning|night)\.html$/.test(f))
+    .sort().reverse()
+    .map(f => {
+      const [, date, mode] = f.match(/^(\d{4}-\d{2}-\d{2})-(morning|night)\.html$/);
+      return { date, mode, file: 'briefings/' + f, mp3: existsSync(`podcasts/${date}-${mode}.mp3`) ? `podcasts/${date}-${mode}.mp3` : null };
+    });
+  writeFileSync('briefings/index.json', JSON.stringify(briefs, null, 1));
+  console.log(`briefings/index.json rebuilt with ${briefs.length} entr${briefs.length === 1 ? 'y' : 'ies'}`);
+} catch (e) { console.log('no briefings dir yet'); }
