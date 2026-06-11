@@ -14,13 +14,15 @@ const eps = readdirSync('podcasts')
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const items = eps.map(f => {
-  const m = f.match(/^(\d{4}-\d{2}-\d{2})-(morning|night)\.mp3$/);
+  const m = f.match(/^(\d{4}-\d{2}-\d{2})-(morning|night|premiere)\.mp3$/);
   if (!m) return '';
   const [, date, mode] = m;
   const nice = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
-  const title = mode === 'night' ? `🌙 Nightcap — ${nice}` : `☀️ Morning Show — ${nice}`;
+  const title = mode === 'premiere' ? `🏆 THE SEASON PREMIERE — The Draft Special` : mode === 'night' ? `🌙 Nightcap — ${nice}` : `☀️ Morning Show — ${nice}`;
   // Publish times: morning ≈ 8:05 AM CT (13:05Z), nightcap ≈ 11:05 PM CT (04:05Z next day UTC)
-  const pub = mode === 'night'
+  const pub = mode === 'premiere'
+    ? new Date(Date.parse(date + 'T02:30:00Z') + 86400e3).toUTCString()
+    : mode === 'night'
     ? new Date(Date.parse(date + 'T04:05:00Z') + 86400e3).toUTCString()
     : new Date(date + 'T13:05:00Z').toUTCString();
   const size = statSync('podcasts/' + f).size;
