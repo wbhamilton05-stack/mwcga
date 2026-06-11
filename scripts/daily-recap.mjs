@@ -413,25 +413,35 @@ async function main() {
 
   // ── 🌙 NIGHTCAP EDITION ──────────────────────────────────────────────────
   if (MODE === 'night') {
-    const tResults = matches.filter(m => m.date === today && m.s1 != null);
-    const tPending = matches.filter(m => m.date === today && m.s1 == null);
-    const tomorrow = centralDate(1);
+    // GitHub cron can fire HOURS late; past midnight Central the calendar
+    // rolls over and "today" becomes a day whose games haven't been played.
+    // The Nightcap always wraps the day that just ENDED: if we're running in
+    // the morning hours, that's yesterday.
+    const ctHour = new Date(Date.now() - 5 * 3600e3).getUTCHours();
+    const lateRun = !process.env.MWCGA_FAKE_TODAY && ctHour < 12;
+    const reportDate = lateRun ? centralDate(-1) : today;
+    const dayNN = Math.round((Date.parse(reportDate) - Date.parse(FIRST_DAY)) / 86400e3) + 1;
+    if (lateRun) console.log(`late nightcap run (${ctHour}:00 CT) — wrapping ${reportDate} instead of ${today}`);
+    out('date', reportDate); // overrides the earlier emit; the archive step uses this
+    const tResults = matches.filter(m => m.date === reportDate && m.s1 != null);
+    const tPending = matches.filter(m => m.date === reportDate && m.s1 == null);
+    const tomorrow = lateRun ? today : centralDate(1);
     const tmGames = matches.filter(m => m.date === tomorrow);
     if (tResults.length === 0 && tPending.length === 0) {
       console.log('No games today — no nightcap.');
       out('send', 'false');
       return;
     }
-    addP(`🌙 THE MWCGA NIGHTCAP — DAY ${dayN} IS IN THE BOOKS 🌙`, true);
+    addP(`🌙 THE MWCGA NIGHTCAP — DAY ${dayNN} IS IN THE BOOKS 🌙`, true);
     addP(pick([
       "The stadiums are dark, the points are counted, and somebody in this family is going to sleep ANGRY tonight. Beautiful.",
       "Before you go to bed, patriots, the numbers. Always the numbers. The most accurate numbers in late-night television.",
-      "Day " + dayN + " is OVER, folks — and what a day. Historians will write about it. The Fake News won't. We will.",
+      "Day " + dayNN + " is OVER, folks — and what a day. Historians will write about it. The Fake News won't. We will.",
       "Lights out at the World Cup — but first, your official, certified, absolutely tremendous end-of-day accounting.",
     ]), true);
 
     if (tResults.length) {
-      addH(`TONIGHT'S FINAL WHISTLES (${today})`);
+      addH(`TONIGHT'S FINAL WHISTLES (${reportDate})`);
       for (const m of tResults) {
         const p = points(m);
         const o1 = ownerOf[m.t1], o2 = ownerOf[m.t2];
@@ -492,11 +502,11 @@ async function main() {
 
     const leaderN = board[0];
     const subjectN = soleLeaderN
-      ? `🌙 MWCGA NIGHTCAP — DAY ${dayN}: ${leaderN.name.toUpperCase()} SLEEPS ON TOP (${leaderN.pts} PTS)`
-      : `🌙 MWCGA NIGHTCAP — DAY ${dayN}: DEADLOCKED AT THE TOP. NOBODY SLEEPS.`;
+      ? `🌙 MWCGA NIGHTCAP — DAY ${dayNN}: ${leaderN.name.toUpperCase()} SLEEPS ON TOP (${leaderN.pts} PTS)`
+      : `🌙 MWCGA NIGHTCAP — DAY ${dayNN}: DEADLOCKED AT THE TOP. NOBODY SLEEPS.`;
     const fullHtmlN = `<div style="max-width:640px;margin:0 auto;border:3px solid #0a1c4a;border-radius:10px;padding:18px;background:#0a1c4a;">
 <h1 style="font-family:Arial,sans-serif;color:#ffd700;margin:0 0 2px;">🌙 MWCGA NIGHTCAP 🌙</h1>
-<div style="font-family:Arial,sans-serif;color:#b8c8f0;font-weight:bold;font-size:13px;margin-bottom:10px;">MAKE THE WORLD CUP GREAT AGAIN · DAY ${dayN} COMPLETE · ${today}</div>
+<div style="font-family:Arial,sans-serif;color:#b8c8f0;font-weight:bold;font-size:13px;margin-bottom:10px;">MAKE THE WORLD CUP GREAT AGAIN · DAY ${dayNN} COMPLETE · ${reportDate}</div>
 <div style="background:#fffdf5;border-radius:8px;padding:4px 14px;">
 ${html.join('\n')}
 </div></div>`;
