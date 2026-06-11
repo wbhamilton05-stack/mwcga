@@ -2,11 +2,21 @@ name: MWCGA Daily Briefing
 
 on:
   schedule:
-    - cron: '0 13 * * *'   # 8:00 AM Central (CDT), every morning of the tournament
-  workflow_dispatch: {}     # manual runs from the Actions tab
+    - cron: '0 13 * * *'   # ‚òÄÔ∏è 8:00 AM Central ‚Äî morning briefing + Morning Show
+    - cron: '0 4 * * *'    # üåô 11:00 PM Central ‚Äî Nightcap briefing + Nightcap Show
+  workflow_dispatch:
+    inputs:
+      fake_today:
+        description: 'Override date for testing (YYYY-MM-DD), blank = real today'
+        required: false
+        default: ''
+      dry_run:
+        description: 'true = generate everything but send NO email'
+        required: false
+        default: 'false'
 
 permissions:
-  contents: read
+  contents: write   # lets the run commit podcast episodes + the RSS feed + briefing archive
 
 jobs:
   briefing:
@@ -20,19 +30,48 @@ jobs:
 
       - name: Generate briefing
         id: gen
+        env:
+          MWCGA_MODE: ${{ github.event.schedule == '0 4 * * *' && 'night' || (github.event.schedule == '0 13 * * *' && 'morning' || '') }}
+          MWCGA_FAKE_TODAY: ${{ inputs.fake_today }}
         run: node scripts/daily-recap.mjs
 
       - name: Show briefing in run log
         if: steps.gen.outputs.send == 'true'
         run: cat recap.txt
 
-      - name: Email the family
+      - name: Record the radio show
+        id: pod
         if: steps.gen.outputs.send == 'true'
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MWCGA_MODE: ${{ steps.gen.outputs.mode }}
+          MWCGA_FAKE_TODAY: ${{ inputs.fake_today }}
+        run: node scripts/make-podcast.mjs
+
+      - name: Publish episode + archive briefing
+        if: steps.gen.outputs.send == 'true'
+        continue-on-error: true
+        run: |
+          mkdir -p briefings
+          cp recap.html "briefings/${{ steps.gen.outputs.date }}-${{ steps.gen.outputs.mode }}.html"
+          cp recap.txt  "briefings/${{ steps.gen.outputs.date }}-${{ steps.gen.outputs.mode }}.md"
+          node scripts/make-rss.mjs
+          git config user.name "mwcga-radio"
+          git config user.email "actions@users.noreply.github.com"
+          git add podcasts podcast.xml briefings 2>/dev/null || true
+          git commit -m "radio: ${{ steps.gen.outputs.date }} ${{ steps.gen.outputs.mode }} episode + archive" || echo "nothing new to commit"
+          git pull --rebase origin main || true
+          git push || echo "push failed (non-fatal)"
+
+      - name: Email the family
+        if: steps.gen.outputs.send == 'true' && inputs.dry_run != 'true'
         env:
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MWCGA_RECIPIENTS: ${{ secrets.MWCGA_RECIPIENTS }}
           MAIL_SUBJECT: ${{ steps.gen.outputs.subject }}
+          PODCAST_URL: ${{ steps.pod.outputs.url }}
         run: |
           npm install --no-fund --no-audit nodemailer@7
           node scripts/send-mail.mjs
