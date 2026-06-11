@@ -1,0 +1,57 @@
+name: MWCGA Score Sync
+
+# Pulls FINISHED World Cup matches from football-data.org and writes the final
+# scores into the family game's cloud store. The game only scores on the W/D/L
+# result (+ penalty winner), so we don't need live/minute-by-minute data — just
+# the correct final, reliably, an hour or two after the whistle.
+#
+# Strategy: run on a cadence during the daily match window rather than a constant
+# heartbeat. The script is idempotent — runs with nothing new to write cost
+# nothing and change nothing — so a handful of passes per day comfortably covers
+# "a couple hours after each match" without per-match cron sprawl.
+#
+# WC 2026 kickoffs span ~12:00–22:00 across US time zones (UTC-4 … UTC-7), so
+# final whistles land roughly 14:00 Central through ~01:00 Central next day.
+# These crons (UTC) cover that window every ~2 hours, plus a morning sweep that
+# catches anything that finished overnight.
+
+on:
+  schedule:
+    - cron: '0 20 * * *'   # 15:00 Central — early afternoon finals
+    - cron: '0 22 * * *'   # 17:00 Central
+    - cron: '0 0 * * *'    # 19:00 Central — evening block
+    - cron: '0 2 * * *'    # 21:00 Central
+    - cron: '0 4 * * *'    # 23:00 Central — late finals
+    - cron: '0 6 * * *'    # 01:00 Central — last West-coast finals
+    - cron: '0 13 * * *'   # 08:00 Central — morning sweep / safety net
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'true = fetch + print diffs but write nothing'
+        required: false
+        default: 'false'
+
+# No repo writes needed — the script writes to the Firebase store over HTTPS.
+permissions:
+  contents: read
+
+# Never let two syncs overlap (read-modify-write of the shared blob).
+concurrency:
+  group: mwcga-score-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Fetch finals and update cloud store
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+          MWCGA_DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/fetch-scores.mjs

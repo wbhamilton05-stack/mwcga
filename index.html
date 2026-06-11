@@ -1231,9 +1231,27 @@ function teamPoints(teamName) {
 }
 
 // ============================================================================
-// 7.  LIVE SCORE SYNC (openfootball)
+// 7.  LIVE SCORE SYNC
 // ============================================================================
+// Primary score source is now the CLOUD STORE: a scheduled job (GitHub Action
+// scripts/fetch-scores.mjs) pulls FINISHED matches from football-data.org and
+// writes them into state.scoreOverrides in the cloud, because the openfootball
+// feed below ships final scores days late or not at all. The openfootball feed
+// is kept as a secondary source — it still usefully resolves knockout bracket
+// placeholders (e.g. "1A" → "Mexico") and will backfill a score if it ever has
+// one before the cloud does.
 const FEED_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+
+// What the "Sync now / Sync scores" buttons call: pull the cloud first (that's
+// where finals land), then run the feed sync for bracket resolution. Cloud
+// scoreOverrides win — applyScoreOverrides() runs at the end of syncFromFeed.
+async function syncScores(opts = {}) {
+  const quiet = opts && opts.quiet === true;
+  if (cloudConfigured()) {
+    try { await pullFromCloud({ force: true, quiet: true }); } catch (e) { /* non-fatal */ }
+  }
+  await syncFromFeed(opts);
+}
 
 async function syncFromFeed(opts = {}) {
   // Button onclick passes a click event as the first arg — treat it as loud.
@@ -2367,7 +2385,7 @@ function renderSchedule() {
   root.appendChild(el('div', { class: 'panel' },
     el('h2', {}, '📅 THE FULL SCHEDULE — EVERY MATCH'),
     el('div', { class: 'row', style: 'margin-bottom: 10px;' },
-      el('button', { onclick: syncFromFeed }, '🔄 SYNC SCORES'),
+      el('button', { onclick: syncScores }, '🔄 SYNC SCORES'),
       el('span', { class: 'small' }, state.lastSync ? `Last sync: ${new Date(state.lastSync).toLocaleString()}` : 'Not yet synced'),
       el('span', { class: 'spacer' }),
       el('label', { style: 'margin: 0;' }, 'Filter: '),
@@ -2488,7 +2506,7 @@ function renderSettings() {
     el('h2', {}, '🔄 LIVE SCORE FEED'),
     el('div', { class: 'sub' }, 'Pulls scores from the openfootball data feed automatically. If the feed is slow or stale, you can always punch in scores manually in the Schedule tab — never give up control!'),
     el('div', { class: 'row' },
-      el('button', { onclick: syncFromFeed }, '🔄 Sync now'),
+      el('button', { onclick: syncScores }, '🔄 Sync now'),
       el('span', { class: 'small' }, state.lastSync ? `Last sync: ${new Date(state.lastSync).toLocaleString()}` : 'Never synced'),
     ),
     el('div', { class: 'small', style: 'margin-top: 8px;' },
