@@ -68,6 +68,7 @@ async function main() {
     m => m.includes('tts'));
   if (!textModel || !ttsModel) throw new Error(`models not found (text=${textModel}, tts=${ttsModel})`);
   console.log(`using text=${textModel}, tts=${ttsModel}`);
+  const thinkCfg = /2\.5/.test(textModel) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
 
   // ── 1. Write the show ──
   const showType = MODE === 'night'
@@ -94,7 +95,7 @@ RULES:
 
   const sj = await gem(`models/${textModel}:generateContent`, {
     contents: [{ parts: [{ text: scriptPrompt }] }],
-    generationConfig: { temperature: 0.9, maxOutputTokens: 2000 },
+    generationConfig: { temperature: 0.9, maxOutputTokens: 4000, ...thinkCfg },
   });
   const script = (sj.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
   if (!script || !script.includes('Hank:')) throw new Error('script generation came back empty/unusable');
