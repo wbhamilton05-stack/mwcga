@@ -25,6 +25,13 @@ if (MODE === 'night' && !process.env.MWCGA_FAKE_TODAY && new Date(Date.now() - 5
 
 async function main() {
   if (!KEY) { console.log('GEMINI_API_KEY not set — skipping podcast.'); out('file', ''); out('url', ''); return; }
+  // STAGED POSTER ONE-SHOT: scripts/hype-poster.json on a day whose episode is
+  // already recorded turns a manual re-dispatch into a poster-only run (it can
+  // never preempt a fresh cron's episode — see poster-art.mjs gates).
+  try {
+    const { hypeOneShot } = await import('./poster-art.mjs');
+    if (await hypeOneShot(DATE, MODE)) { out('file', ''); out('url', ''); return; }
+  } catch (e) { console.log('poster one-shot check failed (continuing with the show):', e.message); }
   // ONE-OFF SEASON PREMIERE: when the premiere source is staged and the episode
   // doesn't exist yet, this run builds THE LAUNCH EPISODE instead of a daily show.
   const PREMIERE = existsSync('scripts/premiere-source.md') && !existsSync('podcasts/2026-06-10-premiere.mp3');
@@ -168,4 +175,12 @@ async function pcmToMp3(pcm, rate, outPath) {
 
 function require_size(p) { return (existsSync(p) ? readFileSync(p).length : 0); }
 
-main().catch(e => { console.error('podcast failed (fail-soft):', e.message); out('file', ''); out('url', ''); });
+main().catch(e => { console.error('podcast failed (fail-soft):', e.message); out('file', ''); out('url', ''); })
+  // Nightly poster art rides the same run — after the show so a poster hiccup
+  // can't cost an episode, in finally so a show hiccup can't cost the poster.
+  .finally(async () => {
+    try {
+      const { nightlyPoster } = await import('./poster-art.mjs');
+      await nightlyPoster(MODE, DATE);
+    } catch (e) { console.error('poster failed (fail-soft, email goes out without art):', e.message); }
+  });
