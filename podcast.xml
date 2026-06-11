@@ -9,11 +9,18 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:category text="Sports"/>
     <item>
+      <title>☀️ Morning Show — June 11</title>
+      <description>MWCGA Radio — the official morning preview of the greatest family World Cup league on Earth. Day-by-day results, standings, and feuds. 2026-06-11.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/2026-06-11-morning.mp3" length="1638912" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-2026-06-11-morning</guid>
+      <pubDate>Thu, 11 Jun 2026 13:05:00 GMT</pubDate>
+    </item>
+    <item>
       <title>🏆 THE SEASON PREMIERE — The Draft Special</title>
-      <description>MWCGA Radio — the official launch episode of the greatest family World Cup league on Earth. 2026-06-10.</description>
+      <description>MWCGA Radio — the official morning preview of the greatest family World Cup league on Earth. Day-by-day results, standings, and feuds. 2026-06-10.</description>
       <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/2026-06-10-premiere.mp3" length="3218880" type="audio/mpeg"/>
       <guid isPermaLink="false">mwcga-2026-06-10-premiere</guid>
-      <pubDate>Thu, 11 Jun 2026 02:30:00 +0000</pubDate>
+      <pubDate>Thu, 11 Jun 2026 02:30:00 GMT</pubDate>
     </item>
   </channel>
 </rss>
