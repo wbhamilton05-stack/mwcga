@@ -13,6 +13,7 @@ import {
   SITE, GAME_URL, FEED_URL, FIRST_DAY, LAST_DAY,
   TEAMS, ODDS, mapName, flag, roundOf, ROUND_MULT, ROUND_NAME,
   appMatchKey, centralDate, OWNER_META, geminiClient, mdToHtml,
+  buildOwnerContext,
 } from './league-data.mjs';
 
 const out = (k, v) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`); };
@@ -36,6 +37,8 @@ async function main() {
     const teams = Array.isArray(rosters) ? (rosters[i] || []) : (rosters[String(i)] || []);
     (teams || []).forEach(t => { if (t) ownerOf[t] = players[i]; });
   });
+
+  const OC = buildOwnerContext(feed, st, today);
 
   const slate = feed.matches.filter(m => m.date === today && TEAMS[mapName(m.team1)] && TEAMS[mapName(m.team2)]);
   if (!slate.length) { console.log(`No matches with resolved teams on ${today}.`); out('count', '0'); return; }
@@ -64,9 +67,19 @@ async function main() {
       const o1 = ownerOf[t1] || null, o2 = ownerOf[t2] || null;
       const round = roundOf(m), mult = ROUND_MULT[round];
       const stake = round === 'group' ? 3 * mult : 6 * mult;
-      const ctx = `MATCH: ${t1} vs ${t2} — ${ROUND_NAME[round]}${mult > 1 ? ` (×${mult} multiplier)` : ''}, ${m.date}.
+      const sameOwner = o1 && o1 === o2;
+      const e1 = o1 ? OWNER_META[o1]?.emoji || '' : '', e2 = o2 ? OWNER_META[o2]?.emoji || '' : '';
+      const ctx = `EDITORIAL RULE — THE OWNERS ARE THE FRANCHISES: This league has four owners and the nations are players on their rosters. EVERYTHING is framed owner-first: this match is ${sameOwner ? `a CIVIL WAR inside ${o1}'s empire` : `${o1 || 'Unowned'} vs ${o2 || 'Unowned'}`}, fought on the field by ${t1} and ${t2}. Talk about owner momentum, form, the standings race, and the season series — use the teams and their real players as the HOW, never the headline.
+
+MATCH: ${t1} (${o1 ? `${e1} ${o1}'s squad` : 'unowned'}) vs ${t2} (${o2 ? `${e2} ${o2}'s squad` : 'unowned'}) — ${ROUND_NAME[round]}${mult > 1 ? ` (×${mult} multiplier)` : ''}, ${m.date}. A win pays +${stake} league points to the owner.
 TITLE ODDS: ${t1} ${ODDS[t1] || 'n/a'}, ${t2} ${ODDS[t2] || 'n/a'}.
-LEAGUE STAKES: ${t1} is owned by ${o1 ? `${o1} (${OWNER_META[o1]?.nick})` : 'nobody'}; ${t2} is owned by ${o2 ? `${o2} (${OWNER_META[o2]?.nick})` : 'nobody'}. A win pays +${stake} league points to the owner${o1 && o2 ? `; this is a HEAD-TO-HEAD FAMILY FEUD: ${o1} vs ${o2}` : ''}.
+
+OWNER FORM & CONTEXT (authoritative — weave these narratives in):
+${o1 ? OC.ownerSummary(o1) : ''}
+${o2 && !sameOwner ? OC.ownerSummary(o2) : ''}
+${o1 && o2 && !sameOwner ? OC.h2hSummary(o1, o2) : ''}
+LEADERBOARD: ${OC.board.map(b => `#${b.rank} ${b.name} ${b.pts}pts`).join(', ')}.
+
 OWNERS: Will "the Commissioner" (dad), Granddad "the Veteran" (74), Barnes "the Prodigy" (12), Warner "the Young Phenom" (10). Family-friendly; tease about results only.`;
 
       // 1) Written briefing — cheeky voice, technical depth
@@ -77,12 +90,12 @@ ${ctx}
 
 VOICE: the MWCGA house style — bombastic, superlative-heavy, "folks", "tremendous", playful jabs at pundits — but this briefing goes DEEPER technically than our daily emails.
 
-STRUCTURE (use these exact markdown headers):
-# 🏟️ <flag emoji> ${t1} vs ${t2} <flag emoji> — THE OFFICIAL MWCGA BRIEFING
-## ⚔️ THE TALE OF THE TAPE — short framing of the matchup + the family stakes (owner names, +points on the line, feud framing if both owned)
-## 🔬 THE SCOUTING REPORT — the technical core: for EACH team, key players by name (stars, in-form attackers, the goalkeeper if notable), preferred shape/style (press, counter, possession), and one tactical question that decides the match
-## 📊 BY THE NUMBERS — a small markdown table: odds, World Cup pedigree (titles/best finish), notable head-to-head history if any
-## 🔮 THE VERDICT — a confident scoreline prediction with one sentence of reasoning, plus what the result does to the family leaderboard
+STRUCTURE (use these exact markdown headers, with the real owner names/emojis):
+# ⚔️ ${sameOwner ? `${e1} ${(o1 || '').toUpperCase()}'S CIVIL WAR` : `${e1} ${(o1 || 'UNOWNED').toUpperCase()} vs ${(o2 || 'UNOWNED').toUpperCase()} ${e2}`} — ${t1} vs ${t2}
+## 📖 THE STORYLINE — owner-first: each owner's form, momentum, place in the race, and the season series between them; what THIS game means for the family leaderboard. This is the heart of the briefing.
+## 🔬 THE SCOUTING REPORT — "${o1 || 'X'} sends out ${t1}…" / "${o2 || 'Y'} answers with ${t2}…": for EACH squad, key players by name, preferred shape/style, and the one tactical question that decides it — always framed as the owner's assets doing the owner's work
+## 📊 BY THE NUMBERS — small markdown table: owner standings & form, season series, title odds, World Cup pedigree
+## 🔮 THE VERDICT — confident scoreline + which OWNER walks away happy and what the leaderboard looks like if it lands
 
 RULES: 350-500 words. Use your knowledge of these national teams' real stars and styles; if unsure about a current-squad detail, lean on established stars and team identity — NEVER invent injuries, transfers, or lineups. Family-friendly.` }] }],
         generationConfig: { temperature: 0.85, maxOutputTokens: 1600 },
@@ -108,7 +121,7 @@ ${mdToHtml(md)}
 
 ${ctx}
 
-Cover: the matchup in one breath, the two or three key players by name, Sal's tactical point, the family stakes (owner names + points), and a fast scoreline prediction from each host. Open with Hank saying which match this is; end with both saying "M-W-C-G-A!". Same accuracy rules: real stars only, never invent injuries.` }] }],
+Cover, OWNER-FIRST: open with Hank framing this as ${sameOwner ? `${o1} against himself — a civil war` : `${o1} vs ${o2}`} (the teams are just their players); each owner's form/momentum from the context above; the season series; then Sal's tactical point with two or three real players by name; the points on the line; and a fast scoreline prediction from each host, stated as which OWNER wins. Open with Hank naming the owners first, the teams second; end with both saying "M-W-C-G-A!". Same accuracy rules: real stars only, never invent injuries.` }] }],
         generationConfig: { temperature: 0.9, maxOutputTokens: 1200 },
       });
       const script = (sj.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
@@ -131,7 +144,7 @@ Cover: the matchup in one breath, the two or three key players by name, Sal's ta
 
       manifest[key] = {
         html: htmlPath, mp3: mp3Path,
-        title: `${flag(t1)} ${t1} vs ${t2} ${flag(t2)}`,
+        title: o1 && o2 ? `${e1} ${o1} vs ${o2} ${e2} — ${t1} vs ${t2}` : `${flag(t1)} ${t1} vs ${t2} ${flag(t2)}`,
         date: m.date,
       };
       made++;
