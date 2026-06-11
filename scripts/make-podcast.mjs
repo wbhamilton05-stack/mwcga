@@ -25,12 +25,21 @@ async function main() {
   const briefing = readFileSync('recap.txt', 'utf8');
 
   const API = 'https://generativelanguage.googleapis.com/v1beta';
+  // Retry transient overload/rate-limit errors — a 2x-daily cron must shrug off 503s.
   async function gem(path, body) {
-    const r = await fetch(`${API}/${path}?key=${KEY}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    if (!r.ok) throw new Error(`${path} HTTP ${r.status}: ${(await r.text()).slice(0, 400)}`);
-    return r.json();
+    const delays = [0, 3000, 8000, 20000];
+    let lastErr;
+    for (const d of delays) {
+      if (d) { console.log(`retrying ${path} in ${d / 1000}s...`); await new Promise(r => setTimeout(r, d)); }
+      const r = await fetch(`${API}/${path}?key=${KEY}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      if (r.ok) return r.json();
+      const msg = `${path} HTTP ${r.status}: ${(await r.text()).slice(0, 400)}`;
+      if (r.status !== 503 && r.status !== 429 && r.status !== 500) throw new Error(msg);
+      lastErr = new Error(msg);
+    }
+    throw lastErr;
   }
 
   // Discover available models so new releases/renames never break the show
