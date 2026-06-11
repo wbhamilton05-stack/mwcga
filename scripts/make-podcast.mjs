@@ -22,12 +22,17 @@ const DATE = centralDate(0);
 
 async function main() {
   if (!KEY) { console.log('GEMINI_API_KEY not set — skipping podcast.'); out('file', ''); out('url', ''); return; }
-  if (!existsSync('recap.txt')) { console.log('no recap.txt — skipping podcast.'); out('file', ''); out('url', ''); return; }
-  const briefing = readFileSync('recap.txt', 'utf8');
+  // ONE-OFF SEASON PREMIERE: when the premiere source is staged and the episode
+  // doesn't exist yet, this run builds THE LAUNCH EPISODE instead of a daily show.
+  const PREMIERE = existsSync('scripts/premiere-source.md') && !existsSync('podcasts/2026-06-10-premiere.mp3');
+  if (!PREMIERE && !existsSync('recap.txt')) { console.log('no recap.txt — skipping podcast.'); out('file', ''); out('url', ''); return; }
+  const briefing = readFileSync(PREMIERE ? 'scripts/premiere-source.md' : 'recap.txt', 'utf8');
+  if (PREMIERE) console.log('PREMIERE MODE: building the launch episode from the kickoff preview');
 
   // Owner-first context: the owners are the franchises, nations are players.
   let ownerBlock = '';
   try {
+    if (PREMIERE) throw new Error('skip — draft content carries its own context');
     const [gameRes, feedRes] = await Promise.all([fetch(GAME_URL), fetch(FEED_URL)]);
     if (gameRes.ok && feedRes.ok) {
       const OC = buildOwnerContext(await feedRes.json(), (await gameRes.json()).state, DATE);
@@ -71,7 +76,9 @@ async function main() {
   const thinkCfg = /2\.5/.test(textModel) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
 
   // ── 1. Write the show ──
-  const showType = MODE === 'night'
+  const showType = PREMIERE
+    ? 'THE SEASON PREMIERE — the launch episode of the network: welcome listeners to MWCGA Radio, announce the daily coverage (Morning Show 8 AM, Nightcap 11 PM, a preview episode for every match on the schedule), then deliver the full draft special — every owner\'s roster reviewed owner-first with their grade and star assets, the power rankings (the TEN-YEAR-OLD Warner is #1 and the hosts cannot believe it), the blood feuds (all 72 group matches are family head-to-heads), and tomorrow\'s opening day: Will vs Warner at the Azteca, Granddad vs Barnes after. This one runs longer: 750-950 words of dialogue.'
+    : MODE === 'night'
     ? 'the NIGHTCAP — an end-of-day wrap of today\'s results, who got paid, and the standings'
     : 'the MORNING SHOW — a preview of today\'s matches, the family feuds on deck, and the standings';
   const scriptPrompt = `Write a podcast script for "MWCGA RADIO", the official show of a four-person FAMILY World Cup fantasy league (Make the World Cup Great Again). This episode is ${showType}.
@@ -125,7 +132,7 @@ RULES:
   console.log(`audio: ${audioParts.length} chunk(s), ~${Math.round(pcm.length / (2 * rate))}s (finishReason: ${tj.candidates?.[0]?.finishReason || '?'})`);
 
   mkdirSync('podcasts', { recursive: true });
-  const mp3 = `podcasts/${DATE}-${MODE}.mp3`;
+  const mp3 = PREMIERE ? 'podcasts/2026-06-10-premiere.mp3' : `podcasts/${DATE}-${MODE}.mp3`;
   await pcmToMp3(pcm, rate, mp3);
   console.log(`episode ready: ${mp3} (${Math.round(require_size(mp3) / 1024)} KB)`);
   out('file', mp3);
