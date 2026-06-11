@@ -8,7 +8,7 @@
 // Test locally:  node scripts/daily-recap.mjs            (uses real today)
 //                MWCGA_FAKE_TODAY=2026-06-15 node scripts/daily-recap.mjs
 // ============================================================================
-import { writeFileSync, appendFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, appendFileSync, readFileSync, existsSync } from 'node:fs';
 
 const GAME_URL = process.env.MWCGA_GAME_URL || 'https://mwcga-c2e5e-default-rtdb.firebaseio.com/games/wcuaw50n22xo.json';
 const FEED_URL = process.env.MWCGA_FEED_URL || 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
@@ -278,20 +278,19 @@ async function main() {
   out('mode', MODE);
 
   if (today < FIRST_DAY || today > LAST_DAY) {
-    // PRE-TOURNAMENT SPECIAL: if the one-time kickoff preview is staged in the
-    // repo, send THAT instead. Only reachable before June 11, so it can never
-    // collide with (or repeat after) the daily briefings.
+    // PRE-TOURNAMENT SPECIAL: if a bulletin is staged AND its premiere episode
+    // hasn't been produced yet, send the bulletin (the podcast step builds the
+    // premiere and the mail step attaches it). One-shot: once the episode is
+    // committed, this branch disarms itself.
     if (today < FIRST_DAY) {
-      try {
-        const { readFileSync } = await import('node:fs');
-        const kickoff = readFileSync(new URL('./kickoff-email.html', import.meta.url), 'utf8');
-        writeFileSync('recap.html', kickoff);
-        writeFileSync('recap.txt', 'THE NIGHT-BEFORE-KICKOFF PREVIEW — open the HTML version for the full tremendous experience. ' + SITE_URL);
+      if (existsSync('scripts/bulletin.html') && !existsSync('podcasts/2026-06-10-premiere.mp3')) {
+        writeFileSync('recap.html', readFileSync('scripts/bulletin.html', 'utf8'));
+        writeFileSync('recap.txt', readFileSync('scripts/bulletin.txt', 'utf8'));
         out('send', 'true');
-        out('subject', '🏆 THE NIGHT BEFORE EVERYTHING: MWCGA 2026 — THE GREATEST DRAFT IN HUMAN HISTORY, FOLKS 🇺🇸🦅');
-        console.log('Kickoff preview staged — sending the season premiere.');
+        out('subject', '🚨 SPECIAL BULLETIN: MWCGA RADIO IS ON THE AIR — THE SEASON PREMIERE DROPS TONIGHT 🎙️🦅');
+        console.log('Special bulletin staged — premiere night.');
         return;
-      } catch (e) { /* no kickoff file staged — fall through to no-op */ }
+      }
     }
     console.log(`Outside tournament window (${today}) — no briefing.`);
     out('send', 'false');
