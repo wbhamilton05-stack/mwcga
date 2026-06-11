@@ -1,0 +1,46 @@
+name: MWCGA Daily Briefing
+
+on:
+  schedule:
+    - cron: '0 13 * * *'   # 8:00 AM Central (CDT), every morning of the tournament
+  workflow_dispatch: {}     # manual test runs from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  briefing:
+    runs-on: ubuntu-latest
+    env:
+      # Email only fires once all three secrets exist; until then the briefing
+      # still generates and is readable in the run log.
+      MAIL_READY: ${{ secrets.MAIL_USERNAME != '' && secrets.MAIL_PASSWORD != '' && secrets.MWCGA_RECIPIENTS != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate briefing
+        id: gen
+        run: node scripts/daily-recap.mjs
+
+      - name: Show briefing in run log
+        if: steps.gen.outputs.send == 'true'
+        run: cat recap.txt
+
+      - name: Email the family
+        if: steps.gen.outputs.send == 'true' && env.MAIL_READY == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: MWCGA Daily Briefing <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MWCGA_RECIPIENTS }}
+          subject: ${{ steps.gen.outputs.subject }}
+          html_body: file://recap.html
+          body: file://recap.txt
