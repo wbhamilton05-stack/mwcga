@@ -130,7 +130,11 @@ async function main() {
     const home = canon(fd.homeTeam?.name);
     const away = canon(fd.awayTeam?.name);
     const s = score90(fd);
-    if (s.home == null || s.away == null) continue;
+    if (s.home == null || s.away == null) {
+      console.log(`  · skipped (no fullTime score yet): ${fd.homeTeam?.name} vs ${fd.awayTeam?.name}` +
+        ` — status=${fd.status}, score.fullTime=${JSON.stringify(fd.score?.fullTime)}, winner=${fd.score?.winner}`);
+      continue;
+    }
 
     // Resolve to the app's scheduled match (covers UTC-vs-local date drift).
     let appMatch = null;
@@ -165,7 +169,10 @@ async function main() {
     const prev = merged[key];
     const same = prev && prev.score1 === override.score1 && prev.score2 === override.score2 &&
       (prev.pens1 ?? null) === (override.pens1 ?? null) && (prev.pens2 ?? null) === (override.pens2 ?? null);
-    if (same) continue;
+    if (same) {
+      console.log(`  = already current: ${appMatch.team1} ${score1}-${score2} ${appMatch.team2}  [${key}]`);
+      continue;
+    }
 
     merged[key] = override;
     changed++;
