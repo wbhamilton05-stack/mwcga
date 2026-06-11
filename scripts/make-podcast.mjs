@@ -95,14 +95,38 @@ RULES:
   const part = (tj.candidates?.[0]?.content?.parts || []).find(p => p.inlineData && p.inlineData.data);
   if (!part) throw new Error('no audio in TTS response');
   const rate = Number((part.inlineData.mimeType.match(/rate=(\d+)/) || [])[1] || 24000);
-  writeFileSync('episode.pcm', Buffer.from(part.inlineData.data, 'base64'));
+  const pcm = Buffer.from(part.inlineData.data, 'base64');
 
   mkdirSync('podcasts', { recursive: true });
   const mp3 = `podcasts/${DATE}-${MODE}.mp3`;
-  execSync(`ffmpeg -y -loglevel error -f s16le -ar ${rate} -ac 1 -i episode.pcm -b:a 64k "${mp3}"`);
+  await pcmToMp3(pcm, rate, mp3);
   console.log(`episode ready: ${mp3} (${Math.round(require_size(mp3) / 1024)} KB)`);
   out('file', mp3);
   out('url', `${SITE}/${mp3}`);
+}
+
+// Encode raw 16-bit mono PCM to MP3. Prefers ffmpeg when present; otherwise
+// installs a pure-JS LAME encoder on the fly (GitHub runners dropped ffmpeg).
+async function pcmToMp3(pcm, rate, outPath) {
+  try {
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    writeFileSync('episode.pcm', pcm);
+    execSync(`ffmpeg -y -loglevel error -f s16le -ar ${rate} -ac 1 -i episode.pcm -b:a 64k "${outPath}"`);
+    return;
+  } catch (e) { console.log('ffmpeg unavailable — using pure-JS encoder'); }
+  execSync('npm install --no-fund --no-audit --no-save @breezystack/lamejs', { stdio: 'inherit' });
+  const mod = await import('@breezystack/lamejs');
+  const L = mod.default || mod;
+  const samples = new Int16Array(pcm.buffer, pcm.byteOffset, Math.floor(pcm.length / 2));
+  const enc = new L.Mp3Encoder(1, rate, 64);
+  const chunks = [];
+  for (let i = 0; i < samples.length; i += 1152) {
+    const b = enc.encodeBuffer(samples.subarray(i, Math.min(i + 1152, samples.length)));
+    if (b.length) chunks.push(Buffer.from(b));
+  }
+  const tail = enc.flush();
+  if (tail.length) chunks.push(Buffer.from(tail));
+  writeFileSync(outPath, Buffer.concat(chunks));
 }
 
 function require_size(p) { return (existsSync(p) ? readFileSync(p).length : 0); }
