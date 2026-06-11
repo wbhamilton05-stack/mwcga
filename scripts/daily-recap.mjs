@@ -267,6 +267,21 @@ async function main() {
   const out = (k, v) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`); };
 
   if (today < FIRST_DAY || today > LAST_DAY) {
+    // PRE-TOURNAMENT SPECIAL: if the one-time kickoff preview is staged in the
+    // repo, send THAT instead. Only reachable before June 11, so it can never
+    // collide with (or repeat after) the daily briefings.
+    if (today < FIRST_DAY) {
+      try {
+        const { readFileSync } = await import('node:fs');
+        const kickoff = readFileSync(new URL('./kickoff-email.html', import.meta.url), 'utf8');
+        writeFileSync('recap.html', kickoff);
+        writeFileSync('recap.txt', 'THE NIGHT-BEFORE-KICKOFF PREVIEW — open the HTML version for the full tremendous experience. ' + SITE_URL);
+        out('send', 'true');
+        out('subject', '🏆 THE NIGHT BEFORE EVERYTHING: MWCGA 2026 — THE GREATEST DRAFT IN HUMAN HISTORY, FOLKS 🇺🇸🦅');
+        console.log('Kickoff preview staged — sending the season premiere.');
+        return;
+      } catch (e) { /* no kickoff file staged — fall through to no-op */ }
+    }
     console.log(`Outside tournament window (${today}) — no briefing.`);
     out('send', 'false');
     return;
