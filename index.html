@@ -1511,23 +1511,31 @@ function clearDirty() {
   try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
 }
 
-async function _doPushToCloud() {
+async function _doPushToCloud(opts = {}) {
   if (!cloudConfigured()) return false;
-  // RETRY SAFETY: our previous PUT may have LANDED even though its response
-  // was lost. If the cloud has since moved past us, re-pushing this snapshot
-  // would erase another house's pick — read before writing.
-  if (_pushFailed) {
+  // ANTI-CLOBBER: read before every write. If the cloud already holds MORE
+  // draft progress than this device (a later pick, or a completed draft we
+  // haven't seen), our snapshot is stale and pushing it would erase real
+  // picks — the exact failure that wiped the draft on 2026-06-11. So we adopt
+  // the cloud instead of overwriting it. The ONLY exception is an explicit
+  // forcePush (the manual "Push my board" button), which the user invokes
+  // precisely because their device is the source of truth.
+  if (!opts.forcePush) {
     try {
       const probe = await fetchWithTimeout(`${CLOUD_API}/${state.cloudGameId}.json`, { cache: 'no-store' });
       if (probe.ok) {
         const p = await probe.json();
-        if (p && p.state && validCloudState(p.state) &&
-            typeof p.state.draftPickIdx === 'number' &&
-            p.state.draftPickIdx > (state.draftPickIdx || 0)) {
-          clearDirty();
-          toast('The draft moved on while this device was out of sync — refreshing the board.', true);
-          pullFromCloud({ force: true, quiet: true });
-          return false;
+        if (p && p.state && validCloudState(p.state)) {
+          const remoteIdx = typeof p.state.draftPickIdx === 'number' ? p.state.draftPickIdx : -1;
+          const localIdx = state.draftPickIdx || 0;
+          const remoteAhead = remoteIdx > localIdx ||
+            (p.state.draftComplete === true && !state.draftComplete);
+          if (remoteAhead) {
+            clearDirty();
+            toast('The board moved on elsewhere — refreshing instead of overwriting.', true);
+            pullFromCloud({ force: true, quiet: true });
+            return false;
+          }
         }
       }
     } catch (e) { /* cloud unreachable — the PUT below will fail and re-arm the retry */ }
@@ -1569,10 +1577,24 @@ async function _doPushToCloud() {
 // All pushes are serialized through a promise chain so overlapping PUTs can't
 // land at Firebase out of order; each push snapshots state when its turn comes.
 let _pushChain = Promise.resolve(false);
-function pushToCloud() {
-  const run = () => _doPushToCloud();
+function pushToCloud(opts = {}) {
+  const run = () => _doPushToCloud(opts);
   _pushChain = _pushChain.then(run, run);
   return _pushChain;
+}
+
+// Manual, deliberate upload: "this device's board is the truth — put it in the
+// cloud now," bypassing the anti-clobber probe. Used by the Push-my-board button
+// and as the recovery path if a device ever shows the right board but the cloud
+// is behind (exactly the 2026-06-11 incident).
+async function forcePushToCloud() {
+  if (!cloudConfigured()) { toast('Not connected to a cloud game.', true); return false; }
+  const picks = (state.rosters && Object.values(state.rosters).reduce((n, r) => n + (Array.isArray(r) ? r.filter(Boolean).length : 0), 0)) || 0;
+  if (!confirm(`Upload THIS device's board to the cloud, replacing what's there?\n\n${state.players?.length || 0} players, ${picks} picks drafted.\n\nUse this if other devices are missing picks that you can see here.`)) return false;
+  _pushFailed = false;
+  const ok = await pushToCloud({ forcePush: true });
+  toast(ok ? '✅ Your board is now saved to the cloud for everyone.' : '❌ Upload failed — check your connection and try again.', !ok);
+  return ok;
 }
 
 async function pullFromCloud(opts = {}) {
@@ -1620,6 +1642,23 @@ async function pullFromCloud(opts = {}) {
       (!state.draftComplete && payload.state.draftComplete === true);
     if (!opts.force && !draftAdvanced && state.cloudLastPushed && payload.savedAt && payload.savedAt <= state.cloudLastPushed) {
       _lastSeenSavedAt = payload.savedAt;
+      return false;
+    }
+    // PROGRESS-REGRESSION GUARD (applies even to forced pulls): draft progress
+    // only ever moves forward. If the cloud has STRICTLY FEWER picks than this
+    // device — and isn't more draft-complete — it's a stale/empty snapshot
+    // (e.g. a device that never drafted pushed its blank state). Adopting it
+    // would erase real picks from the one place they live. This is the guard
+    // that would have prevented the 2026-06-11 wipe. We refuse to adopt and,
+    // if our board never reached the cloud, push it up to heal the cloud.
+    const localIdx = state.draftPickIdx || 0;
+    const remoteRegressed = remoteIdx < localIdx && !(payload.state.draftComplete === true && !state.draftComplete);
+    if (remoteRegressed) {
+      console.warn(`pullFromCloud: refusing to adopt regressed cloud state (remote ${remoteIdx} < local ${localIdx}). Healing cloud from this device.`);
+      _lastSeenSavedAt = payload.savedAt || null;
+      // Our board is ahead — make sure the cloud gets it (won't clobber: the
+      // push does its own anti-clobber probe, and here local is provably ahead).
+      pushToCloud({ forcePush: true });
       return false;
     }
     const cloudGameId = state.cloudGameId;
@@ -2558,11 +2597,22 @@ function renderSettings() {
         try { await navigator.clipboard.writeText(link); toast('Share link copied!'); }
         catch (e) { toast('Copy failed — long-press the link below to copy.', true); }
       }}, '📋 Copy share link'),
-      el('button', { class: 'ghost', onclick: () => pullFromCloud({ force: true }) }, '🔄 Sync now'),
+      // Two-way sync: push any local changes up, then pull the latest down.
+      el('button', { class: 'ghost', onclick: async () => {
+        toast('Syncing…');
+        await pushToCloud();
+        await pullFromCloud({ force: true });
+        toast('Synced.');
+      }}, '🔄 Sync now'),
+      // Deliberate upload: force THIS board into the cloud. The safety net if a
+      // device ever shows the right board but others are missing picks.
+      el('button', { onclick: forcePushToCloud }, '⬆️ Push my board'),
       el('button', { class: 'danger', onclick: () => {
         if (confirm('Disconnect from cloud? Your local data stays intact.')) disconnectCloud();
       }}, '🔌 Disconnect'),
     ));
+    cloudPanel.appendChild(el('div', { class: 'small', style: 'margin-top: 6px; color: var(--muted);' },
+      '“Push my board” uploads what THIS device shows to everyone. Use it if a phone is missing picks you can see here.'));
     cloudPanel.appendChild(el('div', { class: 'small', style: 'margin-top: 10px; word-break: break-all; padding: 8px; background: var(--panel-2); border-radius: 6px; border: 1px solid var(--border);' },
       el('span', {}, 'Share this link with your family: '),
       el('br'),
