@@ -1,0 +1,50 @@
+name: MWCGA Draft Tripwire
+
+# Daily safety check: reads the cloud game and emails an alert if the pick count
+# ever DROPS below the highest we've recorded (sign of a stale device wiping the
+# draft). Records the high-water mark in .mwcga-pickwatch.json so it only fires
+# on a real regression, not on every healthy run.
+
+on:
+  schedule:
+    - cron: '30 13 * * *'   # 08:30 Central — once a day, after the morning sweep
+  workflow_dispatch:        # run manually anytime
+
+permissions:
+  contents: write           # commit the high-water-mark file
+
+concurrency:
+  group: mwcga-watch-picks
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Check cloud pick count
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MWCGA_RECIPIENTS: ${{ secrets.MWCGA_RECIPIENTS }}
+        run: |
+          npm install --no-fund --no-audit nodemailer@7
+          node scripts/watch-picks.mjs
+
+      - name: Save high-water mark
+        run: |
+          if [ -n "$(git status --porcelain .mwcga-pickwatch.json)" ]; then
+            git config user.name "mwcga-radio"
+            git config user.email "actions@users.noreply.github.com"
+            git add .mwcga-pickwatch.json
+            git commit -m "tripwire: update pick high-water mark"
+            git pull --rebase origin main || true
+            git push || echo "push failed (non-fatal)"
+          else
+            echo "No change to high-water mark."
+          fi
