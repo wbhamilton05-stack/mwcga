@@ -8,11 +8,16 @@
 // Test locally:  node scripts/daily-recap.mjs            (uses real today)
 //                MWCGA_FAKE_TODAY=2026-06-15 node scripts/daily-recap.mjs
 // ============================================================================
-import { writeFileSync, appendFileSync } from 'node:fs';
+import { writeFileSync, appendFileSync, readFileSync } from 'node:fs';
 
 const GAME_URL = process.env.MWCGA_GAME_URL || 'https://mwcga-c2e5e-default-rtdb.firebaseio.com/games/wcuaw50n22xo.json';
 const FEED_URL = process.env.MWCGA_FEED_URL || 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 const SITE_URL = 'https://wbhamilton05-stack.github.io/mwcga/?game=wcuaw50n22xo';
+const SITE_BASE = 'https://wbhamilton05-stack.github.io/mwcga';
+// Match-preview manifest (written by the overnight previews cron; present in
+// the workflow checkout). Maps app-style match keys → briefing/episode paths.
+let _previews = {};
+try { _previews = JSON.parse(readFileSync('matchday/index.json', 'utf8')); } catch (e) { /* none yet */ }
 const FIRST_DAY = '2026-06-11', LAST_DAY = '2026-07-20';
 // Two editions share this script: the 8 AM Central MORNING briefing (preview)
 // and the 11 PM Central NIGHTCAP (same-day results). The workflow sets
@@ -330,7 +335,7 @@ async function main() {
         break;
       }
     }
-    return { date: m.date, round: r, t1, t2, s1, s2, p1, p2 };
+    return { date: m.date, round: r, t1, t2, s1, s2, p1, p2, num: m.num };
   });
 
   // Same points math as the app
@@ -394,6 +399,13 @@ async function main() {
 
   const txt = [], html = [];
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const addPreviewLinks = (m) => {
+    const key = m.num != null ? 'k' + m.num : `${m.date}|${m.t1}|${m.t2}`;
+    const pv = _previews[key];
+    if (!pv || !pv.html) return;
+    txt.push(`     📰 Briefing: ${SITE_BASE}/${pv.html}` + (pv.mp3 ? `  ·  🎙️ Listen: ${SITE_BASE}/${pv.mp3}` : ''));
+    html.push(`<p style="font-family:Arial,sans-serif;font-size:13px;margin:0 0 10px 18px;"><a href="${SITE_BASE}/${pv.html}" style="color:#b22234;font-weight:bold;text-decoration:none;">📰 Match Briefing</a>` + (pv.mp3 ? ` &nbsp;·&nbsp; <a href="${SITE_BASE}/${pv.mp3}" style="color:#b22234;font-weight:bold;text-decoration:none;">🎙️ Listen (2 min)</a>` : '') + `</p>`);
+  };
   const addH = (t) => { txt.push('\n== ' + t + ' =='); html.push(`<h2 style="color:#b22234;font-family:Arial,sans-serif;margin:18px 0 6px;">${esc(t)}</h2>`); };
   const addP = (t, bold) => { txt.push(t); html.push(`<p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;margin:6px 0;${bold ? 'font-weight:bold;' : ''}">${esc(t)}</p>`); };
 
@@ -436,6 +448,7 @@ async function main() {
             (upset ? ` A MASSIVE UPSET at ${wOdds} — the experts are in SHAMBLES tonight.` : '') +
             (wo != null ? ` +${wp} points${p.mult > 1 ? ` (×${p.mult} ${ROUND_NAME[m.round]})` : ''}.` : ''));
         }
+        addPreviewLinks(m);
       }
     }
     if (tPending.length) {
@@ -562,6 +575,7 @@ ${html.join('\n')}
       const odds1 = oddsOf(m.t1), odds2 = oddsOf(m.t2);
       const oddsNote = odds1 && odds2 ? ` (odds: ${m.t1} ${odds1}, ${m.t2} ${odds2})` : '';
       addP(`• ${flag(m.t1)} ${m.t1}${o1 != null ? ` (${EMOJI[o1]} ${players[o1]})` : ''} vs ${m.t2}${o2 != null ? ` (${EMOJI[o2]} ${players[o2]})` : ''} ${flag(m.t2)}${roundTag}${oddsNote}${stakes.length ? ' — ' + stakes.join('; ') : ''}${feud}`);
+      addPreviewLinks(m);
     }
 
     // Upset watch: today's biggest David-vs-Goliath where somebody owns David
