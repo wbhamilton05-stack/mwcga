@@ -18,7 +18,10 @@ function centralDate(offsetDays = 0) {
   return new Date(base + offsetDays * 86400e3).toISOString().slice(0, 10);
 }
 const MODE = process.env.MWCGA_MODE || (new Date().getUTCHours() < 8 ? 'night' : 'morning');
-const DATE = centralDate(0);
+let DATE = centralDate(0);
+// Delayed nightcap crons that run past midnight Central still belong to the
+// day that ended — keep the episode filename in sync with the briefing.
+if (MODE === 'night' && !process.env.MWCGA_FAKE_TODAY && new Date(Date.now() - 5 * 3600e3).getUTCHours() < 12) DATE = centralDate(-1);
 
 async function main() {
   if (!KEY) { console.log('GEMINI_API_KEY not set — skipping podcast.'); out('file', ''); out('url', ''); return; }
