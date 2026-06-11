@@ -1360,6 +1360,8 @@ let _pullInFlight = false;          // one pull at a time (focus + visibility bo
 let _lastPullInvalid = false;       // last pull reached the cloud but the blob failed validation
 let _matchPreviews = {};            // match key → {html, mp3} briefing links (loaded at boot, 10c3)
 let _matchPreviewsRaw = '';
+let _newsArchive = [];              // [{date, mode, file, mp3}] past briefings (loaded at boot, 10c3)
+let _newsArchiveRaw = '';
 let _pushFailed = false;            // local state never reached the cloud (e.g. offline pick)
 let _pushRetryTimer = null;
 let _pushRetryDelay = 2000;
@@ -1870,6 +1872,28 @@ function renderToday() {
     const panel = el('div', { class: 'panel' }, el('h2', {}, 'Recent results'));
     recent.forEach(m => panel.appendChild(renderMatchCard(m, false)));
     root.appendChild(panel);
+  }
+
+  // ── 📰 THE MWCGA NEWS DESK — briefing archive + the radio feeds ──
+  if (_newsArchive.length > 0) {
+    const newsPanel = el('div', { class: 'panel' },
+      el('h2', {}, '📰 THE MWCGA NEWS DESK'),
+      el('div', { class: 'sub' }, 'Every briefing and radio show, archived for the historians. They will study this league.'));
+    _newsArchive.slice(0, 8).forEach(b => {
+      const label = (b.mode === 'night' ? '🌙 Nightcap' : '☀️ Morning Briefing') + ' — ' + b.date;
+      newsPanel.appendChild(el('div', { style: 'display:flex; gap:14px; align-items:center; padding:7px 4px; border-bottom: 1px solid var(--border);' },
+        el('span', { style: 'flex:1; font-weight:600; font-size:14px;' }, label),
+        el('a', { href: b.file, target: '_blank', rel: 'noopener', style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '📰 Read'),
+        b.mp3 ? el('a', { href: b.mp3, target: '_blank', rel: 'noopener', style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '🎙️ Listen') : null,
+      ));
+    });
+    newsPanel.appendChild(el('div', { class: 'small', style: 'margin-top: 10px;' },
+      'Subscribe in your podcast app — daily shows: ',
+      el('a', { href: 'podcast.xml', target: '_blank', style: 'color: var(--accent);' }, 'MWCGA Radio'),
+      ' · match previews: ',
+      el('a', { href: 'match-previews.xml', target: '_blank', style: 'color: var(--accent);' }, 'MWCGA Match Previews'),
+    ));
+    root.appendChild(newsPanel);
   }
 }
 
@@ -2669,8 +2693,23 @@ async function loadMatchPreviews() {
     }
   } catch (e) { /* no previews yet — links simply don't render */ }
 }
+async function loadNewsArchive() {
+  try {
+    const r = await fetch('briefings/index.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    const raw = await r.text();
+    if (raw === _newsArchiveRaw) return;
+    const j = JSON.parse(raw);
+    if (Array.isArray(j)) {
+      _newsArchive = j;
+      _newsArchiveRaw = raw;
+      renderAll();
+    }
+  } catch (e) { /* no archive yet */ }
+}
 loadMatchPreviews();
-setInterval(loadMatchPreviews, 6 * 3600e3);
+loadNewsArchive();
+setInterval(() => { loadMatchPreviews(); loadNewsArchive(); }, 6 * 3600e3);
 
 // 10d. Auto-sync match results from openfootball once the tournament starts
 // (local date — UTC would arm this mid-draft on the evening of June 10),
