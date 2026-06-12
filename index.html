@@ -759,6 +759,23 @@ function bookFraction(pct) {
   return best;
 }
 
+// Kid-readable title chance: 9/2 → "18%", 80/1 → "1.2%", 3000/1 → "0.03%".
+function titlePctLabel(team) {
+  const q = impliedTitlePct(team);
+  if (q == null) return null;
+  return (q >= 10 ? q.toFixed(0) : q >= 0.095 ? q.toFixed(1) : q.toFixed(2)) + '%';
+}
+
+// The same chance as a "1 in N shot" for tooltips: 80/1 → "1 in 81".
+function oneInN(team) {
+  const f = TITLE_ODDS[team];
+  if (!f) return null;
+  const [a, b] = String(f).split('/').map(Number);
+  if (!a || !b) return null;
+  const n = (a + b) / b;
+  return '1 in ' + (n >= 10 ? Math.round(n) : n.toFixed(1).replace(/\.0$/, ''));
+}
+
 // Per-seed display labels for the draft UI rank badge
 const SEED_LABEL = {
   1: { text: 'Favorite',  color: '#1a1a1a', bg: 'var(--accent)' },        // gold
@@ -2094,9 +2111,9 @@ function renderMatchCard(m, showOwners = true, showOdds = false) {
         title: 'Locked draft-night title odds — bragging-rights math, draws not modeled. These never move; the scoreboard does the talking.'
       },
         el('div', { class: 'odds-row' },
-          el('span', { class: 'odds-val' }, `🏆 ${TITLE_ODDS[t1]}`),
-          el('span', { class: 'odds-label' }, 'TITLE ODDS'),
-          el('span', { class: 'odds-val right' }, `🏆 ${TITLE_ODDS[t2]}`)),
+          el('span', { class: 'odds-val' }, `🏆 ${TITLE_ODDS[t1]} · ${titlePctLabel(t1)}`),
+          el('span', { class: 'odds-label' }, 'TITLE ODDS · CHANCE'),
+          el('span', { class: 'odds-val right' }, `🏆 ${TITLE_ODDS[t2]} · ${titlePctLabel(t2)}`)),
         el('div', { class: 'odds-bar' },
           el('div', { class: 'l', style: `width:${pct1.toFixed(1)}%` }),
           el('div', { class: 'r' })),
@@ -2592,10 +2609,12 @@ function renderRosters() {
   }
 
   root.appendChild(el('div', { class: 'sub', style: 'margin-bottom: 10px;' },
-    '🏆 = odds to win it all, LOCKED at draft-night value — the board never forgets what the books said about your guys.'));
+    '🏆 = odds & chance to win it all, LOCKED at draft-night value — rosters ranked big dogs first. Long-press a badge for the "1 in N" version.'));
 
   state.players.forEach((p, i) => {
-    const teams = (state.rosters[i] || []).sort((a, b) => TEAMS[a].group.localeCompare(TEAMS[b].group));
+    // Big dogs first: sorted by locked title chance, alphabetical on ties
+    const teams = (state.rosters[i] || []).slice().sort((a, b) =>
+      (impliedTitlePct(b) ?? 0) - (impliedTitlePct(a) ?? 0) || a.localeCompare(b));
     const panel = el('div', { class: 'panel' },
       el('h2', {},
         el('span', { class: 'dot', style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${PLAYER_COLORS[i]};margin-right:8px;` }),
@@ -2609,7 +2628,7 @@ function renderRosters() {
               t,
               el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`),
               TITLE_ODDS[t] ? el('span', { class: 'small', style: 'margin-left:8px; color: var(--accent); font-weight: 700; white-space: nowrap;',
-                title: 'Draft-night odds to win the World Cup (locked)' }, `🏆 ${TITLE_ODDS[t]}`) : null
+                title: `Draft-night odds to win the World Cup (locked) — about a ${oneInN(t)} shot` }, `🏆 ${TITLE_ODDS[t]} · ${titlePctLabel(t)}`) : null
             ),
             el('span', { style: 'color: var(--accent); font-weight: 700;' }, `${tp.total} pts`)
           );
@@ -2625,13 +2644,15 @@ function renderRosters() {
       el('h2', {}, '👻 THE FREE AGENTS'),
       el('div', { class: 'sub' }, 'Nobody picked these teams. If they pull an upset, no points for anyone — but they make the tournament that much more fun to watch.'),
       el('div', { class: 'roster-grid' },
-        state.spoilers.map(t => el('div', { class: 'roster-team', style: 'border-style: dashed;' },
+        state.spoilers.slice().sort((a, b) =>
+          (impliedTitlePct(b) ?? 0) - (impliedTitlePct(a) ?? 0) || a.localeCompare(b)
+        ).map(t => el('div', { class: 'roster-team', style: 'border-style: dashed;' },
           el('span', {},
             el('span', { style: 'margin-right:8px; font-size: 18px;' }, TEAMS[t].flag),
             t,
             el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`),
             TITLE_ODDS[t] ? el('span', { class: 'small', style: 'margin-left:8px; color: var(--accent); font-weight: 700; white-space: nowrap;',
-              title: 'Draft-night odds to win the World Cup (locked)' }, `🏆 ${TITLE_ODDS[t]}`) : null
+              title: `Draft-night odds to win the World Cup (locked) — about a ${oneInN(t)} shot` }, `🏆 ${TITLE_ODDS[t]} · ${titlePctLabel(t)}`) : null
           ),
           el('span', { class: 'small' }, 'No owner')
         ))
