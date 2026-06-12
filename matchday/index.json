@@ -10,5 +10,17 @@
   "mp3": "podcasts/matches/2026-06-11-south-korea-czechia.mp3",
   "title": "⚪ Granddad vs Barnes 🟡 — South Korea vs Czechia",
   "date": "2026-06-11"
+ },
+ "2026-06-12|Canada|Bosnia-Herzegovina": {
+  "html": "matchday/2026-06-12-canada-bosnia-herzegovina.html",
+  "mp3": "podcasts/matches/2026-06-12-canada-bosnia-herzegovina.mp3",
+  "title": "🔴 Will vs Barnes 🟡 — Canada vs Bosnia-Herzegovina",
+  "date": "2026-06-12"
+ },
+ "2026-06-12|United States|Paraguay": {
+  "html": "matchday/2026-06-12-united-states-paraguay.html",
+  "mp3": "podcasts/matches/2026-06-12-united-states-paraguay.mp3",
+  "title": "🔵 Warner vs Will 🔴 — United States vs Paraguay",
+  "date": "2026-06-12"
  }
 }

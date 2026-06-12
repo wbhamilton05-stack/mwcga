@@ -9,6 +9,20 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:category text="Sports"/>
     <item>
+      <title>⚔️ 🔴 Will vs Barnes 🟡 — Canada vs Bosnia-Herzegovina — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-12.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-12-canada-bosnia-herzegovina.mp3" length="886656" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-12-canada-bosnia-herzegovina</guid>
+      <pubDate>Fri, 12 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>⚔️ 🔵 Warner vs Will 🔴 — United States vs Paraguay — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-12.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-12-united-states-paraguay.mp3" length="720576" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-12-united-states-paraguay</guid>
+      <pubDate>Fri, 12 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+    <item>
       <title>⚔️ 🔴 Will vs Warner 🔵 — Mexico vs South Africa — Match Preview</title>
       <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-11.</description>
       <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-11-mexico-south-africa.mp3" length="888960" type="audio/mpeg"/>
