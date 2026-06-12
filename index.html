@@ -370,6 +370,23 @@
     font-size: 11px;
   }
 
+  /* ── VEGAS DESK (draft-night odds strip on upcoming match cards) ── */
+  .odds-strip {
+    margin-top: 8px;
+    padding: 7px 10px 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .odds-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 1px 0; }
+  .odds-row .odds-val { font-weight: 800; min-width: 84px; white-space: nowrap; }
+  .odds-row .odds-val.right { text-align: right; }
+  .odds-row .odds-label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-align: center; flex: 1; }
+  .odds-bar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; margin: 4px 0 3px; border: 1px solid var(--border); }
+  .odds-bar .l { background: var(--accent); }
+  .odds-bar .r { background: #4a90e2; flex: 1; }
+
   /* ── PICK-NOW BANNER ── */
   .pick-now {
     background: linear-gradient(135deg, var(--accent) 0%, #f5b942 50%, var(--accent-2) 150%);
@@ -698,6 +715,49 @@ const TITLE_ODDS = {
   'Jordan':             '2500/1',
   'Haiti':              '3000/1',
 };
+
+// ── THE VEGAS DESK ──────────────────────────────────────────────────────────
+// Display-only math on TITLE_ODDS. The odds themselves are LOCKED at their
+// draft-night values — they never move with results; that's the whole point.
+
+// Implied title chance from fractional odds: 80/1 → 1.23%.
+function impliedTitlePct(team) {
+  const f = TITLE_ODDS[team];
+  if (!f) return null;
+  const [a, b] = String(f).split('/').map(Number);
+  return a && b ? 100 * b / (a + b) : null;
+}
+
+// Head-to-head win chance for one match, from the two teams' title chances.
+// Square-root softening keeps mismatches believable (Spain vs Haiti ≈ 96/4,
+// not 99.8/0.2). Draws aren't modeled — these are bragging-rights numbers.
+function h2hPct(t1, t2) {
+  const q1 = impliedTitlePct(t1), q2 = impliedTitlePct(t2);
+  if (q1 == null || q2 == null) return null;
+  const a = Math.sqrt(q1), b = Math.sqrt(q2);
+  return 100 * a / (a + b);
+}
+
+// American money line from a win percentage, rounded to 5 like the books.
+function moneyline(pct) {
+  const p = pct / 100;
+  const raw = p >= 0.5 ? -100 * p / (1 - p) : 100 * (1 - p) / p;
+  const ml = Math.round(raw / 5) * 5;
+  return (ml > 0 ? '+' : '') + ml;
+}
+
+// Nearest classic bookmaker fraction for a win percentage: 33% → "2/1".
+const BOOK_FRACTIONS = ['1/20','1/12','1/8','1/6','1/5','1/4','2/7','1/3','2/5','4/9','1/2','8/15','4/7','8/13','4/6','8/11','4/5','10/11','1/1','11/10','6/5','5/4','11/8','6/4','13/8','7/4','15/8','2/1','9/4','5/2','11/4','3/1','10/3','7/2','4/1','9/2','5/1','11/2','6/1','7/1','8/1','9/1','10/1','12/1','14/1','16/1','20/1'];
+function bookFraction(pct) {
+  const dec = (100 - pct) / pct;
+  let best = BOOK_FRACTIONS[0], bd = Infinity;
+  for (const f of BOOK_FRACTIONS) {
+    const [a, b] = f.split('/').map(Number);
+    const d = Math.abs(Math.log((a / b) / dec));
+    if (d < bd) { bd = d; best = f; }
+  }
+  return best;
+}
 
 // Per-seed display labels for the draft UI rank badge
 const SEED_LABEL = {
@@ -1923,7 +1983,7 @@ function renderToday() {
       el('h2', {}, `🦅 GAME DAY IN AMERICA · ${todayMatches.length} MATCH${todayMatches.length>1?'ES':''} 🦅`),
       el('div', { class: 'small', style: 'font-weight:700; letter-spacing:0.5px;' }, '🇺🇸 USA · USA · USA · The cheer cards below tell you which patriot to root with 🇺🇸'));
     root.appendChild(banner);
-    todayMatches.forEach(m => root.appendChild(renderMatchCard(m, true)));
+    todayMatches.forEach(m => root.appendChild(renderMatchCard(m, true, true)));
   } else {
     root.appendChild(el('div', { class: 'today-banner' },
       el('h2', {}, nextMatches.length ? '⭐ NO GAMES TODAY — STAY READY ⭐' : '🏆 TOURNAMENT COMPLETE — A TREMENDOUS RUN 🏆'),
@@ -1933,7 +1993,7 @@ function renderToday() {
 
   if (nextMatches.length > 0) {
     const panel = el('div', { class: 'panel' }, el('h2', {}, 'Upcoming'));
-    nextMatches.forEach(m => panel.appendChild(renderMatchCard(m, true)));
+    nextMatches.forEach(m => panel.appendChild(renderMatchCard(m, true, true)));
     root.appendChild(panel);
   }
 
@@ -1977,7 +2037,7 @@ function switchTab(name) {
 }
 
 // ----- MATCH CARD (reused everywhere) -----
-function renderMatchCard(m, showOwners = true) {
+function renderMatchCard(m, showOwners = true, showOdds = false) {
   const round = roundOf(m);
   const mult = ROUND_MULT[round];
   const t1 = mapTeamName(m.team1);
@@ -2021,6 +2081,36 @@ function renderMatchCard(m, showOwners = true) {
     ),
   );
   card.appendChild(teamsRow);
+
+  // Vegas desk — draft-night odds strip on upcoming featured cards. Skipped
+  // once a result is in, and for KO placeholders with no odds (W101 etc).
+  if (showOdds && !scored) {
+    const pct1 = h2hPct(t1, t2);
+    if (pct1 != null) {
+      const pct2 = 100 - pct1;
+      const w1 = Math.round(pct1), w2 = 100 - w1;
+      card.appendChild(el('div', {
+        class: 'odds-strip',
+        title: 'Locked draft-night title odds — bragging-rights math, draws not modeled. These never move; the scoreboard does the talking.'
+      },
+        el('div', { class: 'odds-row' },
+          el('span', { class: 'odds-val' }, `🏆 ${TITLE_ODDS[t1]}`),
+          el('span', { class: 'odds-label' }, 'TITLE ODDS'),
+          el('span', { class: 'odds-val right' }, `🏆 ${TITLE_ODDS[t2]}`)),
+        el('div', { class: 'odds-bar' },
+          el('div', { class: 'l', style: `width:${pct1.toFixed(1)}%` }),
+          el('div', { class: 'r' })),
+        el('div', { class: 'odds-row' },
+          el('span', { class: 'odds-val' }, `${w1}% · ${bookFraction(pct1)}`),
+          el('span', { class: 'odds-label' }, 'WIN CHANCE · ODDS'),
+          el('span', { class: 'odds-val right' }, `${w2}% · ${bookFraction(pct2)}`)),
+        el('div', { class: 'odds-row' },
+          el('span', { class: 'odds-val' }, moneyline(pct1)),
+          el('span', { class: 'odds-label' }, 'MONEY LINE'),
+          el('span', { class: 'odds-val right' }, moneyline(pct2))),
+      ));
+    }
+  }
 
   // Pen shootout indicator
   if (scored && m.pens1 != null && m.pens2 != null) {
@@ -2501,6 +2591,9 @@ function renderRosters() {
     return;
   }
 
+  root.appendChild(el('div', { class: 'sub', style: 'margin-bottom: 10px;' },
+    '🏆 = odds to win it all, LOCKED at draft-night value — the board never forgets what the books said about your guys.'));
+
   state.players.forEach((p, i) => {
     const teams = (state.rosters[i] || []).sort((a, b) => TEAMS[a].group.localeCompare(TEAMS[b].group));
     const panel = el('div', { class: 'panel' },
@@ -2514,7 +2607,9 @@ function renderRosters() {
             el('span', {},
               el('span', { style: 'margin-right:8px; font-size: 18px;' }, TEAMS[t].flag),
               t,
-              el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`)
+              el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`),
+              TITLE_ODDS[t] ? el('span', { class: 'small', style: 'margin-left:8px; color: var(--accent); font-weight: 700; white-space: nowrap;',
+                title: 'Draft-night odds to win the World Cup (locked)' }, `🏆 ${TITLE_ODDS[t]}`) : null
             ),
             el('span', { style: 'color: var(--accent); font-weight: 700;' }, `${tp.total} pts`)
           );
@@ -2534,7 +2629,9 @@ function renderRosters() {
           el('span', {},
             el('span', { style: 'margin-right:8px; font-size: 18px;' }, TEAMS[t].flag),
             t,
-            el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`)
+            el('span', { class: 'small', style: 'margin-left:6px;' }, `(${TEAMS[t].group})`),
+            TITLE_ODDS[t] ? el('span', { class: 'small', style: 'margin-left:8px; color: var(--accent); font-weight: 700; white-space: nowrap;',
+              title: 'Draft-night odds to win the World Cup (locked)' }, `🏆 ${TITLE_ODDS[t]}`) : null
           ),
           el('span', { class: 'small' }, 'No owner')
         ))
