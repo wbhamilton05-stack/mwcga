@@ -22,5 +22,29 @@
   "mp3": "podcasts/matches/2026-06-12-united-states-paraguay.mp3",
   "title": "🔵 Warner vs Will 🔴 — United States vs Paraguay",
   "date": "2026-06-12"
+ },
+ "2026-06-13|Qatar|Switzerland": {
+  "html": "matchday/2026-06-13-qatar-switzerland.html",
+  "mp3": "podcasts/matches/2026-06-13-qatar-switzerland.mp3",
+  "title": "🔵 Warner vs Granddad ⚪ — Qatar vs Switzerland",
+  "date": "2026-06-13"
+ },
+ "2026-06-13|Brazil|Morocco": {
+  "html": "matchday/2026-06-13-brazil-morocco.html",
+  "mp3": "podcasts/matches/2026-06-13-brazil-morocco.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Brazil vs Morocco",
+  "date": "2026-06-13"
+ },
+ "2026-06-13|Haiti|Scotland": {
+  "html": "matchday/2026-06-13-haiti-scotland.html",
+  "mp3": "podcasts/matches/2026-06-13-haiti-scotland.mp3",
+  "title": "⚪ Granddad vs Warner 🔵 — Haiti vs Scotland",
+  "date": "2026-06-13"
+ },
+ "2026-06-13|Australia|Türkiye": {
+  "html": "matchday/2026-06-13-australia-turkiye.html",
+  "mp3": "podcasts/matches/2026-06-13-australia-turkiye.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Australia vs Türkiye",
+  "date": "2026-06-13"
  }
 }
