@@ -46,5 +46,29 @@
   "mp3": "podcasts/matches/2026-06-13-australia-turkiye.mp3",
   "title": "⚪ Granddad vs Barnes 🟡 — Australia vs Türkiye",
   "date": "2026-06-13"
+ },
+ "2026-06-14|Germany|Curaçao": {
+  "html": "matchday/2026-06-14-germany-curacao.html",
+  "mp3": "podcasts/matches/2026-06-14-germany-curacao.mp3",
+  "title": "🔴 Will vs Warner 🔵 — Germany vs Curaçao",
+  "date": "2026-06-14"
+ },
+ "2026-06-14|Ivory Coast|Ecuador": {
+  "html": "matchday/2026-06-14-ivory-coast-ecuador.html",
+  "mp3": "podcasts/matches/2026-06-14-ivory-coast-ecuador.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Ivory Coast vs Ecuador",
+  "date": "2026-06-14"
+ },
+ "2026-06-14|Netherlands|Japan": {
+  "html": "matchday/2026-06-14-netherlands-japan.html",
+  "mp3": "podcasts/matches/2026-06-14-netherlands-japan.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Netherlands vs Japan",
+  "date": "2026-06-14"
+ },
+ "2026-06-14|Sweden|Tunisia": {
+  "html": "matchday/2026-06-14-sweden-tunisia.html",
+  "mp3": "podcasts/matches/2026-06-14-sweden-tunisia.mp3",
+  "title": "🔵 Warner vs Will 🔴 — Sweden vs Tunisia",
+  "date": "2026-06-14"
  }
 }
