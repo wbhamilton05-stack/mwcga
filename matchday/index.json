@@ -94,5 +94,29 @@
   "mp3": "podcasts/matches/2026-06-15-saudi-arabia-uruguay.mp3",
   "title": "🔴 Will vs Granddad ⚪ — Saudi Arabia vs Uruguay",
   "date": "2026-06-15"
+ },
+ "2026-06-16|France|Senegal": {
+  "html": "matchday/2026-06-16-france-senegal.html",
+  "mp3": "podcasts/matches/2026-06-16-france-senegal.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — France vs Senegal",
+  "date": "2026-06-16"
+ },
+ "2026-06-16|Iraq|Norway": {
+  "html": "matchday/2026-06-16-iraq-norway.html",
+  "mp3": "podcasts/matches/2026-06-16-iraq-norway.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Iraq vs Norway",
+  "date": "2026-06-16"
+ },
+ "2026-06-16|Argentina|Algeria": {
+  "html": "matchday/2026-06-16-argentina-algeria.html",
+  "mp3": "podcasts/matches/2026-06-16-argentina-algeria.mp3",
+  "title": "⚪ Granddad vs Warner 🔵 — Argentina vs Algeria",
+  "date": "2026-06-16"
+ },
+ "2026-06-16|Austria|Jordan": {
+  "html": "matchday/2026-06-16-austria-jordan.html",
+  "mp3": "podcasts/matches/2026-06-16-austria-jordan.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Austria vs Jordan",
+  "date": "2026-06-16"
  }
 }
