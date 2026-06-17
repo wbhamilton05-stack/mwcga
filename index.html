@@ -1556,6 +1556,16 @@ function scoreMatch(m) {
     pts2 += 1; breakdown2.push({ label: 'Draw', pts: 1 });
   }
 
+  // Group goal-differential bonus (HOUSE RULE 2026-06-17): on top of W/D/L, the
+  // winner gains +min(margin,3) and the loser −min(margin,3) (capped at ±3, draw
+  // 0) — mirroring how the World Cup uses goal difference to separate group
+  // teams. Knockouts are single-elimination, so no GD bonus there.
+  if (!ko && winner) {
+    const gd = Math.min(Math.abs(s1 - s2), 3);
+    if (winner === 1) { pts1 += gd; pts2 -= gd; breakdown1.push({ label: 'Goal diff', pts: gd }); breakdown2.push({ label: 'Goal diff', pts: -gd }); }
+    else { pts2 += gd; pts1 -= gd; breakdown2.push({ label: 'Goal diff', pts: gd }); breakdown1.push({ label: 'Goal diff', pts: -gd }); }
+  }
+
   // Knockout: advance bonus to the team that moves on (shootout winner included)
   if (ko && winner === 1) { pts1 += 3; breakdown1.push({ label: 'Advanced', pts: 3 }); }
   if (ko && winner === 2) { pts2 += 3; breakdown2.push({ label: 'Advanced', pts: 3 }); }
@@ -2990,7 +3000,8 @@ function teamCeiling(teamName) {
       return t1 === norm || t2 === norm;
     }).forEach(m => {
       const round = roundOf(m);
-      if (round === 'group') maxAdditional += 3 * (ROUND_MULT[round] || 1);
+      // Max a remaining group game can yield: win (3) + GD bonus (+3, capped) = 6.
+      if (round === 'group') maxAdditional += 6 * (ROUND_MULT[round] || 1);
       if (!nextMatch) {
         const opp = mapTeamName(m.team1) === norm ? mapTeamName(m.team2) : mapTeamName(m.team1);
         nextMatch = { date: m.date, opponent: opp, oppFlag: TEAMS[opp]?.flag || '⚽', round };
