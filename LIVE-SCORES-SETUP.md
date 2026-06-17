@@ -10,11 +10,16 @@ Two operator tasks for Will. Both are optional/at-your-pace; the game works with
 
 GitHub Actions can't run every minute, so true 1-min polling runs as a **launchd job on the always-on MBP** (`com.mwcga.livescores.plist`, every 60s — a fast no-op when nothing is live).
 
-**Install (run on the MacBook Pro):**
+**Prerequisite:** Node must be installed and resolvable from a *login* shell (`zsh -lc 'node -v'`). The plist prepends `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin` to PATH, so a userland Node (e.g. `~/.local/opt/node`) or a Homebrew Node both work — no profile edits needed.
+
+**Install (run on the always-on MacBook Pro):** — the plist now uses `$HOME`, so it's machine-independent.
 ```bash
-cp "/Users/willhamilton/Documents/Claude/Projects/World Cup Family Game/deploy/scripts/com.mwcga.livescores.plist" ~/Library/LaunchAgents/
+cp "$HOME/Documents/Claude/Projects/World Cup Family Game/deploy/scripts/com.mwcga.livescores.plist" ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.mwcga.livescores.plist
+launchctl list | grep mwcga      # col 2 == 0 means the last run exited cleanly
 ```
+
+> ✅ **Installed & live on the `hamiltonfamily` MacBook Pro (2026-06-17).** Node v24.16.0 LTS installed userland at `~/.local/opt/node`. First run wrote 3 live updates; polling every 60s.
 
 **Verify it's polling (during or near a match):**
 ```bash
@@ -29,7 +34,7 @@ rm ~/Library/LaunchAgents/com.mwcga.livescores.plist
 
 **Dry-run test anytime (no writes):**
 ```bash
-cd "/Users/willhamilton/Documents/Claude/Projects/World Cup Family Game/deploy/scripts"
+cd "$HOME/Documents/Claude/Projects/World Cup Family Game/deploy/scripts"
 MWCGA_DRY_RUN=true node fetch-live-scores.mjs
 ```
 
