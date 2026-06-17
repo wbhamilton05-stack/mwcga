@@ -17,13 +17,15 @@ name: MWCGA Score Sync
 
 on:
   schedule:
-    - cron: '0 20 * * *'   # 15:00 Central — early afternoon finals
-    - cron: '0 22 * * *'   # 17:00 Central
-    - cron: '0 0 * * *'    # 19:00 Central — evening block
-    - cron: '0 2 * * *'    # 21:00 Central
-    - cron: '0 4 * * *'    # 23:00 Central — late finals
-    - cron: '0 6 * * *'    # 01:00 Central — last West-coast finals
-    - cron: '0 13 * * *'   # 08:00 Central — morning sweep / safety net
+    # Every 30 min across the match-finals window (~14:00 CT → ~01:30 CT) so a
+    # final lands in the app within ~30 min of the whistle instead of ~2 h. The
+    # script is idempotent — extra passes with nothing new cost nothing — and
+    # GitHub schedules are best-effort (often a few min late), so treat this as
+    # "~every 30–45 min." For true minute-to-minute live scores see the ESPN
+    # poller (scripts/fetch-live-scores.mjs).
+    - cron: '*/30 19-23 * * *'   # 14:00–18:30 Central
+    - cron: '*/30 0-6 * * *'     # 19:00 Central – 01:30 Central (next UTC day)
+    - cron: '0 13 * * *'         # 08:00 Central — morning sweep / safety net
   workflow_dispatch:
     inputs:
       dry_run:
