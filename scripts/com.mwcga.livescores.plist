@@ -5,12 +5,13 @@
   <key>Label</key>
   <string>com.mwcga.livescores</string>
 
-  <!-- Run through a login shell so node (homebrew / nvm) is on PATH. -->
+  <!-- Run through a login shell so node (homebrew / nvm / ~/.local/bin) is on PATH.
+       $HOME keeps this portable across both Macs (willhamilton & hamiltonfamily). -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/zsh</string>
     <string>-lc</string>
-    <string>node "/Users/willhamilton/Documents/Claude/Projects/World Cup Family Game/deploy/scripts/fetch-live-scores.mjs"</string>
+    <string>export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"; node "$HOME/Documents/Claude/Projects/World Cup Family Game/deploy/scripts/fetch-live-scores.mjs"</string>
   </array>
 
   <!-- Every 60 seconds. The script is a fast no-op when no match is in progress
