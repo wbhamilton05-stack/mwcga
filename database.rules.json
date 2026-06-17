@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "games": {
+      ".read": false,
+      "$gameId": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['state']) && newData.child('state/players').exists() && newData.child('state/players').hasChildren()",
+        "state": {
+          "players": {
+            "$i": {
+              "name": { ".validate": "newData.isString() && newData.val().length <= 64" }
+            }
+          },
+          "draftPickIdx": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 48" },
+          "scoreOverrides": {
+            "$key": {
+              "score1": { ".validate": "newData.isNumber()" },
+              "score2": { ".validate": "newData.isNumber()" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
