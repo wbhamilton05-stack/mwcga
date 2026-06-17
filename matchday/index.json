@@ -118,5 +118,29 @@
   "mp3": "podcasts/matches/2026-06-16-austria-jordan.mp3",
   "title": "🟡 Barnes vs Will 🔴 — Austria vs Jordan",
   "date": "2026-06-16"
+ },
+ "2026-06-17|Portugal|Congo DR": {
+  "html": "matchday/2026-06-17-portugal-congo-dr.html",
+  "mp3": "podcasts/matches/2026-06-17-portugal-congo-dr.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Portugal vs Congo DR",
+  "date": "2026-06-17"
+ },
+ "2026-06-17|Uzbekistan|Colombia": {
+  "html": "matchday/2026-06-17-uzbekistan-colombia.html",
+  "mp3": "podcasts/matches/2026-06-17-uzbekistan-colombia.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — Uzbekistan vs Colombia",
+  "date": "2026-06-17"
+ },
+ "2026-06-17|England|Croatia": {
+  "html": "matchday/2026-06-17-england-croatia.html",
+  "mp3": "podcasts/matches/2026-06-17-england-croatia.mp3",
+  "title": "🔵 Warner vs Will 🔴 — England vs Croatia",
+  "date": "2026-06-17"
+ },
+ "2026-06-17|Ghana|Panama": {
+  "html": "matchday/2026-06-17-ghana-panama.html",
+  "mp3": "podcasts/matches/2026-06-17-ghana-panama.mp3",
+  "title": "🟡 Barnes vs Granddad ⚪ — Ghana vs Panama",
+  "date": "2026-06-17"
  }
 }
