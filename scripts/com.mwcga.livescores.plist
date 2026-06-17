@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mwcga.livescores</string>
+
+  <!-- Run through a login shell so node (homebrew / nvm) is on PATH. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>node "/Users/willhamilton/Documents/Claude/Projects/World Cup Family Game/deploy/scripts/fetch-live-scores.mjs"</string>
+  </array>
+
+  <!-- Every 60 seconds. The script is a fast no-op when no match is in progress
+       (one ESPN fetch + one Firebase read), so 24/7 is cheap; it only writes to
+       Firebase when a score actually changes. -->
+  <key>StartInterval</key>
+  <integer>60</integer>
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/mwcga-livescores.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/mwcga-livescores.err</string>
+</dict>
+</plist>
