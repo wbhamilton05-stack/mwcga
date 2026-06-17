@@ -134,13 +134,18 @@ export function normalizeFeedMatch(m) {
 export function matchPoints(x) {
   if (x.s1 == null || x.s2 == null) return null;
   const mult = ROUND_MULT[x.round];
-  let pts1 = 0, pts2 = 0, adv = 0;
-  if (x.s1 > x.s2) pts1 = 3; else if (x.s2 > x.s1) pts2 = 3; else { pts1 = 1; pts2 = 1; }
-  if (x.round !== 'group') {
-    if (x.s1 > x.s2) adv = 1; else if (x.s2 > x.s1) adv = 2;
-    else if (x.p1 != null && x.p2 != null && Number(x.p1) !== Number(x.p2)) adv = Number(x.p1) > Number(x.p2) ? 1 : 2;
-    if (adv === 1) pts1 += 3; if (adv === 2) pts2 += 3;
-  }
+  const ko = x.round !== 'group';
+  // Winner; in knockouts a level score is decided by the shootout, and a shootout
+  // winner counts as a FULL regulation winner (house rule 2026-06-17): Win(3) +
+  // Advance(3) = 6×mult, loser 0 (not draw+advance = 4×). Keeps the email/podcast
+  // scoring in lockstep with the app's scoreMatch().
+  let adv = 0;
+  if (x.s1 > x.s2) adv = 1; else if (x.s2 > x.s1) adv = 2;
+  else if (ko && x.p1 != null && x.p2 != null && Number(x.p1) !== Number(x.p2)) adv = Number(x.p1) > Number(x.p2) ? 1 : 2;
+  let pts1 = 0, pts2 = 0;
+  if (adv === 1) pts1 = 3; else if (adv === 2) pts2 = 3; else { pts1 = 1; pts2 = 1; }
+  if (ko && adv === 1) pts1 += 3;
+  if (ko && adv === 2) pts2 += 3;
   return { pts1: pts1 * mult, pts2: pts2 * mult, adv, mult };
 }
 
