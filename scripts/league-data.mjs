@@ -146,6 +146,9 @@ export function matchPoints(x) {
   if (adv === 1) pts1 = 3; else if (adv === 2) pts2 = 3; else { pts1 = 1; pts2 = 1; }
   if (ko && adv === 1) pts1 += 3;
   if (ko && adv === 2) pts2 += 3;
+  // Group goal-differential bonus (house rule 2026-06-17): winner +min(margin,3),
+  // loser −min(margin,3), capped at ±3; group only.
+  if (!ko && adv) { const gd = Math.min(Math.abs(x.s1 - x.s2), 3); if (adv === 1) { pts1 += gd; pts2 -= gd; } else { pts2 += gd; pts1 -= gd; } }
   return { pts1: pts1 * mult, pts2: pts2 * mult, adv, mult };
 }
 
