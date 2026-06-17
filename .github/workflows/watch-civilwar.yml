@@ -1,0 +1,51 @@
+name: MWCGA Civil War Announcer
+
+# When the knockout bracket resolves a match between two teams owned by the SAME
+# player (a "Civil War Bounty"), email the family telling that owner to make
+# their pick. Fires ONCE per matchup — announced match keys are committed to
+# .mwcga-civilwar.json so a matchup is never re-emailed. A no-op (no email, no
+# commit) on every run where nothing new has resolved.
+
+on:
+  schedule:
+    - cron: '15 */2 * * *'   # every 2 hours — catches a fresh bracket draw within ~2h
+  workflow_dispatch:         # run manually anytime
+
+permissions:
+  contents: write            # commit the announced-matchups file
+
+concurrency:
+  group: mwcga-watch-civilwar
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Announce new Civil War matchups
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MWCGA_RECIPIENTS: ${{ secrets.MWCGA_RECIPIENTS }}
+        run: |
+          npm install --no-fund --no-audit nodemailer@7
+          node scripts/watch-civilwar.mjs
+
+      - name: Save announced matchups
+        run: |
+          if [ -n "$(git status --porcelain .mwcga-civilwar.json)" ]; then
+            git config user.name "mwcga-radio"
+            git config user.email "actions@users.noreply.github.com"
+            git add .mwcga-civilwar.json
+            git commit -m "civil-war: record announced matchup(s)"
+            git pull --rebase origin main || true
+            git push || echo "push failed (non-fatal)"
+          else
+            echo "No new matchups to record."
+          fi
