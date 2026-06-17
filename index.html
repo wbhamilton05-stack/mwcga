@@ -1530,12 +1530,25 @@ function scoreMatch(m) {
   const s2 = Math.max(0, Number(m.score2) || 0);
   const breakdown1 = [], breakdown2 = [];
   let pts1 = 0, pts2 = 0;
+  const ko = round !== 'group';
+
+  // Decide the winner. In knockouts a level score is broken by the penalty
+  // shootout, and — HOUSE RULE (2026-06-17) — a shootout winner counts as a
+  // FULL regulation winner: Win(3) + Advance(3) = 6×mult, loser 0. (Previously a
+  // shootout scored draw(1)+advance(3) = only 4×mult for the winner, 1× loser.)
+  // Equal pens is a typo, not a result, so it stays a genuine draw until fixed.
+  let winner = null; // 1 | 2 | null (= genuine draw, group stage or pens pending)
+  if (s1 > s2) winner = 1;
+  else if (s2 > s1) winner = 2;
+  else if (ko && m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
+    winner = Number(m.pens1) > Number(m.pens2) ? 1 : 2;
+  }
 
   // Result points
-  if (s1 > s2) {
+  if (winner === 1) {
     pts1 += 3; breakdown1.push({ label: 'Win', pts: 3 });
     breakdown2.push({ label: 'Loss', pts: 0 });
-  } else if (s2 > s1) {
+  } else if (winner === 2) {
     pts2 += 3; breakdown2.push({ label: 'Win', pts: 3 });
     breakdown1.push({ label: 'Loss', pts: 0 });
   } else {
@@ -1543,18 +1556,9 @@ function scoreMatch(m) {
     pts2 += 1; breakdown2.push({ label: 'Draw', pts: 1 });
   }
 
-  // Knockout: advance bonus to the team that moves on
-  if (round !== 'group') {
-    let advancer = null;
-    if (s1 > s2) advancer = 1;
-    else if (s2 > s1) advancer = 2;
-    else if (m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
-      // Equal pens is a typo, not a result — award no advance bonus until fixed.
-      advancer = Number(m.pens1) > Number(m.pens2) ? 1 : 2;
-    }
-    if (advancer === 1) { pts1 += 3; breakdown1.push({ label: 'Advanced', pts: 3 }); }
-    if (advancer === 2) { pts2 += 3; breakdown2.push({ label: 'Advanced', pts: 3 }); }
-  }
+  // Knockout: advance bonus to the team that moves on (shootout winner included)
+  if (ko && winner === 1) { pts1 += 3; breakdown1.push({ label: 'Advanced', pts: 3 }); }
+  if (ko && winner === 2) { pts2 += 3; breakdown2.push({ label: 'Advanced', pts: 3 }); }
 
   // Apply round multiplier
   pts1 *= mult; pts2 *= mult;
