@@ -537,6 +537,211 @@
     -webkit-tap-highlight-color: transparent;
   }
   details summary:hover { opacity: 0.85; }
+
+  /* ── STANDINGS OVERHAUL ── */
+  .standings-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .standings-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: box-shadow 0.15s;
+  }
+  .standings-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .standings-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .standings-rank {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 56px;
+    flex-shrink: 0;
+  }
+  .standings-rank-icon { font-size: 20px; line-height: 1; }
+  .standings-rank-num {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .standings-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .standings-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  .standings-player-name {
+    font-size: 17px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .standings-pts-big {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .standings-proj-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .standings-rem-pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .standings-projected {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .standings-alive-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .standings-alive-tag { }
+  .standings-elim-tag {
+    color: var(--muted);
+  }
+  .standings-bar-wrap {
+    height: 7px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 2px;
+  }
+  .standings-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+    min-width: 3px;
+  }
+  .standings-bar-pct {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: right;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  /* Teams in Action */
+  .standings-alive-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .standings-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .standings-team-row {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .standings-team-row:last-child { border-bottom: none; }
+  .standings-team-main {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .standings-team-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .standings-team-pts {
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .standings-team-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    padding-left: 28px;
+    flex-wrap: wrap;
+  }
+  .standings-max-add {
+    font-weight: 700;
+  }
+  .standings-next-match {
+    color: var(--muted);
+  }
+
+  /* Eliminated section */
+  .standings-elim-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .standings-elim-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    opacity: 0.6;
+    font-size: 12px;
+  }
+  .standings-elim-name {
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .standings-elim-pts {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -2442,47 +2647,165 @@ function renderStandings() {
     return;
   }
 
-  // Leaderboard — competition ranking: equal points share the same rank
-  const totals = state.players.map((p, i) => ({ idx: i, name: p.name, pts: totalPoints(i) }))
-    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
+  // ── Rank all players by current points ──────────────────────────────────
+  const projections = state.players.map((p, i) => {
+    const proj = calcProjection(i);
+    return { idx: i, name: p.name, ...proj };
+  }).sort((a, b) => b.current - a.current || a.name.localeCompare(b.name));
+
   let _lastPts = null, _lastRank = 1;
-  totals.forEach((t, i) => {
-    t.rank = (t.pts === _lastPts) ? _lastRank : i + 1;
-    _lastPts = t.pts; _lastRank = t.rank;
+  projections.forEach((t, i) => {
+    t.rank = (t.current === _lastPts) ? _lastRank : i + 1;
+    _lastPts = t.current; _lastRank = t.rank;
   });
 
-  const standings = el('div', { class: 'panel' }, el('h2', {}, '🏆 THE LEADERBOARD — WHO\'S WINNING BIGLY 🦅'),
-    el('table', {},
-      el('thead', {}, el('tr', {},
-        el('th', {}, 'Rank'),
-        el('th', {}, 'Player'),
-        el('th', {}, 'Points'),
-        el('th', {}, 'Teams Active'),
-        el('th', {}, 'Eliminated'),
-      )),
-      el('tbody', {},
-        totals.map((t) => {
-          const teams = state.rosters[t.idx] || [];
-          // A team is "active" if no group-stage finale has eliminated them OR
-          // they advanced to a KO round. For simplicity, mark active if they've
-          // played fewer than 3 group games OR if they appear in any KO match.
-          const active = teams.filter(team => teamPoints(team).games.length < 3 || stillAlive(team));
-          const elim = teams.length - active.length;
-          return el('tr', { class: t.rank === 1 ? 'rank-1' : '' },
-            el('td', {}, '#' + t.rank),
-            el('td', {},
-              el('span', { class: 'dot', style: `display:inline-block;width:10px;height:10px;border-radius:50%;background:${PLAYER_COLORS[t.idx]};margin-right:6px;` }),
-              t.name),
-            el('td', { style: 'font-weight:800; color: var(--accent); font-size: 18px;' }, t.pts),
-            el('td', {}, active.length),
-            el('td', {}, elim || '—')
-          );
-        })
-      )
-    ));
-  root.appendChild(standings);
+  const rankIcons  = ['🥇', '🥈', '🥉', '4️⃣'];
+  const rankColors = ['#ffd700', '#c0c0c0', '#cd7f32', '#6b7d9c'];
+  const rankBgs    = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.1)', 'rgba(205,127,50,0.1)', 'rgba(107,125,156,0.08)'];
 
-  // Multiplier preview
+  // Compute the overall max possible (for progress bar denominator)
+  const overallMax = Math.max(...projections.map(t => t.projectedTotal), 1);
+
+  // ── SECTION 1: Tournament Standings ────────────────────────────────────
+  const standingsHeader = el('div', { class: 'panel' },
+    el('h2', {}, '🏆 TOURNAMENT STANDINGS')
+  );
+  root.appendChild(standingsHeader);
+
+  const cardsWrap = el('div', { class: 'standings-cards' });
+  projections.forEach((t, sortedIdx) => {
+    const rankIdx = t.rank - 1;
+    const rankColor = rankColors[Math.min(rankIdx, 3)];
+    const rankBg    = rankBgs[Math.min(rankIdx, 3)];
+    const icon      = rankIcons[Math.min(rankIdx, 3)];
+    const playerColor = PLAYER_COLORS[t.idx];
+    const pct = overallMax > 0 ? Math.round((t.current / overallMax) * 100) : 0;
+    const hasRemaining = t.maxRemaining > 0;
+
+    const card = el('div', {
+      class: 'standings-card',
+      style: `border-left: 5px solid ${rankColor}; background: ${rankBg};`
+    });
+
+    // Rank + name row
+    card.appendChild(el('div', { class: 'standings-card-top' },
+      el('div', { class: 'standings-rank', style: `color: ${rankColor};` },
+        el('span', { class: 'standings-rank-icon' }, icon),
+        el('span', { class: 'standings-rank-num', style: `color: ${rankColor};` }, '#' + t.rank)
+      ),
+      el('div', { class: 'standings-name-wrap' },
+        el('span', { class: 'standings-dot', style: `background: ${playerColor};` }),
+        el('span', { class: 'standings-player-name' }, t.name)
+      ),
+      el('div', { class: 'standings-pts-big', style: `color: ${rankColor};` }, t.current + ' pts')
+    ));
+
+    // Max remaining pill + projected
+    const remPillColor = hasRemaining ? 'var(--green)' : 'var(--muted)';
+    card.appendChild(el('div', { class: 'standings-proj-row' },
+      el('span', {
+        class: 'standings-rem-pill',
+        style: `background: ${hasRemaining ? 'rgba(6,214,160,0.15)' : 'rgba(255,255,255,0.07)'}; color: ${remPillColor}; border: 1px solid ${hasRemaining ? 'rgba(6,214,160,0.4)' : 'var(--border)'};`
+      }, `MAX REMAINING: +${t.maxRemaining} pts`),
+      el('span', { class: 'standings-projected', style: 'color: var(--muted);' }, `PROJECTED MAX: ${t.projectedTotal}`)
+    ));
+
+    // Teams alive
+    card.appendChild(el('div', { class: 'standings-alive-row' },
+      el('span', { class: 'standings-alive-tag', style: `color: ${t.teamsAlive > 0 ? 'var(--green)' : 'var(--muted)'};` },
+        `⚽ ${t.teamsAlive} of ${t.teamsTotal} teams still in`),
+      t.teamsEliminated > 0
+        ? el('span', { class: 'standings-elim-tag' }, `❌ ${t.teamsEliminated} eliminated`)
+        : null
+    ));
+
+    // Progress bar
+    const barFill = el('div', { class: 'standings-bar-fill', style: `width: ${pct}%; background: ${rankColor};` });
+    card.appendChild(el('div', { class: 'standings-bar-wrap' },
+      barFill,
+      el('span', { class: 'standings-bar-pct', style: `color: ${rankColor};` }, pct + '% of leader max')
+    ));
+
+    cardsWrap.appendChild(card);
+  });
+  root.appendChild(cardsWrap);
+
+  // ── SECTION 2: Teams in Action ──────────────────────────────────────────
+  const aliveHeader = el('div', { class: 'panel', style: 'margin-top: 6px;' },
+    el('h2', {}, '⚽ TEAMS IN ACTION')
+  );
+  root.appendChild(aliveHeader);
+
+  projections.forEach(t => {
+    if (t.aliveTeamDetails.length === 0) return;
+    const playerColor = PLAYER_COLORS[t.idx];
+    const section = el('div', { class: 'standings-alive-section' });
+    section.appendChild(el('div', { class: 'standings-section-header' },
+      el('span', { class: 'standings-dot', style: `background: ${playerColor};` }),
+      el('span', { style: 'font-weight: 700; font-size: 14px;' }, t.name),
+      el('span', { class: 'small', style: 'margin-left: 8px;' }, `${t.teamsAlive} alive`)
+    ));
+
+    // Sort alive teams by maxAdditional desc, then currentPoints desc
+    const sorted = t.aliveTeamDetails.slice().sort((a, b) =>
+      b.maxAdditional - a.maxAdditional || b.currentPoints - a.currentPoints
+    );
+    sorted.forEach(td => {
+      const row = el('div', { class: 'standings-team-row' });
+      // Flag + name + earned
+      row.appendChild(el('div', { class: 'standings-team-main' },
+        el('span', { style: 'font-size: 18px; margin-right: 6px;' }, td.flag),
+        el('span', { class: 'standings-team-name' }, td.teamName),
+        el('span', { class: 'standings-team-pts', style: 'color: var(--accent);' }, td.currentPoints + ' pts')
+      ));
+      // Max additional + next match
+      row.appendChild(el('div', { class: 'standings-team-sub' },
+        td.maxAdditional > 0
+          ? el('span', { class: 'standings-max-add', style: 'color: var(--green);' }, `+${td.maxAdditional} max`)
+          : el('span', { class: 'small' }, 'group done'),
+        td.nextMatch
+          ? el('span', { class: 'small standings-next-match' },
+              `Next: ${td.nextMatch.oppFlag} ${td.nextMatch.opponent} · ${td.nextMatch.date}`
+            )
+          : null
+      ));
+      section.appendChild(row);
+    });
+    root.appendChild(section);
+  });
+
+  // ── SECTION 3: Eliminated Teams ────────────────────────────────────────
+  // Gather all eliminated teams across all players
+  const elimByPlayer = projections.map(t => {
+    const elim = (state.rosters[t.idx] || []).filter(team => !stillAlive(team));
+    return { ...t, elimTeams: elim };
+  }).filter(t => t.elimTeams.length > 0);
+
+  if (elimByPlayer.length > 0) {
+    const elimPanel = el('div', { class: 'panel', style: 'margin-top: 6px;' },
+      el('h2', {}, '❌ ELIMINATED TEAMS')
+    );
+    elimByPlayer.forEach(t => {
+      const playerColor = PLAYER_COLORS[t.idx];
+      elimPanel.appendChild(el('div', { class: 'standings-section-header', style: 'margin-top: 10px;' },
+        el('span', { class: 'standings-dot', style: `background: ${playerColor};` }),
+        el('span', { style: 'font-weight: 700; font-size: 13px; color: var(--muted);' }, t.name)
+      ));
+      const grid = el('div', { class: 'standings-elim-grid' });
+      t.elimTeams.forEach(team => {
+        const pts = teamPoints(team).total;
+        grid.appendChild(el('div', { class: 'standings-elim-chip' },
+          el('span', {}, (TEAMS[team]?.flag || '⚽') + ' '),
+          el('span', { class: 'standings-elim-name' }, team),
+          el('span', { class: 'standings-elim-pts' }, pts + ' pts')
+        ));
+      });
+      elimPanel.appendChild(grid);
+    });
+    root.appendChild(elimPanel);
+  }
+
+  // ── SECTION 4: Knockout Ladder ──────────────────────────────────────────
   root.appendChild(el('div', { class: 'panel' },
     el('h2', {}, '⚡ THE KNOCKOUT LADDER — POINTS GO UP BIGLY ⚡'),
     el('div', { class: 'sub' }, '🇺🇸 Points earned in each round get multiplied. The Final is worth 13× the group stage — never give up, never surrender, comebacks are TREMENDOUS! 🇺🇸'),
@@ -2495,57 +2818,150 @@ function renderStandings() {
       )
     )
   ));
-
-  // Player breakdowns
-  totals.forEach(t => {
-    const teams = state.rosters[t.idx] || [];
-    const teamRows = teams.map(team => {
-      const tp = teamPoints(team);
-      return { team, pts: tp.total, games: tp.games.length };
-    }).sort((a, b) => b.pts - a.pts);
-
-    const panel = el('div', { class: 'panel' },
-      el('h2', {},
-        el('span', { class: 'dot', style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${PLAYER_COLORS[t.idx]};margin-right:8px;` }),
-        `${t.name} — ${t.pts} pts`),
-      el('table', {},
-        el('thead', {}, el('tr', {},
-          el('th', {}, 'Team'),
-          el('th', {}, 'Group'),
-          el('th', {}, 'Games'),
-          el('th', {}, 'Points'))),
-        el('tbody', {},
-          teamRows.map(r => el('tr', {},
-            el('td', {}, (TEAMS[r.team]?.flag || '⚽') + ' ' + r.team),
-            el('td', {}, TEAMS[r.team]?.group || '?'),
-            el('td', {}, r.games),
-            el('td', { style: 'font-weight:700; color: var(--accent);' }, r.pts)
-          ))
-        )
-      )
-    );
-    root.appendChild(panel);
-  });
 }
 
 function stillAlive(teamName) {
-  // Heuristic: check if team appears as a played team in a KO win
+  // A team is confirmed eliminated when:
+  //   (a) at least one match with this team has already been played, AND
+  //   (b) no future unplayed match references this team (by name or as a live
+  //       placeholder like "1A", "W74") — meaning there is nowhere left for
+  //       them to show up.
+  //
+  // We also check whether any KO round match has been played at all. If the
+  // tournament hasn't reached the KO stage yet we can't declare anyone out yet
+  // via method (a)+(b) alone, so we fall back to "alive" for group-stage teams
+  // whose group hasn't concluded.
+
+  const norm = mapTeamName(teamName);
+
+  // Build: has any match with this team already been played?
+  let playedAtLeastOne = false;
   for (const m of state.matches) {
-    const r = roundOf(m);
-    if (r === 'group') continue;
-    if (!hasResult(m)) continue;
     const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
-    if (t1 === teamName || t2 === teamName) {
-      // Did they win or advance?
-      if (m.score1 > m.score2 && t1 === teamName) return true;
-      if (m.score2 > m.score1 && t2 === teamName) return true;
-      if (m.score1 === m.score2) {
-        if (m.pens1 != null && m.pens1 > m.pens2 && t1 === teamName) return true;
-        if (m.pens2 != null && m.pens2 > m.pens1 && t2 === teamName) return true;
-      }
+    if ((t1 === norm || t2 === norm) && hasResult(m)) {
+      playedAtLeastOne = true;
+      break;
     }
   }
-  return true; // default to assuming still alive (we don't fully track elimination)
+  if (!playedAtLeastOne) return true; // never played — still here
+
+  // SAFE GUARD (group stage): the knockout bracket is still made of placeholders
+  // ("1A", "W74") that the feed hasn't resolved to real team names yet, so a team
+  // that has finished its 3 group games has no *named* future match — which would
+  // otherwise mark it "eliminated" even if it won its group. Until at least one
+  // knockout match has a result, we can't tell who advanced, so nobody is declared
+  // out. Accurate KO-stage elimination (bracket-aware name resolution) is handled
+  // once real knockout results exist — see KO follow-up.
+  const koStarted = state.matches.some(m => roundOf(m) !== 'group' && hasResult(m));
+  if (!koStarted) return true;
+
+  // Check if any future unplayed match references this team
+  for (const m of state.matches) {
+    if (hasResult(m)) continue; // already played
+    const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+    if (t1 === norm || t2 === norm) return true; // appears in a future match by name
+    // Also check raw (un-normalised) placeholder strings — a KO slot like "1A"
+    // or "W74" might still resolve to this team. We can't know for certain yet,
+    // so treat any unresolved placeholder in a future match as keeping the team
+    // tentatively alive only if the team has played ≤ 2 group matches (still
+    // mathematically able to advance). Once a team has played all 3 group games
+    // we rely on explicit name resolution.
+    const raw1 = m.team1, raw2 = m.team2;
+    const isPlaceholder1 = !TEAMS[mapTeamName(raw1)];
+    const isPlaceholder2 = !TEAMS[mapTeamName(raw2)];
+    if (isPlaceholder1 || isPlaceholder2) {
+      // Count how many group matches this team has played
+      const groupGames = state.matches.filter(gm =>
+        roundOf(gm) === 'group' && hasResult(gm) &&
+        (mapTeamName(gm.team1) === norm || mapTeamName(gm.team2) === norm)
+      ).length;
+      if (groupGames < 3) return true; // group not complete — could still advance
+    }
+  }
+
+  // No future match references this team → eliminated
+  return false;
+}
+
+// ============================================================================
+// 6b.  PROJECTION ENGINE
+// ============================================================================
+/**
+ * calcProjection(playerIdx)
+ * Returns {
+ *   current,          — points already scored
+ *   maxRemaining,     — max additional if all alive teams win all future matches
+ *   projectedTotal,   — current + maxRemaining
+ *   teamsAlive,       — count of still-alive teams
+ *   teamsEliminated,  — count of eliminated teams
+ *   teamsTotal,       — always 12
+ *   aliveTeamDetails  — [{ teamName, flag, currentPoints, maxAdditional, nextMatch }]
+ * }
+ */
+function calcProjection(playerIdx) {
+  const roster = state.rosters[playerIdx] || [];
+  let current = 0;
+  let maxRemaining = 0;
+  const aliveTeamDetails = [];
+
+  // Current points — sum all scored matches
+  roster.forEach(teamName => {
+    current += teamPoints(teamName).total;
+  });
+
+  // For each team, compute max additional points from all unplayed matches
+  roster.forEach(teamName => {
+    const norm = mapTeamName(teamName);
+    const isAlive = stillAlive(teamName);
+    const currentPts = teamPoints(teamName).total;
+
+    let maxAdditional = 0;
+    let nextMatch = null;
+
+    if (isAlive) {
+      // Find all future matches (no result yet) where this team appears by name
+      const futureMatches = state.matches.filter(m => {
+        if (hasResult(m)) return false;
+        const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+        return t1 === norm || t2 === norm;
+      });
+
+      futureMatches.forEach(m => {
+        const round = roundOf(m);
+        const mult = ROUND_MULT[round] || 1;
+        // Max points: win (3 pts) + advance bonus in KO (3 pts), all × mult
+        const maxPtsThisMatch = round === 'group' ? 3 * mult : (3 + 3) * mult;
+        maxAdditional += maxPtsThisMatch;
+        if (!nextMatch) {
+          const opp = mapTeamName(m.team1) === norm ? mapTeamName(m.team2) : mapTeamName(m.team1);
+          const oppFlag = TEAMS[opp]?.flag || '⚽';
+          nextMatch = { date: m.date, opponent: opp, oppFlag, round: roundOf(m) };
+        }
+      });
+
+      maxRemaining += maxAdditional;
+      aliveTeamDetails.push({
+        teamName,
+        flag: TEAMS[teamName]?.flag || '⚽',
+        currentPoints: currentPts,
+        maxAdditional,
+        nextMatch,
+      });
+    }
+  });
+
+  const teamsAlive = roster.filter(t => stillAlive(t)).length;
+  const teamsEliminated = roster.length - teamsAlive;
+
+  return {
+    current,
+    maxRemaining,
+    projectedTotal: current + maxRemaining,
+    teamsAlive,
+    teamsEliminated,
+    teamsTotal: roster.length,
+    aliveTeamDetails,
+  };
 }
 
 // ----- SCHEDULE TAB -----
