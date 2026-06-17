@@ -234,6 +234,8 @@ const flag = t => (TEAMS[t] && TEAMS[t].flag) || '⚽';
 const ODDS = {"Spain": "9/2", "France": "6/1", "England": "11/2", "Argentina": "8/1", "Brazil": "8/1", "Portugal": "12/1", "Germany": "12/1", "Netherlands": "20/1", "Norway": "25/1", "Belgium": "33/1", "Switzerland": "40/1", "Colombia": "50/1", "Morocco": "50/1", "United States": "50/1", "Japan": "66/1", "Uruguay": "80/1", "Mexico": "80/1", "Türkiye": "100/1", "Croatia": "100/1", "Ecuador": "100/1", "Senegal": "100/1", "Austria": "150/1", "Sweden": "150/1", "Paraguay": "150/1", "Canada": "150/1", "Scotland": "250/1", "Bosnia-Herzegovina": "250/1", "Egypt": "300/1", "Czechia": "300/1", "Ivory Coast": "300/1", "Algeria": "300/1", "Ghana": "400/1", "Iran": "500/1", "South Korea": "500/1", "Australia": "500/1", "Tunisia": "500/1", "Congo DR": "750/1", "Qatar": "1000/1", "Saudi Arabia": "1000/1", "South Africa": "1000/1", "New Zealand": "1500/1", "Panama": "1500/1", "Iraq": "1500/1", "Cape Verde": "2000/1", "Uzbekistan": "2000/1", "Curaçao": "2000/1", "Jordan": "2500/1", "Haiti": "3000/1"};
 const impliedPct = f => { const [a, b] = f.split('/').map(Number); return 100 * b / (a + b); };
 const oddsOf = t => ODDS[t] || null;
+// Civil War Bounty default-to-favorite: higher implied title chance; tie/none → t1.
+const civilFavorite = (t1, t2) => ((ODDS[t2] ? impliedPct(ODDS[t2]) : -1) > (ODDS[t1] ? impliedPct(ODDS[t1]) : -1) ? t2 : t1);
 
 // Owner epithets — rotate a little disrespect and a little glory
 const EPITHET = {
@@ -337,6 +339,20 @@ async function main() {
     return { date: m.date, round: r, t1, t2, s1, s2, p1, p2, num: m.num };
   });
 
+  // Tag civil-war KO matches (same owner both sides) with the owner's bounty pick
+  // so points() applies the side-bet — same as the app. Picks ride in st.bounties,
+  // keyed like the app's matchKey ('k'+num for KO).
+  const bounties = st.bounties || {};
+  matches.forEach(m => {
+    if (m.round === 'group') return;
+    const o1 = ownerOf[m.t1], o2 = ownerOf[m.t2];
+    if (o1 != null && o1 === o2) {
+      const key = m.num != null ? 'k' + m.num : `${m.date}|${m.t1}|${m.t2}`;
+      const saved = bounties[key];
+      m.civil = (saved === m.t1 || saved === m.t2) ? saved : civilFavorite(m.t1, m.t2);
+    }
+  });
+
   // Same points math as the app
   function points(m) {
     if (m.s1 == null || m.s2 == null) return null;
@@ -346,6 +362,14 @@ async function main() {
     let adv = 0;
     if (m.s1 > m.s2) adv = 1; else if (m.s2 > m.s1) adv = 2;
     else if (ko && m.p1 != null && m.p2 != null && Number(m.p1) !== Number(m.p2)) adv = Number(m.p1) > Number(m.p2) ? 1 : 2;
+    // CIVIL WAR BOUNTY (house rule 2026-06-17): a KO match with the SAME owner on
+    // both sides (m.civil = that owner's predicted-winner team name) REPLACES
+    // normal scoring — correct → 3×mult, wrong → 1×mult to the winner, loser 0.
+    if (ko && adv && m.civil) {
+      const winName = adv === 1 ? m.t1 : m.t2;
+      const bounty = (m.civil === winName ? 3 : 1) * mult;
+      return { pts1: adv === 1 ? bounty : 0, pts2: adv === 2 ? bounty : 0, adv, mult };
+    }
     let pts1 = 0, pts2 = 0;
     if (adv === 1) pts1 = 3; else if (adv === 2) pts2 = 3; else { pts1 = 1; pts2 = 1; }
     if (ko && adv === 1) pts1 += 3;
