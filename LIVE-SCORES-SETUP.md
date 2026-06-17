@@ -60,3 +60,36 @@ MWCGA_DRY_RUN=true node fetch-live-scores.mjs
 4. A write of `{}` or empty players is **denied**.
 
 Only click **Publish** once those four check out. If anything legitimate is denied, revert (the console keeps history) and tell me which check failed.
+
+---
+
+### 🟢 Dead-simple walkthrough (no jargon — ~5 min, do it whenever)
+
+> This is optional hardening. The game works perfectly without it. Low risk for a private family game, but nice to lock down. If anything looks different from these steps, stop and tell me — don't guess.
+
+**1. Open the rules editor**
+- Go to **https://console.firebase.google.com/** and sign in with the Google account that owns the project (`mwcga-c2e5e`).
+- Click the project tile **mwcga-c2e5e**.
+- In the left sidebar: **Build → Realtime Database**.
+- Click the **Rules** tab (top of that page).
+
+**2. Paste the new rules**
+- You'll see a box of text (the current rules). Select all of it and delete it.
+- Open `deploy/database.rules.json` (in this folder), copy ALL of it, and paste it into that box.
+
+**3. Test it FIRST (this is the safety net)**
+- Look for a small flask/beaker icon or a **"Rules Playground"** link (usually just above the rules box). Click it.
+- Run these 4 quick checks. For each: set the **Location** and **Operation**, leave "Authenticated" OFF, and click **Run**:
+  | # | Location | Operation | Should say |
+  |---|----------|-----------|-----------|
+  | 1 | `/games/wcuaw50n22xo` | get (read) | ✅ Allowed |
+  | 2 | `/games` | get (read) | ❌ Denied |
+  | 3 | `/games/wcuaw50n22xo` | set (write) — paste a blob with `state.players` filled in | ✅ Allowed |
+  | 4 | `/games/wcuaw50n22xo` | set (write) — use `{}` | ❌ Denied |
+- (For check 3, the simplest valid blob to paste in the "Data" field is: `{"state":{"players":[{"name":"Will"}],"draftPickIdx":48,"draftComplete":true}}`.)
+
+**4. Publish (only if all 4 passed)**
+- Click the blue **Publish** button above the rules box.
+- That's it. If any check showed the wrong result, **don't Publish** — click away/undo and tell me which number failed; I'll fix the rules file.
+
+**To undo later:** the Rules tab keeps a history — you can always roll back to the previous version.
