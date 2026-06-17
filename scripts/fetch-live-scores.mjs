@@ -170,4 +170,15 @@ async function main() {
   throw new Error('All PUT attempts failed.');
 }
 
-main().catch(err => { console.error('fetch-live-scores failed:', err.message); process.exit(1); });
+main().catch(err => {
+  // A transient network blip (ESPN / openfootball / Firebase briefly unreachable)
+  // makes a cycle throw — but it's a NO-OP, not a failure: nothing was written and
+  // the next 60s run recovers. Log it on stdout and exit 0 so launchd doesn't record
+  // a spurious failure and the log stays clean. Only an unexpected (non-network)
+  // error exits 1, so real bugs still surface.
+  const msg = String(err && err.message || err);
+  const transient = /fetch failed|HTTP 5\d\d|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ECONNRESET|ECONNREFUSED|network|timeout|aborted/i.test(msg);
+  console.log(`cycle skipped — ${transient ? 'transient' : 'ERROR'}: ${msg}`);
+  console.log('changed=0');
+  process.exit(transient ? 0 : 1);
+});
