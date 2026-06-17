@@ -131,6 +131,13 @@ export function normalizeFeedMatch(m) {
   return { date: m.date, round: roundOf(m), t1, t2, s1, s2, p1, p2, num: m.num };
 }
 
+// Default-to-favorite for a Civil War Bounty: the team with the higher implied
+// title chance from the locked odds. Tie / no odds → t1.
+export function civilFavorite(t1, t2) {
+  const pct = t => { const f = ODDS[t]; if (!f) return -1; const [a, b] = String(f).split('/').map(Number); return a && b ? b / (a + b) : -1; };
+  return pct(t2) > pct(t1) ? t2 : t1;
+}
+
 export function matchPoints(x) {
   if (x.s1 == null || x.s2 == null) return null;
   const mult = ROUND_MULT[x.round];
@@ -142,6 +149,15 @@ export function matchPoints(x) {
   let adv = 0;
   if (x.s1 > x.s2) adv = 1; else if (x.s2 > x.s1) adv = 2;
   else if (ko && x.p1 != null && x.p2 != null && Number(x.p1) !== Number(x.p2)) adv = Number(x.p1) > Number(x.p2) ? 1 : 2;
+  // CIVIL WAR BOUNTY (house rule 2026-06-17): a KO match with the SAME owner on
+  // both sides (x.civil = that owner's predicted-winner team name, tagged by the
+  // caller) REPLACES normal scoring — correct → 3×mult, wrong → 1×mult, paid to
+  // the winning team (loser 0). Mirrors the app's scoreMatch().
+  if (ko && adv && x.civil) {
+    const winName = adv === 1 ? x.t1 : x.t2;
+    const bounty = (x.civil === winName ? 3 : 1) * mult;
+    return { pts1: adv === 1 ? bounty : 0, pts2: adv === 2 ? bounty : 0, adv, mult };
+  }
   let pts1 = 0, pts2 = 0;
   if (adv === 1) pts1 = 3; else if (adv === 2) pts2 = 3; else { pts1 = 1; pts2 = 1; }
   if (ko && adv === 1) pts1 += 3;
@@ -162,6 +178,19 @@ export function buildOwnerContext(feed, st, today) {
   });
 
   const ms = feed.matches.map(normalizeFeedMatch);
+  // Tag civil-war KO matches (same owner both sides) with the owner's bounty pick
+  // so matchPoints applies the side-bet — same as the app. Picks ride in
+  // st.bounties, keyed like the app's matchKey ('k'+num for KO).
+  const bounties = st.bounties || {};
+  for (const x of ms) {
+    if (x.round === 'group') continue;
+    const oa = ownerOf[x.t1], ob = ownerOf[x.t2];
+    if (oa && ob && oa === ob) {
+      const key = x.num != null ? 'k' + x.num : [x.date, x.t1, x.t2].join('|');
+      const saved = bounties[key];
+      x.civil = (saved === x.t1 || saved === x.t2) ? saved : civilFavorite(x.t1, x.t2);
+    }
+  }
   const done = ms.filter(x => x.s1 != null).sort((a, b) => a.date.localeCompare(b.date));
   const totals = Object.fromEntries(players.map(p => [p, 0]));
   const events = Object.fromEntries(players.map(p => [p, []]));
