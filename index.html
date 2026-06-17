@@ -1109,6 +1109,7 @@ const DEFAULT_STATE = {
   draftComplete: false,
   matches: [],          // populated from openfootball + score overrides
   scoreOverrides: {},   // { matchKey: { score1, score2, pens1, pens2 } }
+  bounties: {},         // { matchKey: predicted-winner team NAME } — Civil War Bounty picks (syncs like scoreOverrides)
   lastSync: null,
   hostingMode: 'rotate', // future: support different orderings
   cloudGameId: null,     // jsonblob.com blob ID once connected to cloud
@@ -1500,6 +1501,31 @@ function ownerOfTeam(team) {
   return -1;
 }
 
+// ── CIVIL WAR BOUNTY (house rule 2026-06-17) ────────────────────────────────
+// A KNOCKOUT match between two teams owned by the SAME player. The owner is
+// guaranteed to advance one of them, so normal scoring is moot — it's REPLACED
+// by a side-bet: the owner predicts which of their two teams wins. Returns false
+// for group games and until BOTH knockout slots resolve to real owned teams
+// (placeholders like "W74" aren't owned), which is correct — you only know it's
+// a civil war once both teams are real.
+function isCivilWar(m) {
+  if (roundOf(m) === 'group') return false;
+  const o1 = ownerOfTeam(mapTeamName(m.team1));
+  return o1 >= 0 && o1 === ownerOfTeam(mapTeamName(m.team2));
+}
+
+// The owner's predicted winner for a civil-war match: their saved pick if it's
+// one of the two teams, else DEFAULT-TO-FAVORITE by locked draft-night title
+// odds (higher implied chance), so a forgetful owner isn't punished. Tie / no
+// odds → team1. Generic enough to share with the Crystal Ball Cup (Task G).
+function bountyPick(m) {
+  const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+  const saved = state.bounties && state.bounties[matchKey(m)];
+  if (saved === t1 || saved === t2) return saved;
+  const q1 = impliedTitlePct(t1) ?? -1, q2 = impliedTitlePct(t2) ?? -1;
+  return q2 > q1 ? t2 : t1;
+}
+
 // ============================================================================
 // 6.  SCORING ENGINE
 // ============================================================================
@@ -1542,6 +1568,23 @@ function scoreMatch(m) {
   else if (s2 > s1) winner = 2;
   else if (ko && m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
     winner = Number(m.pens1) > Number(m.pens2) ? 1 : 2;
+  }
+
+  // CIVIL WAR BOUNTY (house rule 2026-06-17): a KO match owned on BOTH sides by
+  // the same player REPLACES normal scoring with the owner's side-bet — correct
+  // pick → 3×mult, wrong → 1×mult. The points go to the WINNING team (the owner
+  // owns both, so they net the bounty); the loser scores 0. Unpicked → favorite.
+  if (ko && winner && isCivilWar(m)) {
+    const pick = bountyPick(m);
+    const winName = winner === 1 ? t1 : t2;
+    const correct = pick === winName;
+    const bounty = (correct ? 3 : 1) * mult;
+    const wb = [{ label: correct ? '⚔️ Bounty ✓' : '⚔️ Bounty ✗', pts: bounty }];
+    return {
+      round, mult,
+      team1: { name: t1, ownerIdx: ownerOfTeam(t1), pts: winner === 1 ? bounty : 0, breakdown: winner === 1 ? wb : [] },
+      team2: { name: t2, ownerIdx: ownerOfTeam(t2), pts: winner === 2 ? bounty : 0, breakdown: winner === 2 ? wb : [] },
+    };
   }
 
   // Result points
@@ -2428,6 +2471,39 @@ function renderMatchCard(m, showOwners = true, showOdds = false) {
     }
   }
 
+  // ⚔️ CIVIL WAR BOUNTY pick control — upcoming KO match, two same-owner teams.
+  // The owner predicts which of their two teams wins (right → 3×, wrong → 1×).
+  // Gated to the owner's device only when seats are claimed (else family trust).
+  if (isCivilWar(m) && !scored) {
+    const owner = ownerOfTeam(t1);
+    const pick = bountyPick(m);
+    const saved = state.bounties && state.bounties[matchKey(m)];
+    const mayPick = deviceMayPick(owner);
+    const wrap = el('div', { style: 'margin-top:8px; padding:9px; border:1px solid var(--accent); border-radius:8px; background:rgba(255,255,255,0.04);' });
+    wrap.appendChild(el('div', { style: 'text-align:center; font-weight:800; letter-spacing:0.5px; color: var(--accent);' }, '⚔️ CIVIL WAR BOUNTY'));
+    wrap.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:2px;' },
+      `${state.players[owner]?.name || 'This owner'} owns both sides — pick the winner. Right → 3×, wrong → 1× (×${mult} round).`));
+    const btns = el('div', { class: 'row', style: 'margin-top:7px; justify-content:center;' });
+    [t1, t2].forEach(name => {
+      const chosen = pick === name;
+      btns.appendChild(el('button', {
+        class: chosen ? '' : 'ghost',
+        onclick: () => {
+          if (!mayPick) { toast('Only ' + (state.players[owner]?.name || 'the owner') + "'s device can set this bounty.", true); return; }
+          if (!state.bounties) state.bounties = {};
+          state.bounties[matchKey(m)] = name;
+          saveState();
+          renderAll();
+          toast('⚔️ Bounty pick: ' + name);
+        }
+      }, `${TEAMS[name]?.flag || '⚽'} ${name}${chosen ? ' ✓' : ''}`));
+    });
+    wrap.appendChild(btns);
+    wrap.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:5px; color: var(--muted);' },
+      saved ? `Locked pick: ${saved}` : `No pick yet — defaulting to favorite: ${pick}`));
+    card.appendChild(wrap);
+  }
+
   // Pen shootout indicator
   if (scored && m.pens1 != null && m.pens2 != null) {
     card.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:4px;' },
@@ -3001,6 +3077,9 @@ function teamCeiling(teamName) {
     }).forEach(m => {
       const round = roundOf(m);
       // Max a remaining group game can yield: win (3) + GD bonus (+3, capped) = 6.
+      // (A future KO match can't be known to be a civil war yet — the bracket is
+      // unresolved — so we still project the full 6×mult there; a harmless, minor
+      // over-projection that settles once the match becomes real.)
       if (round === 'group') maxAdditional += 6 * (ROUND_MULT[round] || 1);
       if (!nextMatch) {
         const opp = mapTeamName(m.team1) === norm ? mapTeamName(m.team2) : mapTeamName(m.team1);
@@ -3199,7 +3278,7 @@ function renderKoMatch(m) {
     if (played) row.appendChild(el('span', { class: 'ko-score' }, String(score) + (pens != null ? ` (${pens})` : '')));
     card.appendChild(row);
   });
-  card.appendChild(el('div', { class: 'ko-meta' }, m.date + (m.ground ? ' · ' + m.ground : '')));
+  card.appendChild(el('div', { class: 'ko-meta' }, (isCivilWar(m) ? '⚔️ Civil War · ' : '') + m.date + (m.ground ? ' · ' + m.ground : '')));
   return card;
 }
 
