@@ -742,6 +742,71 @@
     font-size: 11px;
     font-weight: 700;
   }
+  /* ── Tournament tab ── */
+  .subnav { display:flex; gap:6px; overflow-x:auto; padding:4px 0 12px; -webkit-overflow-scrolling:touch; }
+  .subtab { flex:0 0 auto; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid var(--border);
+            border-radius:999px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .subtab.active { background:var(--accent); color:#0b1a4a; border-color:var(--accent); }
+  .groups-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:12px; }
+  @media (max-width:520px){ .groups-grid { grid-template-columns:1fr; } }
+  .group-card { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .group-card-head { background:rgba(255,255,255,0.06); padding:8px 12px; font-weight:800; font-size:14px; letter-spacing:0.5px; }
+  .group-table { display:flex; flex-direction:column; }
+  .gt-row { display:grid; grid-template-columns:22px 1fr 24px 50px 34px 32px; align-items:center; gap:4px;
+            padding:6px 10px; font-size:13px; border-top:1px solid rgba(255,255,255,0.05); }
+  .gt-wdl { text-align:center; color:var(--muted); font-size:11px; white-space:nowrap; }
+  .gt-head { color:var(--muted); font-size:11px; text-transform:uppercase; font-weight:700; border-top:none; }
+  .gt-pos { text-align:center; color:var(--muted); font-weight:700; }
+  .gt-team { display:flex; align-items:center; gap:6px; min-width:0; }
+  .gt-flag { font-size:16px; }
+  .gt-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .gt-owner { width:9px; height:9px; border-radius:50%; flex:0 0 auto; margin-left:5px; box-shadow:0 0 0 1px rgba(0,0,0,0.3); }
+  .gt-num { text-align:center; color:var(--muted); }
+  .gt-pts { color:#fff; font-weight:800; }
+  .gt-q   { background:linear-gradient(90deg, rgba(6,214,160,0.16), transparent); }
+  .gt-q   .gt-pos { color:var(--green); }
+  .gt-q3  { background:linear-gradient(90deg, rgba(255,215,0,0.14), transparent); }
+  .gt-q3  .gt-pos { color:var(--accent); }
+  .gt-maybe { background:linear-gradient(90deg, rgba(255,215,0,0.05), transparent); }
+  .tourn-soon { color:var(--muted); padding:28px 16px; text-align:center; border:1px dashed var(--border); border-radius:12px; font-weight:600; }
+  /* Bracket */
+  .ko-round { margin-bottom:16px; }
+  .ko-round-head { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-weight:800; font-size:13px; letter-spacing:0.5px; color:var(--accent); text-transform:uppercase; }
+  .ko-mult { background:rgba(255,215,0,0.15); color:var(--accent); border:1px solid rgba(255,215,0,0.4); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:800; }
+  .ko-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; }
+  .ko-match { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; padding:8px 10px; }
+  .ko-team { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:13px; }
+  .ko-flag { font-size:16px; flex:0 0 auto; }
+  .ko-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .ko-tbd { color:var(--muted); font-style:italic; font-size:12px; }
+  .ko-score { font-weight:800; min-width:18px; text-align:right; }
+  .ko-win { color:#fff; font-weight:700; }
+  .ko-win .ko-score { color:var(--green); }
+  .ko-lose { opacity:0.5; }
+  .ko-meta { margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.06); color:var(--muted); font-size:11px; }
+  /* Title Race */
+  .tr-table { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .tr-row { display:grid; grid-template-columns:26px 1fr 54px 46px 36px 42px; align-items:center; gap:6px;
+            padding:7px 12px; font-size:13px; border-top:1px solid rgba(255,255,255,0.05); }
+  .tr-head { color:var(--muted); font-size:11px; text-transform:uppercase; font-weight:700; border-top:none; }
+  .tr-team { display:flex; align-items:center; gap:6px; min-width:0; }
+  .tr-odds { text-align:center; color:var(--accent); font-size:12px; font-weight:700; white-space:nowrap; }
+  .tr-num { text-align:center; color:var(--muted); }
+  .tr-ceil { color:var(--green); font-weight:800; }
+  .tr-out { opacity:0.45; }
+  .tr-out .tr-ceil { color:var(--muted); }
+  /* Dashboard */
+  .dash-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:8px; }
+  .dash-stat { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
+  .dash-stat-num { font-size:22px; font-weight:800; color:var(--accent); }
+  .dash-stat-lbl { font-size:11px; color:var(--muted); margin-top:2px; }
+  .dash-row { display:flex; align-items:center; gap:8px; padding:7px 2px; border-top:1px solid rgba(255,255,255,0.05); font-size:13px; }
+  .dash-row .gt-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dash-rank { color:var(--muted); font-weight:700; width:26px; flex:0 0 auto; }
+  .dash-val { font-weight:800; color:#fff; white-space:nowrap; }
+  /* Mobile: drop the W-D-L column so country names get full room (must come after
+     the base .gt-row rule to win on source order). */
+  @media (max-width:440px){ .gt-row { grid-template-columns:22px 1fr 24px 34px 32px; } .gt-wdl { display:none; } }
 </style>
 </head>
 <body>
@@ -766,6 +831,7 @@
   <button class="tab"        data-tab="standings" onclick="switchTab('standings')">🏆 Rankings</button>
   <button class="tab"        data-tab="schedule"  onclick="switchTab('schedule')">📅 Schedule</button>
   <button class="tab"        data-tab="rosters"   onclick="switchTab('rosters')">🇺🇸 Rosters</button>
+  <button class="tab"        data-tab="tournament" onclick="switchTab('tournament')">🌍 Tournament</button>
   <button class="tab"        data-tab="settings"  onclick="switchTab('settings')">⚙️ Settings</button>
 </div>
 
@@ -784,6 +850,7 @@
 
   <!-- ROSTERS -->
   <section id="tab-rosters"   class="tab-content" style="display:none"></section>
+  <section id="tab-tournament" class="tab-content" style="display:none"></section>
 
   <!-- SETTINGS -->
   <section id="tab-settings"  class="tab-content" style="display:none"></section>
@@ -1250,15 +1317,15 @@ const SCHEDULE_2026 = [
   { round:'Semi-final', num:101, date:'2026-07-14', time:'14:00 UTC-5', team1:'W97', team2:'W98', ground:'Dallas' },
   { round:'Semi-final', num:102, date:'2026-07-15', time:'15:00 UTC-4', team1:'W99', team2:'W100', ground:'Atlanta' },
   // 3RD PLACE + FINAL
-  { round:'Match for third place', date:'2026-07-18', time:'17:00 UTC-4', team1:'L101', team2:'L102', ground:'Miami' },
-  { round:'Final', date:'2026-07-19', time:'15:00 UTC-4', team1:'W101', team2:'W102', ground:'New York/NJ' },
+  { round:'Match for third place', num:103, date:'2026-07-18', time:'17:00 UTC-4', team1:'L101', team2:'L102', ground:'Miami' },
+  { round:'Final', num:104, date:'2026-07-19', time:'15:00 UTC-4', team1:'W101', team2:'W102', ground:'New York/NJ' },
 ];
 
 // Initialise state.matches if empty, and rebuild whenever the embedded
 // schedule changes (SCHEDULE_VERSION bump) — otherwise schedule corrections
 // in future deploys would never reach devices that already have matches
 // cached in localStorage. Existing scores are preserved by match key.
-const SCHEDULE_VERSION = 2;
+const SCHEDULE_VERSION = 3;
 if (!state.matches || state.matches.length === 0 || state.scheduleVersion !== SCHEDULE_VERSION) {
   const oldByKey = {};
   (state.matches || []).forEach(m => { oldByKey[m.key || matchKey(m)] = m; });
@@ -1795,6 +1862,17 @@ function clearDirty() {
   try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
 }
 
+// Count of matches that carry a saved score (official or manual). During the
+// tournament this only ever grows — scores get added or corrected, never mass-
+// deleted — so a remote blob with strictly FEWER scored matches than ours is a
+// stale device about to roll the live game back. This is the tournament-mode
+// analog of the draft-progress guard (which goes inert once draftPickIdx is
+// frozen at 48), and it's what stops a stale phone from clobbering real scores.
+function scoredCount(s) {
+  const ov = s && s.scoreOverrides;
+  return ov && typeof ov === 'object' ? Object.keys(ov).length : 0;
+}
+
 async function _doPushToCloud(opts = {}) {
   if (!cloudConfigured()) return false;
   // ANTI-CLOBBER: read before every write. If the cloud already holds MORE
@@ -1813,7 +1891,8 @@ async function _doPushToCloud(opts = {}) {
           const remoteIdx = typeof p.state.draftPickIdx === 'number' ? p.state.draftPickIdx : -1;
           const localIdx = state.draftPickIdx || 0;
           const remoteAhead = remoteIdx > localIdx ||
-            (p.state.draftComplete === true && !state.draftComplete);
+            (p.state.draftComplete === true && !state.draftComplete) ||
+            (state.draftComplete === true && scoredCount(p.state) > scoredCount(state));
           if (remoteAhead) {
             clearDirty();
             toast('The board moved on elsewhere — refreshing instead of overwriting.', true);
@@ -2132,6 +2211,7 @@ function renderAll() {
   renderStandings();
   renderSchedule();
   renderRosters();
+  renderTournament();
   renderSettings();
   maybeAlertTurn();
 }
@@ -2820,67 +2900,57 @@ function renderStandings() {
   ));
 }
 
+// Which side (1 or 2) won — i.e. ADVANCED from — a played match, or null if it
+// is drawn with no shootout result recorded yet. Goals decide first, then pens.
+function matchWinnerSide(m) {
+  if (!hasResult(m)) return null;
+  const s1 = Number(m.score1), s2 = Number(m.score2);
+  if (s1 > s2) return 1;
+  if (s2 > s1) return 2;
+  if (m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
+    return Number(m.pens1) > Number(m.pens2) ? 1 : 2;
+  }
+  return null; // drawn, no shootout recorded — undecided
+}
+
 function stillAlive(teamName) {
-  // A team is confirmed eliminated when:
-  //   (a) at least one match with this team has already been played, AND
-  //   (b) no future unplayed match references this team (by name or as a live
-  //       placeholder like "1A", "W74") — meaning there is nowhere left for
-  //       them to show up.
+  // Can this team still earn more points (still in the tournament)?
   //
-  // We also check whether any KO round match has been played at all. If the
-  // tournament hasn't reached the KO stage yet we can't declare anyone out yet
-  // via method (a)+(b) alone, so we fall back to "alive" for group-stage teams
-  // whose group hasn't concluded.
-
+  // KNOCKOUT TRUTH (single elimination): the only ALWAYS-correct elimination
+  // signal is "lost a knockout match you actually played." We never infer
+  // elimination from unresolved future bracket placeholders ("W74", "1A") —
+  // the feed resolves those names hours or days after the result lands, so
+  // scanning them would flip advancing teams to "eliminated" during the gap.
+  // The one twist: the two SEMI-FINAL LOSERS still play the 3rd-place match,
+  // so losing the SF does NOT end a team's tournament.
   const norm = mapTeamName(teamName);
+  const mine = state.matches.filter(m =>
+    mapTeamName(m.team1) === norm || mapTeamName(m.team2) === norm);
 
-  // Build: has any match with this team already been played?
-  let playedAtLeastOne = false;
-  for (const m of state.matches) {
-    const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
-    if ((t1 === norm || t2 === norm) && hasResult(m)) {
-      playedAtLeastOne = true;
-      break;
-    }
+  if (!mine.some(hasResult)) return true; // never played yet — still in
+
+  const koPlayed = mine.filter(m => roundOf(m) !== 'group' && hasResult(m));
+  for (const m of koPlayed) {
+    const r = roundOf(m);
+    if (r === 'final' || r === 'third') return false; // played the last match → done
+    const winner = matchWinnerSide(m);
+    if (winner === null) continue; // undecided (e.g. shootout pending) — not a loss
+    const won = winner === (mapTeamName(m.team1) === norm ? 1 : 2);
+    if (!won && r !== 'sf') return false; // lost R32/R16/QF → out (SF loser plays 3rd)
   }
-  if (!playedAtLeastOne) return true; // never played — still here
+  if (koPlayed.length) return true; // into the knockouts, not yet eliminated → alive
 
-  // SAFE GUARD (group stage): the knockout bracket is still made of placeholders
-  // ("1A", "W74") that the feed hasn't resolved to real team names yet, so a team
-  // that has finished its 3 group games has no *named* future match — which would
-  // otherwise mark it "eliminated" even if it won its group. Until at least one
-  // knockout match has a result, we can't tell who advanced, so nobody is declared
-  // out. Accurate KO-stage elimination (bracket-aware name resolution) is handled
-  // once real knockout results exist — see KO follow-up.
-  const koStarted = state.matches.some(m => roundOf(m) !== 'group' && hasResult(m));
-  if (!koStarted) return true;
+  // Only group games played. Don't eliminate on group math until the Round-of-32
+  // bracket is FULLY resolved to real team names — until then a qualifier whose
+  // slot is still a placeholder would be wrongly dropped (the group→KO gap).
+  const r32 = state.matches.filter(m => roundOf(m) === 'r32');
+  const bracketResolved = r32.length > 0 &&
+    r32.every(m => TEAMS[mapTeamName(m.team1)] && TEAMS[mapTeamName(m.team2)]);
+  if (!bracketResolved) return true;
 
-  // Check if any future unplayed match references this team
-  for (const m of state.matches) {
-    if (hasResult(m)) continue; // already played
-    const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
-    if (t1 === norm || t2 === norm) return true; // appears in a future match by name
-    // Also check raw (un-normalised) placeholder strings — a KO slot like "1A"
-    // or "W74" might still resolve to this team. We can't know for certain yet,
-    // so treat any unresolved placeholder in a future match as keeping the team
-    // tentatively alive only if the team has played ≤ 2 group matches (still
-    // mathematically able to advance). Once a team has played all 3 group games
-    // we rely on explicit name resolution.
-    const raw1 = m.team1, raw2 = m.team2;
-    const isPlaceholder1 = !TEAMS[mapTeamName(raw1)];
-    const isPlaceholder2 = !TEAMS[mapTeamName(raw2)];
-    if (isPlaceholder1 || isPlaceholder2) {
-      // Count how many group matches this team has played
-      const groupGames = state.matches.filter(gm =>
-        roundOf(gm) === 'group' && hasResult(gm) &&
-        (mapTeamName(gm.team1) === norm || mapTeamName(gm.team2) === norm)
-      ).length;
-      if (groupGames < 3) return true; // group not complete — could still advance
-    }
-  }
-
-  // No future match references this team → eliminated
-  return false;
+  // R32 is fully drawn: a team that didn't qualify appears in no knockout match.
+  return state.matches.some(m => roundOf(m) !== 'group' &&
+    (mapTeamName(m.team1) === norm || mapTeamName(m.team2) === norm));
 }
 
 // ============================================================================
@@ -2898,54 +2968,64 @@ function stillAlive(teamName) {
  *   aliveTeamDetails  — [{ teamName, flag, currentPoints, maxAdditional, nextMatch }]
  * }
  */
+// Per-team projection: current points earned + the maximum a team can still add
+// (remaining group wins + the reachable knockout Fibonacci ladder ×2,3,5,8,13 —
+// each round a 6-pt KO win). A semi-final LOSER can only reach the 3rd-place
+// match; everyone else still standing can climb to the Final. Rounds already
+// played are skipped so nothing is double-counted. Shared by the player
+// standings and the Title Race so the two always agree.
+function teamCeiling(teamName) {
+  const norm = mapTeamName(teamName);
+  const current = teamPoints(teamName).total;
+  const alive = stillAlive(teamName);
+  let maxAdditional = 0, nextMatch = null;
+  if (alive) {
+    state.matches.filter(m => {
+      if (hasResult(m)) return false;
+      const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+      return t1 === norm || t2 === norm;
+    }).forEach(m => {
+      const round = roundOf(m);
+      if (round === 'group') maxAdditional += 3 * (ROUND_MULT[round] || 1);
+      if (!nextMatch) {
+        const opp = mapTeamName(m.team1) === norm ? mapTeamName(m.team2) : mapTeamName(m.team1);
+        nextMatch = { date: m.date, opponent: opp, oppFlag: TEAMS[opp]?.flag || '⚽', round };
+      }
+    });
+    const myKo = state.matches.filter(m => roundOf(m) !== 'group' && hasResult(m) &&
+      (mapTeamName(m.team1) === norm || mapTeamName(m.team2) === norm));
+    const lostSF = myKo.some(m => roundOf(m) === 'sf' &&
+      matchWinnerSide(m) !== (mapTeamName(m.team1) === norm ? 1 : 2) && matchWinnerSide(m) !== null);
+    const playedThird = state.matches.some(m => roundOf(m) === 'third' && hasResult(m) &&
+      (mapTeamName(m.team1) === norm || mapTeamName(m.team2) === norm));
+    let reachable;
+    if (lostSF) reachable = playedThird ? [] : ['third'];
+    else {
+      const playedRounds = new Set(myKo.map(m => roundOf(m)));
+      reachable = ['r32', 'r16', 'qf', 'sf', 'final'].filter(r => !playedRounds.has(r));
+    }
+    reachable.forEach(r => { maxAdditional += (3 + 3) * (ROUND_MULT[r] || 1); });
+  }
+  return { current, alive, maxAdditional, projectedMax: current + maxAdditional, nextMatch };
+}
+
 function calcProjection(playerIdx) {
   const roster = state.rosters[playerIdx] || [];
   let current = 0;
   let maxRemaining = 0;
   const aliveTeamDetails = [];
 
-  // Current points — sum all scored matches
   roster.forEach(teamName => {
-    current += teamPoints(teamName).total;
-  });
-
-  // For each team, compute max additional points from all unplayed matches
-  roster.forEach(teamName => {
-    const norm = mapTeamName(teamName);
-    const isAlive = stillAlive(teamName);
-    const currentPts = teamPoints(teamName).total;
-
-    let maxAdditional = 0;
-    let nextMatch = null;
-
-    if (isAlive) {
-      // Find all future matches (no result yet) where this team appears by name
-      const futureMatches = state.matches.filter(m => {
-        if (hasResult(m)) return false;
-        const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
-        return t1 === norm || t2 === norm;
-      });
-
-      futureMatches.forEach(m => {
-        const round = roundOf(m);
-        const mult = ROUND_MULT[round] || 1;
-        // Max points: win (3 pts) + advance bonus in KO (3 pts), all × mult
-        const maxPtsThisMatch = round === 'group' ? 3 * mult : (3 + 3) * mult;
-        maxAdditional += maxPtsThisMatch;
-        if (!nextMatch) {
-          const opp = mapTeamName(m.team1) === norm ? mapTeamName(m.team2) : mapTeamName(m.team1);
-          const oppFlag = TEAMS[opp]?.flag || '⚽';
-          nextMatch = { date: m.date, opponent: opp, oppFlag, round: roundOf(m) };
-        }
-      });
-
-      maxRemaining += maxAdditional;
+    const c = teamCeiling(teamName);
+    current += c.current;
+    if (c.alive) {
+      maxRemaining += c.maxAdditional;
       aliveTeamDetails.push({
         teamName,
         flag: TEAMS[teamName]?.flag || '⚽',
-        currentPoints: currentPts,
-        maxAdditional,
-        nextMatch,
+        currentPoints: c.current,
+        maxAdditional: c.maxAdditional,
+        nextMatch: c.nextMatch,
       });
     }
   });
@@ -2965,6 +3045,280 @@ function calcProjection(playerIdx) {
 }
 
 // ----- SCHEDULE TAB -----
+// ============================================================================
+// 9b.  TOURNAMENT VIEWS (Groups · Bracket · Title Race · Dashboard)
+// ============================================================================
+
+// Live group-stage tables built from played group matches. 2026 format: the top 2
+// of each of the 12 groups PLUS the 8 best 3rd-place teams advance to the Round of
+// 32 (24 + 8 = 32). Returns { groups:{A:[row,...]}, letters:[...], thirds:[row,...] }.
+// row = { team, flag, group, P,W,D,L,GF,GA,GD,Pts, rank, thirdRank?, bestThird?, qualifying }.
+function computeGroupStandings() {
+  const rows = {};
+  Object.entries(TEAMS).forEach(([name, t]) => {
+    if (!t.group) return;
+    rows[name] = { team: name, flag: t.flag, group: t.group,
+      P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 };
+  });
+  state.matches.forEach(m => {
+    if (roundOf(m) !== 'group' || !hasResult(m)) return;
+    const a = mapTeamName(m.team1), b = mapTeamName(m.team2);
+    const ra = rows[a], rb = rows[b];
+    if (!ra || !rb) return;
+    const s1 = Number(m.score1), s2 = Number(m.score2);
+    if (Number.isNaN(s1) || Number.isNaN(s2)) return;
+    ra.P++; rb.P++; ra.GF += s1; ra.GA += s2; rb.GF += s2; rb.GA += s1;
+    if (s1 > s2) { ra.W++; rb.L++; ra.Pts += 3; }
+    else if (s2 > s1) { rb.W++; ra.L++; rb.Pts += 3; }
+    else { ra.D++; rb.D++; ra.Pts++; rb.Pts++; }
+  });
+  Object.values(rows).forEach(r => { r.GD = r.GF - r.GA; });
+  // FIFA-style sort: points, then goal difference, then goals for; alpha as the
+  // final tiebreak (real FIFA adds head-to-head / fair-play / lots — overkill here).
+  const cmp = (x, y) => y.Pts - x.Pts || y.GD - x.GD || y.GF - x.GF || x.team.localeCompare(y.team);
+  const letters = [...new Set(Object.values(rows).map(r => r.group))].sort();
+  const groups = {};
+  letters.forEach(L => {
+    const gr = Object.values(rows).filter(r => r.group === L).sort(cmp);
+    gr.forEach((r, i) => { r.rank = i + 1; });
+    groups[L] = gr;
+  });
+  const thirds = letters.map(L => groups[L][2]).filter(Boolean).sort(cmp);
+  thirds.forEach((r, i) => { r.thirdRank = i + 1; r.bestThird = i < 8; });
+  Object.values(rows).forEach(r => {
+    r.qualifying = r.rank <= 2 || (r.rank === 3 && r.bestThird === true);
+  });
+  return { groups, letters, thirds };
+}
+
+let _tournView = 'groups';
+function setTournView(v) { _tournView = v; renderTournament(); }
+
+function renderTournament() {
+  const root = $('#tab-tournament');
+  if (!root) return;
+  root.innerHTML = '';
+  const views = [['groups', '🅰️ Groups'], ['bracket', '🏆 Bracket'], ['title', '📈 Title Race'], ['dash', '📊 Dashboard']];
+  const sub = el('div', { class: 'subnav' });
+  views.forEach(([k, label]) => sub.appendChild(
+    el('button', { class: 'subtab' + (_tournView === k ? ' active' : ''), onclick: () => setTournView(k) }, label)
+  ));
+  root.appendChild(sub);
+  const body = el('div', { class: 'subview' });
+  root.appendChild(body);
+  if (_tournView === 'groups') renderGroupsView(body);
+  else if (_tournView === 'bracket') renderBracketView(body);
+  else if (_tournView === 'title') renderTitleView(body);
+  else renderDashView(body);
+}
+
+function renderGroupsView(root) {
+  const { groups, letters } = computeGroupStandings();
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '🅰️ GROUP STANDINGS'),
+    el('div', { class: 'sub' }, 'Top 2 of every group advance — plus the 8 best 3rd-place teams — to the Round of 32 (24 + 8 = 32). The dot shows each nation’s fantasy owner.')
+  ));
+  const grid = el('div', { class: 'groups-grid' });
+  letters.forEach(L => {
+    const card = el('div', { class: 'group-card' });
+    card.appendChild(el('div', { class: 'group-card-head' }, 'GROUP ' + L));
+    const table = el('div', { class: 'group-table' });
+    table.appendChild(el('div', { class: 'gt-row gt-head' },
+      el('span', { class: 'gt-pos' }, '#'), el('span', { class: 'gt-team' }, 'Team'),
+      el('span', { class: 'gt-num' }, 'P'), el('span', { class: 'gt-wdl' }, 'W-D-L'),
+      el('span', { class: 'gt-num' }, 'GD'), el('span', { class: 'gt-num gt-pts' }, 'Pts')
+    ));
+    groups[L].forEach(r => {
+      const owner = ownerOfTeam(r.team);
+      const status = r.rank <= 2 ? 'q' : (r.rank === 3 && r.bestThird ? 'q3' : (r.rank === 3 ? 'maybe' : 'out'));
+      const team = el('span', { class: 'gt-team' },
+        el('span', { class: 'gt-flag' }, r.flag || '⚽'),
+        el('span', { class: 'gt-name' }, r.team));
+      if (owner >= 0) team.appendChild(el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[owner]}` }));
+      table.appendChild(el('div', { class: 'gt-row gt-' + status },
+        el('span', { class: 'gt-pos' }, String(r.rank)),
+        team,
+        el('span', { class: 'gt-num' }, String(r.P)),
+        el('span', { class: 'gt-wdl' }, `${r.W}-${r.D}-${r.L}`),
+        el('span', { class: 'gt-num' }, (r.GD > 0 ? '+' : '') + r.GD),
+        el('span', { class: 'gt-num gt-pts' }, String(r.Pts))
+      ));
+    });
+    card.appendChild(table);
+    grid.appendChild(card);
+  });
+  root.appendChild(grid);
+}
+
+// Humanize a knockout bracket placeholder ("W74", "1E", "3A/B/C/D/F", "L101")
+// into a readable label. Returns null if the slot is already a real team.
+function koSlotLabel(s) {
+  if (!s) return '';
+  if (TEAMS[mapTeamName(s)]) return null;
+  let mm;
+  if ((mm = s.match(/^W(\d+)$/))) return 'Winner M' + mm[1];
+  if ((mm = s.match(/^L(\d+)$/))) return 'Loser M' + mm[1];
+  if ((mm = s.match(/^1([A-L])$/))) return 'Winner Grp ' + mm[1];
+  if ((mm = s.match(/^2([A-L])$/))) return 'Runner-up Grp ' + mm[1];
+  if (/^3/.test(s)) return '3rd: ' + s.slice(1);
+  return s;
+}
+
+function renderKoMatch(m) {
+  const played = hasResult(m);
+  const winner = matchWinnerSide(m); // 1 | 2 | null
+  const card = el('div', { class: 'ko-match' });
+  [1, 2].forEach(side => {
+    const raw = side === 1 ? m.team1 : m.team2;
+    const name = mapTeamName(raw);
+    const isTeam = !!TEAMS[name];
+    const owner = isTeam ? ownerOfTeam(name) : -1;
+    const score = side === 1 ? m.score1 : m.score2;
+    const pens = side === 1 ? m.pens1 : m.pens2;
+    const cls = 'ko-team' + (played && winner === side ? ' ko-win' : (played && winner && winner !== side ? ' ko-lose' : ''));
+    const row = el('div', { class: cls },
+      el('span', { class: 'ko-flag' }, isTeam ? (TEAMS[name].flag || '⚽') : '⬚'),
+      el('span', { class: 'ko-name' + (isTeam ? '' : ' ko-tbd') }, isTeam ? name : (koSlotLabel(raw) || raw))
+    );
+    if (owner >= 0) row.appendChild(el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[owner]}` }));
+    if (played) row.appendChild(el('span', { class: 'ko-score' }, String(score) + (pens != null ? ` (${pens})` : '')));
+    card.appendChild(row);
+  });
+  card.appendChild(el('div', { class: 'ko-meta' }, m.date + (m.ground ? ' · ' + m.ground : '')));
+  return card;
+}
+
+function renderBracketView(root) {
+  const ROUNDS = [['r32', 'Round of 32'], ['r16', 'Round of 16'], ['qf', 'Quarter-finals'],
+                  ['sf', 'Semi-finals'], ['third', '3rd-Place Match'], ['final', 'Final']];
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '🏆 KNOCKOUT BRACKET'),
+    el('div', { class: 'sub' }, 'The road to the Final. Multipliers climb every round — the Final pays 13×. Slots fill in with real teams as the groups finish.')
+  ));
+  ROUNDS.forEach(([rk, label]) => {
+    const ms = state.matches.filter(m => roundOf(m) === rk).sort((a, b) => (a.num || 0) - (b.num || 0));
+    if (!ms.length) return;
+    const sec = el('div', { class: 'ko-round' });
+    sec.appendChild(el('div', { class: 'ko-round-head' },
+      el('span', {}, label),
+      el('span', { class: 'ko-mult' }, '×' + (ROUND_MULT[rk] || 1))
+    ));
+    const grid = el('div', { class: 'ko-grid' });
+    ms.forEach(m => grid.appendChild(renderKoMatch(m)));
+    sec.appendChild(grid);
+    root.appendChild(sec);
+  });
+}
+
+function renderTitleView(root) {
+  const teams = Object.keys(TEAMS).map(name => {
+    const c = teamCeiling(name);
+    return { name, flag: TEAMS[name].flag, odds: TITLE_ODDS[name] || null,
+      pct: impliedTitlePct(name), pctLabel: titlePctLabel(name),
+      pts: c.current, ceiling: c.projectedMax, alive: c.alive, owner: ownerOfTeam(name) };
+  }).sort((a, b) => (b.pct || 0) - (a.pct || 0) || b.ceiling - a.ceiling || b.pts - a.pts || a.name.localeCompare(b.name));
+
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '📈 TITLE RACE'),
+    el('div', { class: 'sub' }, 'Every nation by its locked draft-night title odds. 🏆 = Vegas odds · Win% = implied chance · Pts = fantasy points earned · Max = projected ceiling up the Fibonacci ladder. Greyed = eliminated.')
+  ));
+  const table = el('div', { class: 'tr-table' });
+  table.appendChild(el('div', { class: 'tr-row tr-head' },
+    el('span', { class: 'gt-pos' }, '#'), el('span', { class: 'tr-team' }, 'Nation'),
+    el('span', { class: 'tr-odds' }, '🏆'), el('span', { class: 'tr-num' }, 'Win%'),
+    el('span', { class: 'tr-num' }, 'Pts'), el('span', { class: 'tr-num tr-ceil' }, 'Max')
+  ));
+  teams.forEach((t, i) => {
+    const team = el('span', { class: 'tr-team' },
+      el('span', { class: 'gt-flag' }, t.flag || '⚽'),
+      el('span', { class: 'gt-name' }, t.name));
+    if (t.owner >= 0) team.appendChild(el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[t.owner]}` }));
+    table.appendChild(el('div', { class: 'tr-row' + (t.alive ? '' : ' tr-out') },
+      el('span', { class: 'gt-pos' }, String(i + 1)),
+      team,
+      el('span', { class: 'tr-odds' }, t.odds || '—'),
+      el('span', { class: 'tr-num' }, t.pctLabel || '—'),
+      el('span', { class: 'tr-num' }, String(t.pts)),
+      el('span', { class: 'tr-num tr-ceil' }, t.alive ? String(t.ceiling) : 'OUT')
+    ));
+  });
+  root.appendChild(table);
+}
+
+function dashStat(big, label) {
+  return el('div', { class: 'dash-stat' },
+    el('div', { class: 'dash-stat-num' }, big), el('div', { class: 'dash-stat-lbl' }, label));
+}
+
+function renderDashView(root) {
+  const played = state.matches.filter(m => hasResult(m) &&
+    TEAMS[mapTeamName(m.team1)] && TEAMS[mapTeamName(m.team2)]);
+  let goals = 0, biggest = null;
+  played.forEach(m => {
+    const s1 = Number(m.score1), s2 = Number(m.score2);
+    goals += s1 + s2;
+    const margin = Math.abs(s1 - s2);
+    if (!biggest || margin > biggest.margin || (margin === biggest.margin && s1 + s2 > biggest.total)) {
+      biggest = { margin, total: s1 + s2, s1, s2 };
+    }
+  });
+
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '📊 TOURNAMENT DASHBOARD'),
+    el('div', { class: 'dash-stats' },
+      dashStat(played.length + '/' + state.matches.length, 'matches played'),
+      dashStat(String(goals), 'goals scored'),
+      dashStat(played.length ? (goals / played.length).toFixed(2) : '0', 'goals / match'),
+      dashStat(biggest ? `${biggest.s1}-${biggest.s2}` : '—', 'biggest result')
+    )
+  ));
+
+  const topTeams = Object.keys(TEAMS).map(n => ({ n, pts: teamPoints(n).total, flag: TEAMS[n].flag, owner: ownerOfTeam(n) }))
+    .filter(t => t.pts > 0).sort((a, b) => b.pts - a.pts).slice(0, 6);
+  if (topTeams.length) {
+    const tn = el('div', { class: 'panel' }, el('h2', {}, '🔥 Top Fantasy Nations'));
+    topTeams.forEach((t, i) => tn.appendChild(el('div', { class: 'dash-row' },
+      el('span', { class: 'dash-rank' }, '#' + (i + 1)),
+      el('span', { class: 'gt-flag' }, t.flag || '⚽'),
+      el('span', { class: 'gt-name' }, t.n),
+      t.owner >= 0 ? el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[t.owner]}` }) : null,
+      el('span', { class: 'dash-val' }, t.pts + ' pts')
+    )));
+    root.appendChild(tn);
+  }
+
+  const upsets = played.map(m => {
+    const w = matchWinnerSide(m); if (!w) return null;
+    const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+    const winT = w === 1 ? t1 : t2, loseT = w === 1 ? t2 : t1;
+    const wp = impliedTitlePct(winT), lp = impliedTitlePct(loseT);
+    if (!wp || !lp || wp >= lp) return null;
+    return { winT, loseT, ratio: lp / wp, s1: Number(m.score1), s2: Number(m.score2), w };
+  }).filter(Boolean).sort((a, b) => b.ratio - a.ratio).slice(0, 5);
+  if (upsets.length) {
+    const up = el('div', { class: 'panel' }, el('h2', {}, '😱 Biggest Upsets'));
+    upsets.forEach(u => up.appendChild(el('div', { class: 'dash-row' },
+      el('span', { class: 'gt-flag' }, TEAMS[u.winT]?.flag || '⚽'),
+      el('span', { class: 'gt-name' }, `${u.winT} beat ${u.loseT}`),
+      el('span', { class: 'dash-val' }, TITLE_ODDS[u.winT] || '')
+    )));
+    root.appendChild(up);
+  }
+
+  if (state.players && state.players.length) {
+    const owners = state.players.map((p, i) => ({ name: p.name, pts: calcProjection(i).current, i }))
+      .sort((a, b) => b.pts - a.pts);
+    const ow = el('div', { class: 'panel' }, el('h2', {}, '🏅 Owner Standings'));
+    owners.forEach((o, i) => ow.appendChild(el('div', { class: 'dash-row' },
+      el('span', { class: 'dash-rank' }, '#' + (i + 1)),
+      el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[o.i]}` }),
+      el('span', { class: 'gt-name' }, o.name),
+      el('span', { class: 'dash-val' }, o.pts + ' pts')
+    )));
+    root.appendChild(ow);
+  }
+}
+
 function renderSchedule() {
   const root = $('#tab-schedule');
   root.innerHTML = '';
