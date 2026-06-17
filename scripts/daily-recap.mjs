@@ -341,13 +341,15 @@ async function main() {
   function points(m) {
     if (m.s1 == null || m.s2 == null) return null;
     const mult = ROUND_MULT[m.round];
-    let pts1 = 0, pts2 = 0, adv = 0;
-    if (m.s1 > m.s2) pts1 = 3; else if (m.s2 > m.s1) pts2 = 3; else { pts1 = 1; pts2 = 1; }
-    if (m.round !== 'group') {
-      if (m.s1 > m.s2) adv = 1; else if (m.s2 > m.s1) adv = 2;
-      else if (m.p1 != null && m.p2 != null && Number(m.p1) !== Number(m.p2)) adv = Number(m.p1) > Number(m.p2) ? 1 : 2;
-      if (adv === 1) pts1 += 3; if (adv === 2) pts2 += 3;
-    }
+    const ko = m.round !== 'group';
+    // Shootout winner = FULL regulation win (house rule 2026-06-17): 6×mult, loser 0.
+    let adv = 0;
+    if (m.s1 > m.s2) adv = 1; else if (m.s2 > m.s1) adv = 2;
+    else if (ko && m.p1 != null && m.p2 != null && Number(m.p1) !== Number(m.p2)) adv = Number(m.p1) > Number(m.p2) ? 1 : 2;
+    let pts1 = 0, pts2 = 0;
+    if (adv === 1) pts1 = 3; else if (adv === 2) pts2 = 3; else { pts1 = 1; pts2 = 1; }
+    if (ko && adv === 1) pts1 += 3;
+    if (ko && adv === 2) pts2 += 3;
     return { pts1: pts1 * mult, pts2: pts2 * mult, adv, mult };
   }
 
