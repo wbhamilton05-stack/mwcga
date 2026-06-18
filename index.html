@@ -863,6 +863,7 @@
   <button class="tab"        data-tab="results"   onclick="switchTab('results')">📋 Results</button>
   <button class="tab"        data-tab="rosters"   onclick="switchTab('rosters')">🇺🇸 Rosters</button>
   <button class="tab"        data-tab="tournament" onclick="switchTab('tournament')">🌍 Tournament</button>
+  <button class="tab"        data-tab="crystal"   onclick="switchTab('crystal')">🔮 Crystal Ball</button>
   <button class="tab"        data-tab="settings"  onclick="switchTab('settings')">⚙️ Settings</button>
 </div>
 
@@ -883,6 +884,7 @@
   <!-- ROSTERS -->
   <section id="tab-rosters"   class="tab-content" style="display:none"></section>
   <section id="tab-tournament" class="tab-content" style="display:none"></section>
+  <section id="tab-crystal"    class="tab-content" style="display:none"></section>
 
   <!-- SETTINGS -->
   <section id="tab-settings"  class="tab-content" style="display:none"></section>
@@ -1142,6 +1144,7 @@ const DEFAULT_STATE = {
   matches: [],          // populated from openfootball + score overrides
   scoreOverrides: {},   // { matchKey: { score1, score2, pens1, pens2 } }
   bounties: {},         // { matchKey: predicted-winner team NAME } — Civil War Bounty picks (syncs like scoreOverrides)
+  predictions: {},      // { matchKey: { playerIdx: 'TeamName'|'DRAW' } } — Crystal Ball Cup side-game picks (syncs like bounties; NEVER touches fantasy scoring)
   lastSync: null,
   hostingMode: 'rotate', // future: support different orderings
   cloudGameId: null,     // jsonblob.com blob ID once connected to cloud
@@ -1556,6 +1559,103 @@ function bountyPick(m) {
   if (saved === t1 || saved === t2) return saved;
   const q1 = impliedTitlePct(t1) ?? -1, q2 = impliedTitlePct(t2) ?? -1;
   return q2 > q1 ? t2 : t1;
+}
+
+// ── 🔮 CRYSTAL BALL CUP (side-game, Task G) ─────────────────────────────────
+// A bragging-rights prediction game that rides ALONGSIDE the league but NEVER
+// touches the sacred fantasy scoring: every family member taps their predicted
+// winner for each match BEFORE kickoff; a separate leaderboard counts hits.
+// Picks live in state.predictions (keyed matchKey → { playerIdx: pick }) and
+// sync through Firebase exactly like state.bounties. Correct pick pays by round
+// (group +1 … Final +13) so late-round calls matter — bragging rights only.
+// Nothing here is imported by scoreMatch/matchPoints/totalPoints.
+
+// The actual winning team NAME of a finished match, or 'DRAW', or null if the
+// result isn't decided yet (no score, or a level KO before its shootout). Uses
+// the same winner logic as scoreMatch (regulation, then penalty shootout).
+function matchOutcome(m) {
+  if (!hasResult(m)) return null;
+  const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+  const s1 = Math.max(0, Number(m.score1) || 0), s2 = Math.max(0, Number(m.score2) || 0);
+  const ko = roundOf(m) !== 'group';
+  if (s1 > s2) return t1;
+  if (s2 > s1) return t2;
+  if (ko && m.pens1 != null && m.pens2 != null && Number(m.pens1) !== Number(m.pens2)) {
+    return Number(m.pens1) > Number(m.pens2) ? t1 : t2;
+  }
+  return 'DRAW'; // group draw (a valid pick) or a level KO awaiting pens (caller treats as undecided for KO)
+}
+
+// Absolute kickoff instant for a match (Date) from its 'YYYY-MM-DD' date + a
+// 'HH:MM UTC±X' stadium-local time, or null if the time can't be parsed. Mirrors
+// centralTime's offset convention (UTC = local − offset); Date.UTC normalises
+// any hour overflow into the right calendar day.
+function matchKickoff(m) {
+  if (!m || !m.date) return null;
+  const t = String(m.time || '').match(/^(\d{1,2}):(\d{2})\s*UTC([+-]\d+)$/);
+  if (!t) return null;
+  const [Y, Mo, D] = m.date.split('-').map(Number);
+  if (!Y || !Mo || !D) return null;
+  return new Date(Date.UTC(Y, Mo - 1, D, parseInt(t[1], 10) - parseInt(t[3], 10), parseInt(t[2], 10)));
+}
+
+// A Crystal Ball pick is LOCKED once the match has a result, is live, or its
+// kickoff has passed. Fail-OPEN: if we can't parse a kickoff time we only lock
+// on live/result — better to let a pick land slightly late than to wrongly lock
+// a family member out before kickoff.
+function pickLocked(m) {
+  if (hasResult(m) || m.live) return true;
+  const ko = matchKickoff(m);
+  return ko ? Date.now() >= ko.getTime() : false;
+}
+
+// The legal Crystal Ball pick options for a match: group games can be drawn,
+// knockouts always resolve to one side.
+function cbOptions(m) {
+  const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+  return roundOf(m) === 'group' ? [t1, 'DRAW', t2] : [t1, t2];
+}
+
+// A player's saved Crystal Ball pick for a match (string), or null. Tolerates
+// both numeric and string player-index keys (Firebase stringifies object keys).
+function cbPickOf(m, i) {
+  const p = state.predictions && state.predictions[matchKey(m)];
+  if (!p) return null;
+  return p[i] ?? p[String(i)] ?? null;
+}
+
+// Record a player's Crystal Ball pick and sync it (same path as a bounty pick).
+function setCbPick(m, i, choice) {
+  const key = matchKey(m);
+  if (!state.predictions) state.predictions = {};
+  if (!state.predictions[key]) state.predictions[key] = {};
+  state.predictions[key][i] = choice;
+  saveState();
+}
+
+// The Crystal Ball leaderboard: one row per player with round-weighted points,
+// correct count, and picks-made. A correct pick pays ROUND_MULT[round] (group 1
+// … Final 13). Entirely separate from the fantasy standings.
+function cbBoard() {
+  const players = state.players || [];
+  const board = players.map((p, i) => ({ name: p.name, idx: i, pts: 0, correct: 0, made: 0 }));
+  if (!board.length) return board;
+  (state.matches || []).forEach(m => {
+    const out = matchOutcome(m);
+    if (out == null) return;                 // undecided — skip
+    if (roundOf(m) !== 'group' && out === 'DRAW') return; // level KO awaiting pens — not yet scorable
+    const weight = ROUND_MULT[roundOf(m)] || 1;
+    board.forEach(row => {
+      const pick = cbPickOf(m, row.idx);
+      if (pick == null) return;              // no pick = no points (you must play to score)
+      row.made++;
+      if (pick === out) { row.pts += weight; row.correct++; }
+    });
+  });
+  board.sort((a, b) => b.pts - a.pts || b.correct - a.correct || a.name.localeCompare(b.name));
+  let lastPts = null, lastRank = 1;
+  board.forEach((b, i) => { b.rank = b.pts === lastPts ? lastRank : i + 1; lastPts = b.pts; lastRank = b.rank; });
+  return board;
 }
 
 // ============================================================================
@@ -2308,6 +2408,7 @@ function renderAll() {
   renderResults();
   renderRosters();
   renderTournament();
+  renderCrystal();
   renderSettings();
   maybeAlertTurn();
 }
@@ -2471,6 +2572,17 @@ function renderToday() {
       el('h2', {}, `🦅 GAME DAY IN AMERICA · ${todayMatches.length} MATCH${todayMatches.length>1?'ES':''} 🦅`),
       el('div', { class: 'small', style: 'font-weight:700; letter-spacing:0.5px;' }, '🇺🇸 USA · USA · USA · The cheer cards below tell you which patriot to root with 🇺🇸'));
     root.appendChild(banner);
+    // 🔮 Crystal Ball nudge — only while at least one of today's games is still
+    // open to pick, so the family taps their predictions before kickoff.
+    if (todayMatches.some(m => !pickLocked(m))) {
+      root.appendChild(el('div', {
+        class: 'today-banner',
+        style: 'cursor:pointer; background:rgba(124,58,237,0.14); border-color:var(--accent);',
+        onclick: () => switchTab('crystal')
+      },
+        el('h2', { style: 'font-size:16px;' }, '🔮 MAKE YOUR CRYSTAL BALL PICKS'),
+        el('div', { class: 'small' }, 'Predict today\'s winners before kickoff for bragging rights — tap to open the Crystal Ball Cup →')));
+    }
     todayMatches.forEach(m => root.appendChild(renderMatchCard(m, true, true)));
   } else {
     root.appendChild(el('div', { class: 'today-banner' },
@@ -3557,6 +3669,159 @@ function renderDashView(root) {
       el('span', { class: 'dash-val' }, o.pts + ' pts')
     )));
     root.appendChild(ow);
+  }
+}
+
+// ----- 🔮 CRYSTAL BALL CUP TAB — predict-the-winner side game -----------------
+// Every family member taps a predicted winner for each match BEFORE kickoff; the
+// Crystal Ball leaderboard tracks correct calls (round-weighted: group +1 … Final
+// +13). Pure bragging rights — this never feeds the fantasy standings. Picks live
+// in state.predictions and sync like bounties. Picks lock at kickoff.
+function cbPickLabel(name) {
+  return name === 'DRAW' ? '🤝 Draw' : `${TEAMS[name]?.flag || '⚽'} ${name}`;
+}
+
+function renderCbMatch(m) {
+  const round = roundOf(m), weight = ROUND_MULT[round] || 1;
+  const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+  const players = state.players || [];
+  const card = el('div', { class: 'match-card' });
+
+  // Header: matchup + round weight + kickoff
+  card.appendChild(el('div', { style: 'display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:15px;' },
+    el('span', {}, `${TEAMS[t1]?.flag || '⚽'} ${t1}`),
+    el('span', { class: 'small', style: 'opacity:0.6; font-weight:600;' }, 'vs'),
+    el('span', {}, `${t2} ${TEAMS[t2]?.flag || '⚽'}`)));
+  const koTime = centralTime(m.time);
+  card.appendChild(el('div', { class: 'small', style: 'text-align:center; color:var(--muted);' },
+    `${ROUND_NAME[round] || round} · 🔮 ×${weight} ${weight > 1 ? '(picks pay BIG)' : ''}${koTime ? ' · ' + koTime : ''}`));
+
+  const out = matchOutcome(m);
+  const decided = out != null && !(round !== 'group' && out === 'DRAW');
+  const locked = pickLocked(m);
+
+  if (decided) {
+    card.appendChild(el('div', { class: 'match-outcome win', style: 'margin-top:6px;' },
+      out === 'DRAW' ? '🤝 Drawn' : `✅ ${out} won`));
+  } else if (locked) {
+    card.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:6px; color:var(--accent);' },
+      '🔒 Picks locked' + (out === 'DRAW' ? ' — level, awaiting shootout' : '')));
+  }
+
+  // One row per player: their pick (editable when open + this device may pick).
+  const rows = el('div', { style: 'margin-top:8px; display:flex; flex-direction:column; gap:6px;' });
+  players.forEach((p, i) => {
+    const pick = cbPickOf(m, i);
+    const mayPick = !locked && deviceMayPick(i);
+    const row = el('div', { style: 'display:flex; align-items:center; gap:8px; flex-wrap:wrap;' });
+    row.appendChild(el('span', { class: 'dot', style: `background:${PLAYER_COLORS[i]}` }));
+    row.appendChild(el('span', { style: 'min-width:74px; font-weight:700; font-size:13px;' }, p.name));
+
+    if (decided || locked) {
+      // Read-only: show the pick (and ✓/✗ + points once decided).
+      if (pick == null) {
+        row.appendChild(el('span', { class: 'small', style: 'color:var(--muted);' }, '— no pick'));
+      } else {
+        const hit = decided && pick === out;
+        const tag = decided ? (hit ? ` ✓ +${weight}` : ' ✗') : '';
+        row.appendChild(el('span', {
+          class: 'pts-pill',
+          style: decided
+            ? `background:${hit ? PLAYER_COLORS[i] : 'rgba(255,255,255,0.08)'}; color:${hit ? '#1a1a1a' : 'var(--muted)'}; border:1px solid ${hit ? 'transparent' : 'var(--border)'};`
+            : 'background:rgba(255,255,255,0.06); border:1px solid var(--border);'
+        }, cbPickLabel(pick) + tag));
+      }
+    } else {
+      // Open: pick buttons for each option, current pick highlighted.
+      const opts = el('div', { class: 'row', style: 'gap:6px; flex:1;' });
+      cbOptions(m).forEach(opt => {
+        const chosen = pick === opt;
+        opts.appendChild(el('button', {
+          class: (chosen ? '' : 'ghost') + ' cb-opt',
+          style: 'font-size:12px; padding:5px 9px;',
+          onclick: () => {
+            if (!mayPick) { toast(`Only ${p.name}'s device can set this pick (claim seats in Settings).`, true); return; }
+            setCbPick(m, i, opt);
+            renderCrystal();
+            toast(`🔮 ${p.name} picks ${opt === 'DRAW' ? 'a draw' : opt}`);
+          }
+        }, cbPickLabel(opt) + (chosen ? ' ✓' : '')));
+      });
+      row.appendChild(opts);
+    }
+    rows.appendChild(row);
+  });
+  card.appendChild(rows);
+  return card;
+}
+
+function renderCrystal() {
+  const root = $('#tab-crystal');
+  if (!root) return;
+  root.innerHTML = '';
+
+  if (!state.players || state.players.length === 0) {
+    root.appendChild(el('div', { class: 'panel' },
+      el('h2', {}, '🔮 THE CRYSTAL BALL CUP'),
+      el('div', { class: 'sub' }, 'A side game for the whole family — predict each match winner before kickoff. Set up the draft first, then come back to gaze into the future.'),
+      el('div', { class: 'row' }, el('button', { onclick: () => switchTab('draft') }, '⭐ Set Up Draft →'))));
+    return;
+  }
+
+  // Intro + how it works
+  root.appendChild(el('div', { class: 'panel' },
+    el('h2', {}, '🔮 THE CRYSTAL BALL CUP'),
+    el('div', { class: 'sub' },
+      'Tap your predicted winner for every match BEFORE it kicks off. Right calls earn Crystal Ball points — and they pay by round, so nailing a Final is worth a TREMENDOUS 13×. This is pure bragging rights: it never changes the real fantasy scoreboard.')));
+
+  // Leaderboard
+  const board = cbBoard();
+  const lead = el('div', { class: 'panel' }, el('h2', {}, '🏆 CRYSTAL BALL STANDINGS'));
+  const anyPicks = board.some(b => b.made > 0);
+  if (!anyPicks) {
+    lead.appendChild(el('div', { class: 'sub' }, 'No picks scored yet — make your calls below and watch this board come alive.'));
+  } else {
+    board.forEach(b => {
+      lead.appendChild(el('div', { style: 'display:flex; align-items:center; gap:10px; padding:7px 4px; border-bottom:1px solid var(--border);' },
+        el('span', { style: 'width:22px; font-weight:800; color:var(--muted);' }, '#' + b.rank),
+        el('span', { class: 'dot', style: `background:${PLAYER_COLORS[b.idx]}` }),
+        el('span', { style: 'flex:1; font-weight:700;' }, b.name),
+        el('span', { class: 'small', style: 'color:var(--muted);' }, `${b.correct}/${b.made} correct`),
+        el('span', { class: 'pts', style: 'font-weight:800;' }, b.pts + ' pts')));
+    });
+  }
+  root.appendChild(lead);
+
+  // Seat hint
+  const seats = deviceSeats();
+  root.appendChild(el('div', { class: 'small', style: 'text-align:center; color:var(--muted); margin:2px 0 8px;' },
+    seats.length
+      ? `This device picks for: ${seats.map(i => state.players[i]?.name).filter(Boolean).join(', ')} (change in Settings).`
+      : 'Open device — anyone can tap their own pick. Claim seats in Settings to lock each phone to its player.'));
+
+  // Match lists: today's games, then upcoming, then recently decided.
+  const today = localDateStr();
+  const todays = state.matches.filter(m => m.date === today);
+  const upcoming = state.matches.filter(m => m.date > today && !hasResult(m)).slice(0, 6);
+  const decided = state.matches.filter(m => matchOutcome(m) != null).slice(-6).reverse();
+
+  if (todays.length) {
+    const panel = el('div', { class: 'panel' }, el('h2', {}, '🔮 TODAY — LOCK IN YOUR PICKS'));
+    todays.forEach(m => panel.appendChild(renderCbMatch(m)));
+    root.appendChild(panel);
+  }
+  if (upcoming.length) {
+    const panel = el('div', { class: 'panel' }, el('h2', {}, '🗓️ COMING UP — CALL THEM EARLY'));
+    upcoming.forEach(m => panel.appendChild(renderCbMatch(m)));
+    root.appendChild(panel);
+  }
+  if (decided.length) {
+    const panel = el('div', { class: 'panel' }, el('h2', {}, '📜 HOW YOUR CALLS LANDED'));
+    decided.forEach(m => panel.appendChild(renderCbMatch(m)));
+    root.appendChild(panel);
+  }
+  if (!todays.length && !upcoming.length && !decided.length) {
+    root.appendChild(el('div', { class: 'panel' }, el('div', { class: 'sub' }, 'No matches to predict right now — check back on game day.')));
   }
 }
 

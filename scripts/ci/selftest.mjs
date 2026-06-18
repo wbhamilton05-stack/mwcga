@@ -6,9 +6,12 @@
 //  Family League build shipped a 100%-NaN scoring regression that code review
 //  never saw and an executable self-test caught instantly (0/10 → 23/23).
 //
-//  Target: `matchPoints` in league-data.mjs (the email/podcast scoring path),
-//  which mirrors the app's `scoreMatch`. The `league-data.mjs` drift check
-//  (separate gate, deferred) keeps that mirror honest with index.html.
+//  Targets: `matchPoints` in league-data.mjs (the email/podcast scoring path,
+//  which mirrors the app's `scoreMatch`), PLUS the Crystal Ball Cup side-game
+//  core (`crystalOutcome` / `crystalBallPoints`) — a bragging-rights predict-
+//  the-winner game whose round-weighting is asserted here so it is executable-
+//  verified, not preview-only. The `league-data.mjs` drift check (separate
+//  gate, deferred) keeps these mirrors honest with index.html.
 //
 //  House rules under test (locked 2026-06-17 — see memory `mwcga-scoring-rules`):
 //   • Group:    win 3 / draw 1 / loss 0  +  goal-diff bonus ±min(margin,3)   (×mult, group=1)
@@ -18,7 +21,7 @@
 //
 //  Exit non-zero on any failure so CI goes red.
 // ============================================================================
-import { matchPoints, ROUND_MULT } from '../league-data.mjs';
+import { matchPoints, ROUND_MULT, crystalOutcome, crystalBallPoints } from '../league-data.mjs';
 
 let pass = 0, fail = 0;
 const cases = [];
@@ -58,6 +61,36 @@ for (const [k, v] of Object.entries({ group: 1, r32: 2, r16: 3, qf: 5, sf: 8, th
   if (ROUND_MULT[k] === v) pass++;
   else { fail++; console.log(`✗ ROUND_MULT[${k}] = ${ROUND_MULT[k]}, expected ${v}`); }
 }
+
+// ── 🔮 Crystal Ball Cup (side-game, Task G): outcome + round-weighted picks ──
+// Bragging rights only — never feeds fantasy totals. Asserted so the round-
+// weighting is executable-verified (REVIEWER req b), not preview-only. Mirrors
+// the app's matchOutcome()/cbBoard in index.html.
+const O = (label, x, exp) => { // crystalOutcome
+  const got = crystalOutcome(x);
+  if (got === exp) pass++; else { fail++; console.log(`✗ CB outcome ${label} → got ${got}, expected ${exp}`); }
+};
+const P = (label, round, outcome, pick, exp) => { // crystalBallPoints
+  const got = crystalBallPoints(round, outcome, pick);
+  if (Number.isFinite(got) && got === exp) pass++; else { fail++; console.log(`✗ CB points ${label} → got ${got}, expected ${exp}`); }
+};
+const T1 = 'Spain', T2 = 'Brazil';
+O('group 2-0 → winner',          { s1: 2, s2: 0, round: 'group', t1: T1, t2: T2 }, T1);
+O('group 1-1 → DRAW',            { s1: 1, s2: 1, round: 'group', t1: T1, t2: T2 }, 'DRAW');
+O('final pens 0-0 (4-2) → t1',   { s1: 0, s2: 0, p1: 4, p2: 2, round: 'final', t1: T1, t2: T2 }, T1);
+O('r16 1-2 → t2',                { s1: 1, s2: 2, round: 'r16', t1: T1, t2: T2 }, T2);
+O('KO level, no pens → DRAW',    { s1: 1, s2: 1, round: 'qf', t1: T1, t2: T2 }, 'DRAW');
+O('no result → null',            { s1: null, s2: null, round: 'group', t1: T1, t2: T2 }, null);
+
+P('group correct = +1',          'group', T1, T1, 1);
+P('group wrong = 0',             'group', T1, T2, 0);
+P('group DRAW correct = +1',     'group', 'DRAW', 'DRAW', 1);
+P('group DRAW wrong = 0',        'group', 'DRAW', T1, 0);
+P('final correct = +13',         'final', T1, T1, 13);
+P('r32 correct = +2',            'r32', T2, T2, 2);
+P('sf correct = +8',             'sf', T1, T1, 8);
+P('no pick = 0',                 'final', T1, null, 0);
+P('KO DRAW not scorable = 0',    'qf', 'DRAW', T1, 0);
 
 const total = pass + fail;
 console.log(`\nscoring self-test: ${pass}/${total} passed${fail ? ` — ${fail} FAILED` : ' ✓'}`);
