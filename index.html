@@ -830,7 +830,13 @@
   .lb-stakes { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:9px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px; flex-wrap:wrap; }
   .lb-mult { color:var(--accent); font-weight:800; }
   .lb-earn { color:var(--green); font-weight:800; }
+  .lb-goals { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; padding-top:7px; border-top:1px solid rgba(255,255,255,0.06); font-size:11.5px; color:#dfe7ff; }
+  .lb-goals-side div { padding:1px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lb-goals-r { text-align:right; }
   .live-pill { background:#b22234 !important; border-color:#ff3b3b !important; color:#fff !important; cursor:pointer; font-weight:900; letter-spacing:0.5px; }
+  .match-outcome { margin-top:8px; padding:7px 10px; border-radius:8px; font-size:12px; font-weight:700; text-align:center; line-height:1.4; }
+  .outcome-chalk { background:rgba(255,255,255,0.05); color:var(--muted); }
+  .outcome-upset { background:rgba(178,34,52,0.22); color:#ff9aa6; border:1px solid var(--accent-2); }
 </style>
 </head>
 <body>
@@ -1868,6 +1874,7 @@ function applyScoreOverrides() {
     m.live = o.live === true && o.state === 'in' && o.official !== true;
     m.liveClock = o.clock || null;
     m.liveState = o.state || null;
+    m.liveGoals = Array.isArray(o.goals) ? o.goals : null;
   });
 }
 
@@ -2394,6 +2401,19 @@ function renderLiveMatch(m) {
       el('span', { class: 'lb-flag' }, TEAMS[t2]?.flag || '⚽'))
   ));
 
+  // Goal scorers (from the ESPN poller) — ⚽ name + minute, per side.
+  if (Array.isArray(m.liveGoals) && m.liveGoals.length) {
+    const fmt = g => `${g.who}${g.clock ? ' ' + g.clock : ''}`;
+    const g1 = m.liveGoals.filter(g => g.team === 1).map(fmt);
+    const g2 = m.liveGoals.filter(g => g.team === 2).map(fmt);
+    if (g1.length || g2.length) {
+      card.appendChild(el('div', { class: 'lb-goals' },
+        el('div', { class: 'lb-goals-side' }, g1.map(s => el('div', {}, '⚽ ' + s))),
+        el('div', { class: 'lb-goals-side lb-goals-r' }, g2.map(s => el('div', {}, s + ' ⚽')))
+      ));
+    }
+  }
+
   const stakes = el('div', { class: 'lb-stakes' });
   stakes.appendChild(el('span', { class: 'lb-mult' }, `${ROUND_NAME[round]} · ×${mult}`));
   if (sc) {
@@ -2466,7 +2486,7 @@ function renderToday() {
   const recent = state.matches.filter(m => hasResult(m)).slice(-4).reverse();
   if (recent.length > 0) {
     const panel = el('div', { class: 'panel' }, el('h2', {}, 'Recent results'));
-    recent.forEach(m => panel.appendChild(renderMatchCard(m, false)));
+    recent.forEach(m => panel.appendChild(renderMatchCard(m, true, true)));
     root.appendChild(panel);
   }
 
@@ -2547,9 +2567,10 @@ function renderMatchCard(m, showOwners = true, showOdds = false) {
   );
   card.appendChild(teamsRow);
 
-  // Vegas desk — draft-night odds strip on upcoming featured cards. Skipped
-  // once a result is in, and for KO placeholders with no odds (W101 etc).
-  if (showOdds && !scored) {
+  // Vegas desk — draft-night odds strip. Kept ON even after the final whistle so
+  // you can relive how it was SUPPOSED to go ("Portugal was 88% and TIED?!").
+  // Skipped only for KO placeholders with no odds (W101 etc).
+  if (showOdds) {
     const pct1 = h2hPct(t1, t2);
     if (pct1 != null) {
       const pct2 = 100 - pct1;
@@ -2574,6 +2595,23 @@ function renderMatchCard(m, showOwners = true, showOdds = false) {
           el('span', { class: 'odds-label' }, 'MONEY LINE'),
           el('span', { class: 'odds-val right' }, moneyline(pct2))),
       ));
+      // Outcome vs. the odds — the "relive the upset" payoff on finished games.
+      if (scored) {
+        const winner = matchWinnerSide(m); // 1 | 2 | null (draw)
+        const favIsT1 = pct1 >= 50;
+        const favName = favIsT1 ? t1 : t2, dogName = favIsT1 ? t2 : t1;
+        const favPct = Math.round(favIsT1 ? pct1 : pct2);
+        let txt, cls = 'outcome-chalk';
+        if (winner == null) {
+          if (favPct >= 60) { txt = `😱 STUNNER — ${favName} was a ${favPct}% favorite and only TIED. ${dogName} hung on!`; cls = 'outcome-upset'; }
+          else txt = '🤝 Coin-flip game — they split the points.';
+        } else {
+          const winName = winner === 1 ? t1 : t2;
+          if (winName === favName) txt = `✅ Chalk holds — ${favName} (${favPct}%) took care of business.`;
+          else { txt = `🚨 UPSET! ${dogName} (${100 - favPct}%) BEAT ${favName} (${favPct}%). Bracket-buster!`; cls = 'outcome-upset'; }
+        }
+        card.appendChild(el('div', { class: 'match-outcome ' + cls }, txt));
+      }
     }
   }
 
@@ -3564,7 +3602,7 @@ function renderSchedule() {
     const panel = el('div', { class: 'panel' },
       el('h2', {}, date),
     );
-    byDate[date].forEach(m => panel.appendChild(renderMatchCard(m, true)));
+    byDate[date].forEach(m => panel.appendChild(renderMatchCard(m, true, true)));
     root.appendChild(panel);
   });
 }
