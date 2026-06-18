@@ -1,0 +1,2 @@
+# Append-only review channel: union-merge so concurrent PRs never collide on it.
+REVIEW.md merge=union
