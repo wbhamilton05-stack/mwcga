@@ -19,13 +19,17 @@
   "html": "matchday/2026-06-12-canada-bosnia-herzegovina.html",
   "mp3": "podcasts/matches/2026-06-12-canada-bosnia-herzegovina.mp3",
   "title": "🔴 Will vs Barnes 🟡 — Canada vs Bosnia-Herzegovina",
-  "date": "2026-06-12"
+  "date": "2026-06-12",
+  "art": "matchday/art/2026-06-12-canada-bosnia-herzegovina.png",
+  "posterCaption": "WILL vs BARNES — Canada battles back! Barnes holds on for the draw, but Will takes the glory!"
  },
  "2026-06-12|United States|Paraguay": {
   "html": "matchday/2026-06-12-united-states-paraguay.html",
   "mp3": "podcasts/matches/2026-06-12-united-states-paraguay.mp3",
   "title": "🔵 Warner vs Will 🔴 — United States vs Paraguay",
-  "date": "2026-06-12"
+  "date": "2026-06-12",
+  "art": "matchday/art/2026-06-12-united-states-paraguay.png",
+  "posterCaption": "WARNER vs WILL — The Phenom's USA dominates, sending the Commissioner packing!"
  },
  "2026-06-13|Qatar|Switzerland": {
   "html": "matchday/2026-06-13-qatar-switzerland.html",
