@@ -168,6 +168,36 @@ export function matchPoints(x) {
   return { pts1: pts1 * mult, pts2: pts2 * mult, adv, mult };
 }
 
+// ── 🔮 CRYSTAL BALL CUP — side-game scoring core (Task G) ────────────────────
+// A bragging-rights prediction game that rides ALONGSIDE the league and NEVER
+// touches fantasy scoring (nothing here feeds matchPoints/buildOwnerContext
+// totals). These two pure helpers are the executable-verified core the email
+// side-leaderboard (G2) will use; they are kept in LOCKSTEP with the app's
+// matchOutcome()/cbBoard round-weighting in index.html (a mirror, exactly as
+// matchPoints mirrors the app's scoreMatch).
+
+// Winning team NAME of a finished match (normalized feed shape: s1/s2/round,
+// optional p1/p2 pens, t1/t2 names), or 'DRAW', or null if undecided. A level
+// KO is broken by the shootout; a level KO with no/tied pens stays 'DRAW' =
+// not yet scorable for the side-game.
+export function crystalOutcome(x) {
+  if (x.s1 == null || x.s2 == null) return null;
+  const ko = x.round !== 'group';
+  if (x.s1 > x.s2) return x.t1;
+  if (x.s2 > x.s1) return x.t2;
+  if (ko && x.p1 != null && x.p2 != null && Number(x.p1) !== Number(x.p2)) return Number(x.p1) > Number(x.p2) ? x.t1 : x.t2;
+  return 'DRAW';
+}
+
+// Crystal Ball points a single prediction earns: round-weighted on a correct
+// call (group +1 … Final +13, reusing ROUND_MULT), else 0. No pick = 0 (you
+// must play to score). A KO 'DRAW' outcome (awaiting pens) isn't scorable → 0.
+export function crystalBallPoints(round, outcome, pick) {
+  if (!pick || outcome == null) return 0;
+  if (round !== 'group' && outcome === 'DRAW') return 0;
+  return pick === outcome ? (ROUND_MULT[round] || 1) : 0;
+}
+
 export function buildOwnerContext(feed, st, today) {
   const players = st.players.map(p => p.name);
   const rosters = st.rosters || {};
