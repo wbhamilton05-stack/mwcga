@@ -222,5 +222,37 @@
   "date": "2026-06-18",
   "art": "matchday/art/2026-06-18-canada-qatar.png",
   "posterCaption": "WILL vs WARNER — The Commissioner and The Phenom collide in Vancouver!"
+ },
+ "2026-06-19|Scotland|Morocco": {
+  "html": "matchday/2026-06-19-scotland-morocco.html",
+  "mp3": "podcasts/matches/2026-06-19-scotland-morocco.mp3",
+  "title": "🔵 Warner vs Will 🔴 — Scotland vs Morocco",
+  "date": "2026-06-19",
+  "art": "matchday/art/2026-06-19-scotland-morocco.png",
+  "posterCaption": "WARNER vs WILL — The Phenom's streak meets The Commissioner's comeback bid in Boston!"
+ },
+ "2026-06-19|Brazil|Haiti": {
+  "html": "matchday/2026-06-19-brazil-haiti.html",
+  "mp3": "podcasts/matches/2026-06-19-brazil-haiti.mp3",
+  "title": "🟡 Barnes vs Granddad ⚪ — Brazil vs Haiti",
+  "date": "2026-06-19",
+  "art": "matchday/art/2026-06-19-brazil-haiti.png",
+  "posterCaption": "BARNES vs GRANDDAD — The Prodigy faces the Veteran in Philly!"
+ },
+ "2026-06-19|United States|Australia": {
+  "html": "matchday/2026-06-19-united-states-australia.html",
+  "mp3": "podcasts/matches/2026-06-19-united-states-australia.mp3",
+  "title": "🔵 Warner vs Granddad ⚪ — United States vs Australia",
+  "date": "2026-06-19",
+  "art": "matchday/art/2026-06-19-united-states-australia.png",
+  "posterCaption": "WARNER vs GRANDDAD — The gloves are off in Seattle!"
+ },
+ "2026-06-19|Türkiye|Paraguay": {
+  "html": "matchday/2026-06-19-turkiye-paraguay.html",
+  "mp3": "podcasts/matches/2026-06-19-turkiye-paraguay.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Türkiye vs Paraguay",
+  "date": "2026-06-19",
+  "art": "matchday/art/2026-06-19-turkiye-paraguay.png",
+  "posterCaption": "BARNES vs WILL — Prodigy takes on Commissioner in the Bay!"
  }
 }

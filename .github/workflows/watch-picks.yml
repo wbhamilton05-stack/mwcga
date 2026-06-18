@@ -11,7 +11,8 @@ on:
   workflow_dispatch:        # run manually anytime
 
 permissions:
-  contents: write           # commit the high-water-mark file
+  contents: write        # commit the high-water-mark file on a bot branch
+  pull-requests: write   # open the auto-merging content PR
 
 concurrency:
   group: mwcga-watch-picks
@@ -22,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # PAT so the content PR is opened by a real user → triggers the `gates` CI.
+          token: ${{ secrets.CONTENT_PAT || github.token }}
 
       - uses: actions/setup-node@v5
         with:
@@ -36,15 +40,22 @@ jobs:
           npm install --no-fund --no-audit nodemailer@7
           node scripts/watch-picks.mjs
 
-      - name: Save high-water mark
+      - name: Save high-water mark (auto-merge PR)
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_PAT }}
         run: |
-          if [ -n "$(git status --porcelain .mwcga-pickwatch.json)" ]; then
-            git config user.name "mwcga-radio"
-            git config user.email "actions@users.noreply.github.com"
-            git add .mwcga-pickwatch.json
-            git commit -m "tripwire: update pick high-water mark"
-            git pull --rebase origin main || true
-            git push || echo "push failed (non-fatal)"
-          else
-            echo "No change to high-water mark."
+          set -e
+          if [ -z "$(git status --porcelain .mwcga-pickwatch.json)" ]; then
+            echo "No change to high-water mark."; exit 0
           fi
+          MSG="tripwire: update pick high-water mark"
+          git config user.name "mwcga-radio"
+          git config user.email "actions@users.noreply.github.com"
+          BRANCH="bot/pickwatch-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$BRANCH"
+          git add .mwcga-pickwatch.json
+          git commit -m "$MSG"
+          git push -u origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "$MSG" \
+            --body "Automated state update. Auto-merges once \`gates\` passes." || true
+          gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "auto-merge enable failed (non-fatal)"

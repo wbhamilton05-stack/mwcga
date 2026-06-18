@@ -16,13 +16,17 @@ on:
         default: 'false'
 
 permissions:
-  contents: write   # lets the run commit podcast episodes + the RSS feed + briefing archive
+  contents: write        # commit content on a bot branch
+  pull-requests: write   # open the auto-merging content PR
 
 jobs:
   briefing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # PAT so the content PR is opened by a real user → triggers the `gates` CI.
+          token: ${{ secrets.CONTENT_PAT || github.token }}
 
       - uses: actions/setup-node@v5
         with:
@@ -49,20 +53,29 @@ jobs:
           MWCGA_FAKE_TODAY: ${{ inputs.fake_today }}
         run: node scripts/make-podcast.mjs
 
-      - name: Publish episode + archive briefing
+      - name: Publish episode + archive briefing (auto-merge PR)
         if: steps.gen.outputs.send == 'true'
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_PAT }}
         run: |
+          set -e
           mkdir -p briefings
           cp recap.html "briefings/${{ steps.gen.outputs.date }}-${{ steps.gen.outputs.mode }}.html"
           cp recap.txt  "briefings/${{ steps.gen.outputs.date }}-${{ steps.gen.outputs.mode }}.md"
           node scripts/make-rss.mjs
+          MSG="radio: ${{ steps.gen.outputs.date }} ${{ steps.gen.outputs.mode }} episode + archive"
           git config user.name "mwcga-radio"
           git config user.email "actions@users.noreply.github.com"
           git add podcasts podcast.xml briefings 2>/dev/null || true
-          git commit -m "radio: ${{ steps.gen.outputs.date }} ${{ steps.gen.outputs.mode }} episode + archive" || echo "nothing new to commit"
-          git pull --rebase origin main || true
-          git push || echo "push failed (non-fatal)"
+          if git diff --cached --quiet; then echo "Nothing to publish."; exit 0; fi
+          BRANCH="bot/radio-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$BRANCH"
+          git commit -m "$MSG"
+          git push -u origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "$MSG" \
+            --body "Automated content publish. Auto-merges once \`gates\` passes." || true
+          gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "auto-merge enable failed (non-fatal)"
 
       - name: Email the family
         if: steps.gen.outputs.send == 'true' && inputs.dry_run != 'true'
