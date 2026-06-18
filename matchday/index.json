@@ -35,25 +35,33 @@
   "html": "matchday/2026-06-13-qatar-switzerland.html",
   "mp3": "podcasts/matches/2026-06-13-qatar-switzerland.mp3",
   "title": "🔵 Warner vs Granddad ⚪ — Qatar vs Switzerland",
-  "date": "2026-06-13"
+  "date": "2026-06-13",
+  "art": "matchday/art/2026-06-13-qatar-switzerland.png",
+  "posterCaption": "WARNER vs GRANDDAD — Young Phenom holds the Veteran to a draw!"
  },
  "2026-06-13|Brazil|Morocco": {
   "html": "matchday/2026-06-13-brazil-morocco.html",
   "mp3": "podcasts/matches/2026-06-13-brazil-morocco.mp3",
   "title": "🟡 Barnes vs Will 🔴 — Brazil vs Morocco",
-  "date": "2026-06-13"
+  "date": "2026-06-13",
+  "art": "matchday/art/2026-06-13-brazil-morocco.png",
+  "posterCaption": "BARNES vs WILL — The Prodigy draws first blood against the Commissioner!"
  },
  "2026-06-13|Haiti|Scotland": {
   "html": "matchday/2026-06-13-haiti-scotland.html",
   "mp3": "podcasts/matches/2026-06-13-haiti-scotland.mp3",
   "title": "⚪ Granddad vs Warner 🔵 — Haiti vs Scotland",
-  "date": "2026-06-13"
+  "date": "2026-06-13",
+  "art": "matchday/art/2026-06-13-haiti-scotland.png",
+  "posterCaption": "WARNER vs GRANDDAD — The Young Phenom snatches a late winner from the Veteran!"
  },
  "2026-06-13|Australia|Türkiye": {
   "html": "matchday/2026-06-13-australia-turkiye.html",
   "mp3": "podcasts/matches/2026-06-13-australia-turkiye.mp3",
   "title": "⚪ Granddad vs Barnes 🟡 — Australia vs Türkiye",
-  "date": "2026-06-13"
+  "date": "2026-06-13",
+  "art": "matchday/art/2026-06-13-australia-turkiye.png",
+  "posterCaption": "GRANDDAD vs BARNES — Kangaroos can fly! Australia hops all over Türkiye for the upset!"
  },
  "2026-06-14|Germany|Curaçao": {
   "html": "matchday/2026-06-14-germany-curacao.html",
