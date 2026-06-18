@@ -43,3 +43,6 @@ jobs:
             fi
           done
           [ "$viol" = 0 ] && echo "✓ guardrail green — only the 2 allowed writers touch the cloud" || exit 1
+
+      - name: Scoring self-test — locked house rules (group GD, KO multipliers, pens 6×)
+        run: node scripts/ci/selftest.mjs
