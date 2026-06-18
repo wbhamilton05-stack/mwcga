@@ -92,12 +92,20 @@ async function main() {
       const home = comp?.competitors?.find(c => c.homeAway === 'home');
       const away = comp?.competitors?.find(c => c.homeAway === 'away');
       if (!home || !away) continue;
+      // Goal scorers — ESPN flags real goals with scoringPlay:true; each carries
+      // the scoring team id, the scorer's name, and the match clock.
+      const goals = (comp.details || []).filter(d => d.scoringPlay === true).map(d => ({
+        side: d.team?.id === home.team?.id ? 'home' : (d.team?.id === away.team?.id ? 'away' : null),
+        who: (d.athletesInvolved || []).map(a => a.displayName).filter(Boolean)[0] || (d.type?.text || 'Goal'),
+        clock: d.clock?.displayValue || '',
+      })).filter(g => g.side);
       live.push({
         state, utc: ev.date, clock: ev.status?.displayClock || '',
         home: canon(home.team?.displayName), away: canon(away.team?.displayName),
         hs: Number(home.score), as: Number(away.score),
         hShoot: home.shootoutScore != null ? Number(home.shootoutScore) : null,
         aShoot: away.shootoutScore != null ? Number(away.shootoutScore) : null,
+        goals,
       });
     }
   }
@@ -133,11 +141,16 @@ async function main() {
 
     const next = { score1, score2, live: true, source: 'espn', state: e.state, clock: e.clock, updatedAt: new Date().toISOString() };
     if (pens1 != null && pens2 != null) { next.pens1 = pens1; next.pens2 = pens2; }
+    // Orient goal scorers to the app's team1/team2 (home → 1 unless the pair is flipped).
+    if (e.goals && e.goals.length) {
+      next.goals = e.goals.map(g => ({ team: (g.side === 'home') !== flip ? 1 : 2, who: g.who, clock: g.clock }));
+    }
 
     // Write only when the MEANINGFUL values change (ignore clock/updatedAt churn),
     // so the live clock ticking doesn't spam a cloud write every single minute.
     const changed = !prev || prev.score1 !== score1 || prev.score2 !== score2 || prev.state !== e.state ||
-      (prev.pens1 ?? null) !== (next.pens1 ?? null) || (prev.pens2 ?? null) !== (next.pens2 ?? null);
+      (prev.pens1 ?? null) !== (next.pens1 ?? null) || (prev.pens2 ?? null) !== (next.pens2 ?? null) ||
+      (prev.goals?.length || 0) !== (next.goals?.length || 0);
     if (changed) {
       updates[key] = next;
       console.log(`  ↳ ${appMatch.team1} ${score1}-${score2} ${appMatch.team2}  [${key}] ${e.state} ${e.clock}` +
