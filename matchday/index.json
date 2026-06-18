@@ -163,25 +163,33 @@
   "html": "matchday/2026-06-17-portugal-congo-dr.html",
   "mp3": "podcasts/matches/2026-06-17-portugal-congo-dr.mp3",
   "title": "🟡 Barnes vs Warner 🔵 — Portugal vs Congo DR",
-  "date": "2026-06-17"
+  "date": "2026-06-17",
+  "art": "matchday/art/2026-06-17-portugal-congo-dr.png",
+  "posterCaption": "BARNES vs WARNER — A draw for Barnes, a minor setback for the Young Phenom!"
  },
  "2026-06-17|Uzbekistan|Colombia": {
   "html": "matchday/2026-06-17-uzbekistan-colombia.html",
   "mp3": "podcasts/matches/2026-06-17-uzbekistan-colombia.mp3",
   "title": "🔴 Will vs Granddad ⚪ — Uzbekistan vs Colombia",
-  "date": "2026-06-17"
+  "date": "2026-06-17",
+  "art": "matchday/art/2026-06-17-uzbekistan-colombia.png",
+  "posterCaption": "GRANDDAD vs WILL — Colombia soars! Will's Commissioner Cup quest hits a snag."
  },
  "2026-06-17|England|Croatia": {
   "html": "matchday/2026-06-17-england-croatia.html",
   "mp3": "podcasts/matches/2026-06-17-england-croatia.mp3",
   "title": "🔵 Warner vs Will 🔴 — England vs Croatia",
-  "date": "2026-06-17"
+  "date": "2026-06-17",
+  "art": "matchday/art/2026-06-17-england-croatia.png",
+  "posterCaption": "WARNER vs WILL — The Young Phenom's Lions feast, leaving the Commissioner's checkers in the dust!"
  },
  "2026-06-17|Ghana|Panama": {
   "html": "matchday/2026-06-17-ghana-panama.html",
   "mp3": "podcasts/matches/2026-06-17-ghana-panama.mp3",
   "title": "🟡 Barnes vs Granddad ⚪ — Ghana vs Panama",
-  "date": "2026-06-17"
+  "date": "2026-06-17",
+  "art": "matchday/art/2026-06-17-ghana-panama.png",
+  "posterCaption": "BARNES vs GRANDDAD — The Prodigy's Ghana outshines the Veteran's Panama!"
  },
  "2026-06-18|Czechia|South Africa": {
   "html": "matchday/2026-06-18-czechia-south-africa.html",
