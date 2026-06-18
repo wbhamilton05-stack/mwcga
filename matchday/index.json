@@ -3,13 +3,17 @@
   "html": "matchday/2026-06-11-mexico-south-africa.html",
   "mp3": "podcasts/matches/2026-06-11-mexico-south-africa.mp3",
   "title": "🔴 Will vs Warner 🔵 — Mexico vs South Africa",
-  "date": "2026-06-11"
+  "date": "2026-06-11",
+  "art": "matchday/art/2026-06-11-mexico-south-africa.png",
+  "posterCaption": "WILL vs WARNER — The Commissioner's El Tri conquers the Young Phenom's Bafana Bafana!"
  },
  "2026-06-11|South Korea|Czechia": {
   "html": "matchday/2026-06-11-south-korea-czechia.html",
   "mp3": "podcasts/matches/2026-06-11-south-korea-czechia.mp3",
   "title": "⚪ Granddad vs Barnes 🟡 — South Korea vs Czechia",
-  "date": "2026-06-11"
+  "date": "2026-06-11",
+  "art": "matchday/art/2026-06-11-south-korea-czechia.png",
+  "posterCaption": "GRANDDAD vs BARNES — The Veteran's tiger pounces! Barnes' Czechs are left seeing stars."
  },
  "2026-06-12|Canada|Bosnia-Herzegovina": {
   "html": "matchday/2026-06-12-canada-bosnia-herzegovina.html",
