@@ -21,7 +21,7 @@
 //
 //  Exit non-zero on any failure so CI goes red.
 // ============================================================================
-import { matchPoints, ROUND_MULT, crystalOutcome, crystalBallPoints } from '../league-data.mjs';
+import { matchPoints, ROUND_MULT, crystalOutcome, crystalBallPoints, crystalBallBoard } from '../league-data.mjs';
 
 let pass = 0, fail = 0;
 const cases = [];
@@ -91,6 +91,27 @@ P('r32 correct = +2',            'r32', T2, T2, 2);
 P('sf correct = +8',             'sf', T1, T1, 8);
 P('no pick = 0',                 'final', T1, null, 0);
 P('KO DRAW not scorable = 0',    'qf', 'DRAW', T1, 0);
+
+// crystalBallBoard aggregation (the email side-leaderboard, G2): round-weighted
+// totals + tie-ranking, keyed by app matchKey ('date|t1|t2' group, 'k'+num KO).
+{
+  const cbMatches = [
+    { round: 'group', date: '2026-06-15', num: 10, t1: 'Brazil', t2: 'France', s1: 2, s2: 0 },   // Brazil win — keyed 'k10'
+    { round: 'group', date: '2026-06-15', t1: 'England', t2: 'Germany', s1: 1, s2: 1 },           // DRAW — no num → date key
+    { round: 'final', date: '2026-07-19', num: 104, t1: 'Spain', t2: 'Brazil', s1: 0, s2: 0, p1: 4, p2: 2 }, // Spain on pens — 'k104'
+  ];
+  const cbPreds = {
+    'k10': { 0: 'Brazil', 1: 'France' },                        // num-keyed: Will ✓ / Granddad ✗
+    '2026-06-15|England|Germany': { 0: 'DRAW', 1: 'England' },   // date-keyed: Will ✓ / Granddad ✗
+    'k104': { 0: 'Spain' },                                      // Will ✓ (+13); Granddad no pick
+  };
+  const b = crystalBallBoard(cbMatches, cbPreds, ['Will', 'Granddad']);
+  const A = (label, cond) => { if (cond) pass++; else { fail++; console.log(`✗ CB board ${label}`); } };
+  A('Will tops at 15 pts (1+1+13)', b[0].name === 'Will' && b[0].pts === 15 && b[0].rank === 1);
+  A('Will 3/3 correct',             b[0].correct === 3 && b[0].made === 3);
+  A('Granddad 0 pts, rank 2',       b[1].name === 'Granddad' && b[1].pts === 0 && b[1].rank === 2);
+  A('Granddad 0/2 correct',         b[1].correct === 0 && b[1].made === 2);
+}
 
 const total = pass + fail;
 console.log(`\nscoring self-test: ${pass}/${total} passed${fail ? ` — ${fail} FAILED` : ' ✓'}`);
