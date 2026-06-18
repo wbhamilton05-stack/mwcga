@@ -9,6 +9,20 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:category text="Sports"/>
     <item>
+      <title>⚔️ 🟡 Barnes vs Warner 🔵 — Czechia vs South Africa — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-18.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-18-czechia-south-africa.mp3" length="833472" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-18-czechia-south-africa</guid>
+      <pubDate>Thu, 18 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>⚔️ 🔴 Will vs Granddad ⚪ — Mexico vs South Korea — Match Preview</title>
+      <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-18.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-18-mexico-south-korea.mp3" length="848256" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-preview-2026-06-18-mexico-south-korea</guid>
+      <pubDate>Thu, 18 Jun 2026 07:30:00 GMT</pubDate>
+    </item>
+    <item>
       <title>⚔️ 🟡 Barnes vs Warner 🔵 — Portugal vs Congo DR — Match Preview</title>
       <description>MWCGA Radio match preview — scouting, stakes, and a fearless prediction. 2026-06-17.</description>
       <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/matches/2026-06-17-portugal-congo-dr.mp3" length="944256" type="audio/mpeg"/>

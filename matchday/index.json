@@ -142,5 +142,17 @@
   "mp3": "podcasts/matches/2026-06-17-ghana-panama.mp3",
   "title": "🟡 Barnes vs Granddad ⚪ — Ghana vs Panama",
   "date": "2026-06-17"
+ },
+ "2026-06-18|Czechia|South Africa": {
+  "html": "matchday/2026-06-18-czechia-south-africa.html",
+  "mp3": "podcasts/matches/2026-06-18-czechia-south-africa.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Czechia vs South Africa",
+  "date": "2026-06-18"
+ },
+ "2026-06-18|Mexico|South Korea": {
+  "html": "matchday/2026-06-18-mexico-south-korea.html",
+  "mp3": "podcasts/matches/2026-06-18-mexico-south-korea.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — Mexico vs South Korea",
+  "date": "2026-06-18"
  }
 }
