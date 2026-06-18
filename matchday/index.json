@@ -195,12 +195,32 @@
   "html": "matchday/2026-06-18-czechia-south-africa.html",
   "mp3": "podcasts/matches/2026-06-18-czechia-south-africa.mp3",
   "title": "🟡 Barnes vs Warner 🔵 — Czechia vs South Africa",
-  "date": "2026-06-18"
+  "date": "2026-06-18",
+  "art": "matchday/art/2026-06-18-czechia-south-africa.png",
+  "posterCaption": "BARNES vs WARNER — Atlanta braces for the Group Stage showdown!"
  },
  "2026-06-18|Mexico|South Korea": {
   "html": "matchday/2026-06-18-mexico-south-korea.html",
   "mp3": "podcasts/matches/2026-06-18-mexico-south-korea.mp3",
   "title": "🔴 Will vs Granddad ⚪ — Mexico vs South Korea",
-  "date": "2026-06-18"
+  "date": "2026-06-18",
+  "art": "matchday/art/2026-06-18-mexico-south-korea.png",
+  "posterCaption": "WILL vs GRANDDAD — The Veteran's tigers meet the Commissioner's eagles!"
+ },
+ "2026-06-18|Switzerland|Bosnia-Herzegovina": {
+  "html": "matchday/2026-06-18-switzerland-bosnia-herzegovina.html",
+  "mp3": "podcasts/matches/2026-06-18-switzerland-bosnia-herzegovina.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Switzerland vs Bosnia-Herzegovina",
+  "date": "2026-06-18",
+  "art": "matchday/art/2026-06-18-switzerland-bosnia-herzegovina.png",
+  "posterCaption": "GRANDDAD vs BARNES — The Veteran and the Prodigy clash in LA!"
+ },
+ "2026-06-18|Canada|Qatar": {
+  "html": "matchday/2026-06-18-canada-qatar.html",
+  "mp3": "podcasts/matches/2026-06-18-canada-qatar.mp3",
+  "title": "🔴 Will vs Warner 🔵 — Canada vs Qatar",
+  "date": "2026-06-18",
+  "art": "matchday/art/2026-06-18-canada-qatar.png",
+  "posterCaption": "WILL vs WARNER — The Commissioner and The Phenom collide in Vancouver!"
  }
 }
