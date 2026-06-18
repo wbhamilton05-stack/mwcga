@@ -860,6 +860,7 @@
   <button class="tab"        data-tab="draft"     onclick="switchTab('draft')">⭐ Draft</button>
   <button class="tab"        data-tab="standings" onclick="switchTab('standings')">🏆 Rankings</button>
   <button class="tab"        data-tab="schedule"  onclick="switchTab('schedule')">📅 Schedule</button>
+  <button class="tab"        data-tab="results"   onclick="switchTab('results')">📋 Results</button>
   <button class="tab"        data-tab="rosters"   onclick="switchTab('rosters')">🇺🇸 Rosters</button>
   <button class="tab"        data-tab="tournament" onclick="switchTab('tournament')">🌍 Tournament</button>
   <button class="tab"        data-tab="settings"  onclick="switchTab('settings')">⚙️ Settings</button>
@@ -877,6 +878,7 @@
 
   <!-- SCHEDULE -->
   <section id="tab-schedule"  class="tab-content" style="display:none"></section>
+  <section id="tab-results"   class="tab-content" style="display:none"></section>
 
   <!-- ROSTERS -->
   <section id="tab-rosters"   class="tab-content" style="display:none"></section>
@@ -2303,6 +2305,7 @@ function renderAll() {
   renderDraft();
   renderStandings();
   renderSchedule();
+  renderResults();
   renderRosters();
   renderTournament();
   renderSettings();
@@ -3555,6 +3558,95 @@ function renderDashView(root) {
     )));
     root.appendChild(ow);
   }
+}
+
+// ----- RESULTS TAB — browse completed games by match day / group / nation -----
+// Each view renders the SAME match cards as the Today tab (scores, owners, odds,
+// and the upset/stunner outcome callouts), just grouped three different ways.
+let _resultsView = 'matchday';
+function setResultsView(v) { _resultsView = v; renderResults(); }
+
+function _resultsHeader(title, sub) {
+  return el('div', { class: 'panel', style: 'margin-bottom:4px;' },
+    el('h2', {}, title), sub ? el('div', { class: 'sub' }, sub) : null);
+}
+
+function renderResults() {
+  const root = $('#tab-results');
+  if (!root) return;
+  root.innerHTML = '';
+  const views = [['matchday', '🗓️ Match Day'], ['group', '🅰️ Group'], ['nation', '🏳️ Nation']];
+  const sub = el('div', { class: 'subnav' });
+  views.forEach(([k, label]) => sub.appendChild(
+    el('button', { class: 'subtab' + (_resultsView === k ? ' active' : ''), onclick: () => setResultsView(k) }, label)));
+  root.appendChild(sub);
+
+  const done = state.matches.filter(hasResult);
+  if (!done.length) {
+    root.appendChild(el('div', { class: 'panel' },
+      el('h2', {}, '📋 RESULTS'),
+      el('div', { class: 'sub' }, 'No results yet — once the first matches finish, relive every game (and every upset) here.')));
+    return;
+  }
+  const body = el('div', {});
+  root.appendChild(body);
+  if (_resultsView === 'matchday') renderResultsByMatchday(body, done);
+  else if (_resultsView === 'group') renderResultsByGroup(body, done);
+  else renderResultsByNation(body, done);
+}
+
+function renderResultsByMatchday(root, done) {
+  root.appendChild(_resultsHeader('🗓️ RESULTS BY MATCH DAY', `${done.length} match${done.length > 1 ? 'es' : ''} in the books.`));
+  const groups = {};
+  done.forEach(m => { const k = m.round || ROUND_NAME[roundOf(m)]; (groups[k] = groups[k] || []).push(m); });
+  const minDate = arr => arr.map(x => x.date).sort()[0];
+  Object.keys(groups)
+    .sort((a, b) => minDate(groups[a]).localeCompare(minDate(groups[b])))
+    .forEach(k => {
+      const ms = groups[k].slice().sort((a, b) => a.date.localeCompare(b.date) || String(a.time).localeCompare(String(b.time)));
+      const sec = el('div', { class: 'panel' }, el('h2', { style: 'font-size:15px;' }, `${k} · ${ms[0].date}`));
+      ms.forEach(m => sec.appendChild(renderMatchCard(m, true, true)));
+      root.appendChild(sec);
+    });
+}
+
+function renderResultsByGroup(root, done) {
+  root.appendChild(_resultsHeader('🅰️ RESULTS BY GROUP', 'Group-stage results by group, plus the knockout bracket.'));
+  const letters = [...new Set(Object.values(TEAMS).map(t => t.group))].sort();
+  letters.forEach(L => {
+    const ms = done.filter(m => roundOf(m) === 'group' && (m.group === L || TEAMS[mapTeamName(m.team1)]?.group === L))
+      .sort((a, b) => a.date.localeCompare(b.date) || String(a.time).localeCompare(String(b.time)));
+    if (!ms.length) return;
+    const sec = el('div', { class: 'panel' }, el('h2', { style: 'font-size:15px;' }, 'GROUP ' + L));
+    ms.forEach(m => sec.appendChild(renderMatchCard(m, true, true)));
+    root.appendChild(sec);
+  });
+  const ko = done.filter(m => roundOf(m) !== 'group').sort((a, b) => (a.num || 0) - (b.num || 0));
+  if (ko.length) {
+    const sec = el('div', { class: 'panel' }, el('h2', { style: 'font-size:15px;' }, '⚡ KNOCKOUT STAGE'));
+    ko.forEach(m => sec.appendChild(renderMatchCard(m, true, true)));
+    root.appendChild(sec);
+  }
+}
+
+function renderResultsByNation(root, done) {
+  root.appendChild(_resultsHeader('🏳️ RESULTS BY NATION', 'Every nation’s results — favorites first.'));
+  Object.keys(TEAMS)
+    .map(n => ({ n, pct: impliedTitlePct(n), ms: done.filter(m => mapTeamName(m.team1) === n || mapTeamName(m.team2) === n) }))
+    .filter(x => x.ms.length)
+    .sort((a, b) => (b.pct || 0) - (a.pct || 0) || a.n.localeCompare(b.n))
+    .forEach(({ n, ms }) => {
+      const owner = ownerOfTeam(n);
+      const sec = el('div', { class: 'panel' });
+      sec.appendChild(el('div', { style: 'display:flex; align-items:center; gap:8px; margin-bottom:4px;' },
+        el('span', { style: 'font-size:20px;' }, TEAMS[n].flag || '⚽'),
+        el('h2', { style: 'font-size:15px; margin:0;' }, n),
+        owner >= 0 ? el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[owner]}` }) : null,
+        owner >= 0 ? el('span', { class: 'small', style: 'color:var(--muted);' }, state.players[owner]?.name || '') : null));
+      ms.slice().sort((a, b) => a.date.localeCompare(b.date) || (a.num || 0) - (b.num || 0))
+        .forEach(m => sec.appendChild(renderMatchCard(m, true, true)));
+      root.appendChild(sec);
+    });
 }
 
 function renderSchedule() {
