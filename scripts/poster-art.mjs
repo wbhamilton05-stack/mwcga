@@ -54,15 +54,22 @@ export function pickTopMatch(ms, date, { finishedOnly }) {
     (((b.s1 ?? 0) + (b.s2 ?? 0)) - ((a.s1 ?? 0) + (a.s2 ?? 0))))[0] || null;
 }
 
+// Pick the image-gen model from an already-fetched model list (no extra API
+// call). Exported so the previews pipeline can reuse its own models[] fetch.
+export function chooseImageModel(models) {
+  const pick = (prefs, pred) => prefs.find(p => models.includes(p)) || models.find(pred);
+  return pick(
+    ['gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview', 'gemini-3-pro-image-preview', 'gemini-2.0-flash-preview-image-generation'],
+    m => /^gemini-.*image/.test(m) && !/embed/.test(m));
+}
+
 async function pickModels(g) {
   const models = await g.models();
   const pick = (prefs, pred) => prefs.find(p => models.includes(p)) || models.find(pred);
   const textModel = pick(
     ['gemini-3.1-flash', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'],
     m => /^gemini-[\d.]+-flash$/.test(m));
-  const imageModel = pick(
-    ['gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview', 'gemini-3-pro-image-preview', 'gemini-2.0-flash-preview-image-generation'],
-    m => /^gemini-.*image/.test(m) && !/embed/.test(m));
+  const imageModel = chooseImageModel(models);
   if (!textModel || !imageModel) throw new Error(`models not found (text=${textModel}, image=${imageModel})`);
   console.log(`poster: using text=${textModel}, image=${imageModel}`);
   return { textModel, imageModel };
@@ -89,7 +96,7 @@ function houseArt(kind, m, OC) {
 }
 
 // One text call writes both the image prompt and the owner-first caption
-async function writeArtDirection(g, textModel, kind, m, OC) {
+export async function writeArtDirection(g, textModel, kind, m, OC) {
   const o1 = OC.ownerOf[m.t1], o2 = OC.ownerOf[m.t2];
   const p = m.s1 != null ? matchPoints(m) : null;
   const matchLine = kind === 'hype'
@@ -124,7 +131,7 @@ Return STRICT JSON, nothing else: {"scene": "...", "caption": "..."}
   }
 }
 
-async function paintPoster(g, imageModel, scene, outPath) {
+export async function paintPoster(g, imageModel, scene, outPath) {
   const prompt = `${scene}
 
 STYLE: epic cinematic sports-movie poster, dramatic rim lighting, rich saturated color, painterly photoreal detail, portrait composition. League palette accents: deep navy #0a1c4a, red #b22234, gold #ffd700.
@@ -144,7 +151,8 @@ HARD RULES: the ONLY text anywhere in the image is the small bold wordmark "MWCG
       const img = (r.candidates?.[0]?.content?.parts || []).find(x => x.inlineData && /^image\//.test(x.inlineData.mimeType || ''));
       if (!img) throw new Error('no image in response (finishReason: ' + (r.candidates?.[0]?.finishReason || '?') + ')');
       const bytes = Buffer.from(img.inlineData.data, 'base64');
-      mkdirSync('briefings/art', { recursive: true });
+      const dir = outPath.includes('/') ? outPath.slice(0, outPath.lastIndexOf('/')) : '.';
+      mkdirSync(dir, { recursive: true });
       writeFileSync(outPath, bytes);
       console.log(`poster painted: ${outPath} (${Math.round(bytes.length / 1024)} KB, ${img.inlineData.mimeType})`);
       return;
@@ -159,6 +167,22 @@ HARD RULES: the ONLY text anywhere in the image is the small bold wordmark "MWCG
 
 const sidecarPath = png => png.replace(/\.png$/, '.json');
 const writeSidecar = (png, data) => writeFileSync(sidecarPath(png), JSON.stringify(data, null, 1) + '\n');
+
+// Paint ONE match's poster (used by the per-match previews pipeline + backfill).
+// `m` is a normalized match {t1,t2,round,date,s1?,s2?,ground?,time?}; kind auto-
+// selects recap (played) vs hype (upcoming) unless forced. Writes the PNG + a
+// .json sidecar and returns { scene, caption }. Caller owns the manifest.
+export async function paintMatchPoster({ g, textModel, imageModel, m, OC, outPath, kind }) {
+  const k = kind || (m.s1 != null ? 'recap' : 'hype');
+  const art = await writeArtDirection(g, textModel, k, m, OC);
+  await paintPoster(g, imageModel, art.scene, outPath);
+  writeSidecar(outPath, {
+    kind: k, date: m.date,
+    match: m.s1 != null ? `${m.t1} ${m.s1}–${m.s2} ${m.t2}` : `${m.t1} vs ${m.t2}`,
+    caption: art.caption,
+  });
+  return art;
+}
 
 // Put the poster at the top of the Nightcap email (and the archived briefing,
 // since the publish step copies recap.html after this runs).

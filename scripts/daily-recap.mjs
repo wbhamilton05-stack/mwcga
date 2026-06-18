@@ -9,6 +9,10 @@
 //                MWCGA_FAKE_TODAY=2026-06-15 node scripts/daily-recap.mjs
 // ============================================================================
 import { writeFileSync, appendFileSync, readFileSync, existsSync } from 'node:fs';
+// The Crystal Ball Cup side-leaderboard reuses the tested scoring core (kept in
+// ONE place so it never drifts from the app). All fantasy scoring below stays
+// self-contained in this file (the §5 third site) — this import is side-game only.
+import { crystalBallBoard } from './league-data.mjs';
 
 const GAME_URL = process.env.MWCGA_GAME_URL || 'https://mwcga-c2e5e-default-rtdb.firebaseio.com/games/wcuaw50n22xo.json';
 const FEED_URL = process.env.MWCGA_FEED_URL || 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
@@ -440,6 +444,17 @@ async function main() {
   const dayN = Math.round((Date.parse(today) - Date.parse(FIRST_DAY)) / 86400e3) + 1;
   const ep = (name) => { const list = EPITHET[name]; return list ? pick(list) : ''; };
 
+  // 🔮 Crystal Ball Cup — the prediction side-game standings (bragging rights;
+  // NEVER touches the real fantasy scoreboard). Shown in both editions only once
+  // somebody has scored a pick, so it stays invisible until the game is in use.
+  const cbBoard = crystalBallBoard(matches, st.predictions, players);
+  const addCrystalBall = (nudge) => {
+    if (!cbBoard.some(b => b.made > 0)) return;
+    addH('🔮 THE CRYSTAL BALL CUP — PREDICTION BRAGGING RIGHTS');
+    for (const b of cbBoard) addP(`#${b.rank}  ${EMOJI[b.idx]} ${b.name}: ${b.pts} pts (${b.correct}/${b.made} correct)`);
+    addP(nudge);
+  };
+
   // ── 🌙 NIGHTCAP EDITION ──────────────────────────────────────────────────
   if (MODE === 'night') {
     // GitHub cron can fire HOURS late; past midnight Central the calendar
@@ -526,6 +541,8 @@ async function main() {
       addP(`#${b.rank}  ${EMOJI[b.i]} ${b.name}: ${b.pts} pts${b.rank === 1 && soleLeaderN ? ' — sleeping like a champion tonight' : ''}`);
     }
 
+    addCrystalBall(`🔮 Today's calls are scored above. Tomorrow's slate is OPEN now — tap your winners before kickoff at ${SITE_URL}. Picks are pure bragging rights; they never move the real scoreboard.`);
+
     if (tmGames.length) {
       addH('TOMORROW, WE GO AGAIN');
       const feuds = tmGames.filter(m => ownerOf[m.t1] != null && ownerOf[m.t2] != null && ownerOf[m.t1] !== ownerOf[m.t2]);
@@ -597,6 +614,8 @@ ${html.join('\n')}
     addP(`#${b.rank}  ${EMOJI[b.i]} ${b.name}: ${b.pts} pts${tag}`);
   }
   if (!soleLeader) addP('A DEAD HEAT at the top. The tension is UNBELIEVABLE. Somebody has to win — and somebody has to lose. Sad for them!');
+
+  addCrystalBall(`🔮 Lock in today's winners before kickoff at ${SITE_URL} — correct calls pay by round (group +1 … all the way to a TREMENDOUS +13 for the Final). Pure bragging rights; the real scoreboard never moves.`);
 
   if (tGames.length) {
     // Whose armies march today

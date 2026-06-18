@@ -13,8 +13,9 @@ import {
   SITE, GAME_URL, FEED_URL, FIRST_DAY, LAST_DAY,
   TEAMS, ODDS, mapName, flag, roundOf, ROUND_MULT, ROUND_NAME,
   appMatchKey, centralDate, OWNER_META, geminiClient, mdToHtml,
-  buildOwnerContext,
+  buildOwnerContext, normalizeFeedMatch,
 } from './league-data.mjs';
+import { chooseImageModel, paintMatchPoster } from './poster-art.mjs';
 
 const out = (k, v) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`); };
 const KEY = process.env.GEMINI_API_KEY;
@@ -45,6 +46,7 @@ async function main() {
   console.log(`${slate.length} match(es) on the ${today} slate`);
 
   mkdirSync('matchday', { recursive: true });
+  mkdirSync('matchday/art', { recursive: true });
   mkdirSync('podcasts/matches', { recursive: true });
   const manifestPath = 'matchday/index.json';
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
@@ -57,7 +59,8 @@ async function main() {
   // for content generation or short caps starve the actual text.
   const thinkCfg = /2\.5/.test(textModel) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
   const ttsModel = pick(['gemini-3.1-flash-tts', 'gemini-3-flash-tts', 'gemini-2.5-flash-tts', 'gemini-2.5-flash-preview-tts'], m => m.includes('tts'));
-  console.log(`using text=${textModel}, tts=${ttsModel}`);
+  const imageModel = chooseImageModel(models); // per-match movie-poster art (fail-soft if none)
+  console.log(`using text=${textModel}, tts=${ttsModel}, image=${imageModel || 'none'}`);
 
   let made = 0;
   for (const m of slate) {
@@ -65,7 +68,11 @@ async function main() {
     const key = appMatchKey(m);
     const slug = slugify(`${m.date}-${t1}-${t2}`);
     const htmlPath = `matchday/${slug}.html`, mp3Path = `podcasts/matches/${slug}.mp3`;
-    if (manifest[key] && existsSync(htmlPath) && existsSync(mp3Path)) { console.log(`skip (exists): ${t1} vs ${t2}`); continue; }
+    const artPath = `matchday/art/${slug}.png`;
+    const hasPreview = manifest[key] && manifest[key].html && existsSync(htmlPath) && existsSync(mp3Path);
+    const hasArt = manifest[key] && manifest[key].art && existsSync(artPath);
+    if (hasPreview && hasArt) { console.log(`skip (exists): ${t1} vs ${t2}`); continue; }
+    let did = false; // only count an iteration that actually generated something
     try {
       const o1 = ownerOf[t1] || null, o2 = ownerOf[t2] || null;
       const round = roundOf(m), mult = ROUND_MULT[round];
@@ -85,6 +92,7 @@ LEADERBOARD: ${OC.board.map(b => `#${b.rank} ${b.name} ${b.pts}pts`).join(', ')}
 
 OWNERS: Will "the Commissioner" (dad), Granddad "the Veteran" (74), Barnes "the Prodigy" (12), Warner "the Young Phenom" (10). Family-friendly; tease about results only.`;
 
+      if (!hasPreview) {
       // 1) Written briefing — cheeky voice, technical depth
       const bj = await gem.call(`models/${textModel}:generateContent`, {
         contents: [{ parts: [{ text: `Write "THE OFFICIAL MWCGA MATCH BRIEFING" for one World Cup 2026 match, in markdown.
@@ -154,9 +162,29 @@ Cover, OWNER-FIRST: open with Hank framing this as ${sameOwner ? `${o1} against 
         title: o1 && o2 ? `${e1} ${o1} vs ${o2} ${e2} — ${t1} vs ${t2}` : `${flag(t1)} ${t1} vs ${t2} ${flag(t2)}`,
         date: m.date,
       };
-      made++;
       console.log(`✓ ${t1} vs ${t2} → ${htmlPath} + ${mp3Path}`);
+      did = true;
       await new Promise(r => setTimeout(r, 2500)); // gentle on free-tier rate limits
+      } // end briefing+podcast generation (skipped when both already exist)
+
+      // 3) Match movie-poster art — one cinematic poster per match (fail-soft).
+      // Runs independently of the briefing/podcast skip, so art backfills onto
+      // matches that already have their preview text + audio.
+      if (!hasArt && imageModel) {
+        const nm = normalizeFeedMatch(m);
+        nm.ground = m.ground; nm.time = m.time;
+        const art = await paintMatchPoster({ g: gem, textModel, imageModel, m: nm, OC, outPath: artPath });
+        manifest[key] = manifest[key] || {
+          title: o1 && o2 ? `${e1} ${o1} vs ${o2} ${e2} — ${t1} vs ${t2}` : `${flag(t1)} ${t1} vs ${t2} ${flag(t2)}`,
+          date: m.date,
+        };
+        manifest[key].art = artPath;
+        manifest[key].posterCaption = art.caption;
+        console.log(`  🎨 poster → ${artPath} · ${art.caption}`);
+        did = true;
+        await new Promise(r => setTimeout(r, 2500));
+      }
+      if (did) made++;
     } catch (e) {
       console.error(`✗ ${t1} vs ${t2} failed (continuing): ${e.message}`);
     }
