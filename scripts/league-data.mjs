@@ -198,6 +198,39 @@ export function crystalBallPoints(round, outcome, pick) {
   return pick === outcome ? (ROUND_MULT[round] || 1) : 0;
 }
 
+// The Crystal Ball Cup leaderboard (the email side-leaderboard, G2). Takes the
+// normalized matches (each with t1/t2/s1/s2/p1/p2/round/num/date), the synced
+// `state.predictions` ({ matchKey: { playerIdx: pick } }, keyed like the app's
+// matchKey — 'k'+num for KO, 'date|t1|t2' for group), and the player-name list.
+// Returns one tie-ranked row per player. Identical aggregation to the app's
+// cbBoard; bragging rights only — never feeds the fantasy totals.
+export function crystalBallBoard(matches, predictions, playerNames) {
+  const preds = predictions || {};
+  const board = (playerNames || []).map((name, idx) => ({ name, idx, pts: 0, correct: 0, made: 0 }));
+  if (!board.length) return board;
+  for (const m of (matches || [])) {
+    const outcome = crystalOutcome(m);
+    if (outcome == null) continue;                                   // undecided
+    if (m.round !== 'group' && outcome === 'DRAW') continue;         // KO awaiting pens
+    // Use the canonical app key (`appMatchKey`) — the SAME function the score
+    // writers use — so the lookup matches exactly how the app stored the pick
+    // ('k'+num when the feed gives a number, else date|teams). No drift.
+    const key = appMatchKey({ num: m.num, date: m.date, team1: m.t1, team2: m.t2 });
+    const picks = preds[key];
+    if (!picks) continue;
+    for (const row of board) {
+      const pick = picks[row.idx] ?? picks[String(row.idx)];
+      if (pick == null) continue;                                    // no pick = no points
+      row.made++;
+      if (pick === outcome) { row.pts += (ROUND_MULT[m.round] || 1); row.correct++; }
+    }
+  }
+  board.sort((a, b) => b.pts - a.pts || b.correct - a.correct || a.name.localeCompare(b.name));
+  let lastPts = null, lastRank = 1;
+  board.forEach((b, i) => { b.rank = b.pts === lastPts ? lastRank : i + 1; lastPts = b.pts; lastRank = b.rank; });
+  return board;
+}
+
 export function buildOwnerContext(feed, st, today) {
   const players = st.players.map(p => p.name);
   const rosters = st.rosters || {};
