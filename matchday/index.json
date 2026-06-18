@@ -99,25 +99,33 @@
   "html": "matchday/2026-06-15-belgium-egypt.html",
   "mp3": "podcasts/matches/2026-06-15-belgium-egypt.mp3",
   "title": "🟡 Barnes vs Warner 🔵 — Belgium vs Egypt",
-  "date": "2026-06-15"
+  "date": "2026-06-15",
+  "art": "matchday/art/2026-06-15-belgium-egypt.png",
+  "posterCaption": "BARNES vs WARNER — A draw! The Prodigy holds steady, the Phenom can't quite soar!"
  },
  "2026-06-15|Iran|New Zealand": {
   "html": "matchday/2026-06-15-iran-new-zealand.html",
   "mp3": "podcasts/matches/2026-06-15-iran-new-zealand.mp3",
   "title": "🔴 Will vs Granddad ⚪ — Iran vs New Zealand",
-  "date": "2026-06-15"
+  "date": "2026-06-15",
+  "art": "matchday/art/2026-06-15-iran-new-zealand.png",
+  "posterCaption": "WILL vs GRANDDAD — A hard-fought draw! No W, no L. Just MWCGA thrills!"
  },
  "2026-06-15|Spain|Cape Verde": {
   "html": "matchday/2026-06-15-spain-cape-verde.html",
   "mp3": "podcasts/matches/2026-06-15-spain-cape-verde.mp3",
   "title": "🔵 Warner vs Barnes 🟡 — Spain vs Cape Verde",
-  "date": "2026-06-15"
+  "date": "2026-06-15",
+  "art": "matchday/art/2026-06-15-spain-cape-verde.png",
+  "posterCaption": "WARNER vs BARNES — A stalemate, but one point closer to glory for Warner!"
  },
  "2026-06-15|Saudi Arabia|Uruguay": {
   "html": "matchday/2026-06-15-saudi-arabia-uruguay.html",
   "mp3": "podcasts/matches/2026-06-15-saudi-arabia-uruguay.mp3",
   "title": "🔴 Will vs Granddad ⚪ — Saudi Arabia vs Uruguay",
-  "date": "2026-06-15"
+  "date": "2026-06-15",
+  "art": "matchday/art/2026-06-15-saudi-arabia-uruguay.png",
+  "posterCaption": "WILL vs GRANDDAD — A desert draw! Granddad gets a point, Will avoids the shutout!"
  },
  "2026-06-16|France|Senegal": {
   "html": "matchday/2026-06-16-france-senegal.html",
