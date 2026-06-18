@@ -1,0 +1,8 @@
+# Transient build artifacts from daily-recap.mjs — the email is rendered, sent,
+# then discarded by the workflow; these should never be committed. (Local mock
+# runs and dry-runs produce them too.)
+recap.html
+recap.txt
+
+# macOS
+.DS_Store
