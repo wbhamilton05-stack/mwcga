@@ -1,0 +1,45 @@
+name: CI
+
+# Dual-Agent Git Build gate. Runs the build's own deterministic checks on every PR
+# to main. Green is mechanical, not editorial — "done" = this passes AND the reviewer
+# approves the PR (see CHECKS.md / REVIEW.md).
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Parse — content/score scripts
+        run: |
+          for f in scripts/*.mjs; do node --check "$f"; done
+          echo "✓ all scripts parse"
+
+      - name: Parse — index.html inline app script
+        run: |
+          awk '/<script>/{f=1;next} /<\/script>/{f=0} f' index.html > /tmp/app.js
+          test -s /tmp/app.js || { echo "::error::could not extract inline script from index.html"; exit 1; }
+          node --check /tmp/app.js
+          echo "✓ index.html inline script parses ($(wc -l < /tmp/app.js) lines)"
+
+      - name: Guardrail — only fetch-scores + fetch-live-scores write the cloud
+        run: |
+          viol=0
+          for f in scripts/*.mjs; do
+            case "$f" in
+              scripts/fetch-scores.mjs|scripts/fetch-live-scores.mjs) continue;;
+            esac
+            if grep -qE "method:.{0,3}PUT" "$f"; then
+              echo "::error file=$f::content script must never PUT the Firebase game blob"
+              viol=1
+            fi
+          done
+          [ "$viol" = 0 ] && echo "✓ guardrail green — only the 2 allowed writers touch the cloud" || exit 1
