@@ -293,6 +293,43 @@
   }
   .toast.error { background: var(--accent-2); color: white; }
 
+  /* ── MATCH POSTER ART (per-match movie posters; tap to enlarge) ── */
+  .poster-thumb {
+    margin-top: 8px; cursor: zoom-in; border-radius: 8px; overflow: hidden;
+    border: 2px solid var(--accent); position: relative; line-height: 0;
+    background: var(--panel-2);
+  }
+  .poster-thumb img { width: 100%; height: 150px; object-fit: cover; object-position: 50% 38%; display: block; }
+  .poster-thumb .cap {
+    position: absolute; left: 0; right: 0; bottom: 0; line-height: 1.25;
+    background: linear-gradient(transparent, rgba(10,28,74,0.94));
+    color: var(--accent); font-weight: 800; font-size: 12px; padding: 20px 10px 7px;
+  }
+  .poster-thumb .play {
+    position: absolute; top: 6px; right: 8px; background: rgba(10,28,74,0.82);
+    color: #fff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  }
+  .poster-lb {
+    position: fixed; inset: 0; z-index: 300; background: rgba(2,6,20,0.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;
+    animation: slideIn 0.2s;
+  }
+  .poster-lb img { max-width: 100%; max-height: 76vh; border-radius: 10px; border: 2px solid var(--accent); box-shadow: 0 14px 50px rgba(0,0,0,0.6); }
+  .poster-lb .cap { color: var(--accent); font-weight: 800; text-align: center; margin-top: 12px; font-size: 15px; max-width: 680px; }
+  .poster-lb .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .poster-lb .dl { color: var(--muted); font-size: 12px; margin-top: 8px; text-decoration: underline; }
+  .poster-lb .nav {
+    position: absolute; top: 50%; transform: translateY(-50%); font-size: 42px;
+    color: #fff; background: none; border: none; cursor: pointer; padding: 8px 14px; opacity: 0.85;
+  }
+  .poster-lb .nav.prev { left: 2px; } .poster-lb .nav.next { right: 2px; }
+  .poster-lb .x { position: absolute; top: 8px; right: 14px; font-size: 28px; color: #fff; background: none; border: none; cursor: pointer; }
+  .day-posters-btn {
+    display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-top: 8px;
+    background: var(--accent); color: #1a1a1a; font-weight: 800; font-size: 13px;
+    padding: 5px 12px; border-radius: 999px; border: none;
+  }
+
   /* ── TODAY BANNER ── */
   .today-banner {
     background: var(--panel-2);
@@ -2570,7 +2607,8 @@ function renderToday() {
   if (todayMatches.length > 0) {
     const banner = el('div', { class: 'today-banner' },
       el('h2', {}, `🦅 GAME DAY IN AMERICA · ${todayMatches.length} MATCH${todayMatches.length>1?'ES':''} 🦅`),
-      el('div', { class: 'small', style: 'font-weight:700; letter-spacing:0.5px;' }, '🇺🇸 USA · USA · USA · The cheer cards below tell you which patriot to root with 🇺🇸'));
+      el('div', { class: 'small', style: 'font-weight:700; letter-spacing:0.5px;' }, '🇺🇸 USA · USA · USA · The cheer cards below tell you which patriot to root with 🇺🇸'),
+      dayPostersButton(today, "Today's Posters"));
     root.appendChild(banner);
     // 🔮 Crystal Ball nudge — only while at least one of today's games is still
     // open to pick, so the family taps their predictions before kickoff.
@@ -2637,6 +2675,56 @@ function switchTab(name) {
 }
 
 // ----- MATCH CARD (reused everywhere) -----
+// ----- MATCH POSTER LIGHTBOX -----
+// Posters are painted overnight per match (matchday/art/<slug>.png) and listed
+// in the previews manifest as { art, posterCaption }. Tapping any match's poster
+// opens this full-screen viewer, seeded to that match but able to swipe through
+// EVERY poster from the same day — so "tap the match" and "browse the day" are
+// the same gesture.
+function postersForDate(date) {
+  return Object.entries(_matchPreviews)
+    .filter(([, v]) => v && v.art && v.date === date)
+    .map(([key, v]) => ({ key, art: v.art, caption: v.posterCaption || v.title || '', date: v.date }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+}
+function openPosterLightbox(startKey) {
+  const start = _matchPreviews[startKey];
+  if (!start || !start.art) return;
+  const group = postersForDate(start.date);
+  let i = Math.max(0, group.findIndex(g => g.key === startKey));
+  const lb = el('div', { class: 'poster-lb' });
+  const imgWrap = el('div', { style: 'text-align:center; max-width:100%;' });
+  let onKey;
+  const close = () => { lb.remove(); document.removeEventListener('keydown', onKey); };
+  const go = d => { i = (i + d + group.length) % group.length; draw(); };
+  function draw() {
+    const g = group[i];
+    imgWrap.innerHTML = '';
+    imgWrap.appendChild(el('img', { src: g.art, alt: g.caption }));
+    imgWrap.appendChild(el('div', { class: 'cap' }, '🎬 ' + g.caption));
+    imgWrap.appendChild(el('div', { class: 'meta' }, g.date + (group.length > 1 ? `  ·  poster ${i + 1} of ${group.length}` : '')));
+    imgWrap.appendChild(el('a', { class: 'dl', href: g.art, target: '_blank', rel: 'noopener' }, 'Open full image ↗'));
+  }
+  onKey = e => { if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1); };
+  lb.appendChild(el('button', { class: 'x', 'aria-label': 'Close', onclick: close }, '✕'));
+  if (group.length > 1) {
+    lb.appendChild(el('button', { class: 'nav prev', 'aria-label': 'Previous', onclick: e => { e.stopPropagation(); go(-1); } }, '‹'));
+    lb.appendChild(el('button', { class: 'nav next', 'aria-label': 'Next', onclick: e => { e.stopPropagation(); go(1); } }, '›'));
+  }
+  lb.appendChild(imgWrap);
+  lb.addEventListener('click', e => { if (e.target === lb) close(); });
+  document.addEventListener('keydown', onKey);
+  draw();
+  document.body.appendChild(lb);
+}
+// A "🎬 Posters" pill for a whole day — only rendered when that day has art.
+function dayPostersButton(date, label) {
+  const group = postersForDate(date);
+  if (!group.length) return null;
+  return el('button', { class: 'day-posters-btn', onclick: () => openPosterLightbox(group[0].key) },
+    `🎬 ${label || 'Match Posters'} (${group.length})`);
+}
+
 function renderMatchCard(m, showOwners = true, showOdds = false) {
   const round = roundOf(m);
   const mult = ROUND_MULT[round];
@@ -2805,6 +2893,17 @@ function renderMatchCard(m, showOwners = true, showOdds = false) {
         style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '📰 Match Briefing') : null,
       pv.mp3 ? el('a', { href: pv.mp3, target: '_blank', rel: 'noopener',
         style: 'color: var(--accent); font-weight:700; font-size:13px; text-decoration:none;' }, '🎙️ Listen') : null,
+    ));
+  }
+
+  // Match movie-poster — a tappable teaser that opens the full-screen lightbox.
+  if (pv && pv.art) {
+    const key = m.key || matchKey(m);
+    card.appendChild(el('div', { class: 'poster-thumb', title: 'Tap for the full match poster',
+      onclick: () => openPosterLightbox(key) },
+      el('img', { src: pv.art, loading: 'lazy', alt: pv.posterCaption || 'Match poster' }),
+      el('span', { class: 'play' }, '🎬 Poster'),
+      pv.posterCaption ? el('div', { class: 'cap' }, pv.posterCaption) : null,
     ));
   }
 
@@ -3958,6 +4057,7 @@ function renderSchedule() {
   Object.keys(byDate).sort().forEach(date => {
     const panel = el('div', { class: 'panel' },
       el('h2', {}, date),
+      dayPostersButton(date, 'Posters'),
     );
     byDate[date].forEach(m => panel.appendChild(renderMatchCard(m, true, true)));
     root.appendChild(panel);

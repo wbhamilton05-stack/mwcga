@@ -5,7 +5,7 @@
 // Expects env: MAIL_USERNAME, MAIL_PASSWORD (Gmail app password),
 // MWCGA_RECIPIENTS (comma-separated), MAIL_SUBJECT.
 import nodemailer from 'nodemailer';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const user = process.env.MAIL_USERNAME;
 const pass = (process.env.MAIL_PASSWORD || '').replace(/\s+/g, '');
@@ -26,6 +26,34 @@ const transporter = nodemailer.createTransport({
 
 let text = readFileSync('recap.txt', 'utf8');
 let html = readFileSync('recap.html', 'utf8');
+
+// ── Inline the poster art (the "I'm not seeing them" fix) ───────────────────
+// The briefing embeds the poster via its GitHub Pages URL, but the Nightcap
+// emails the family seconds after pushing the PNG — before Pages redeploys — so
+// the hot-linked <img> 404s at fetch time and Gmail caches the broken state.
+// Carry any committed poster INSIDE the email as a CID attachment instead, so it
+// renders the moment the email opens regardless of Pages timing. We rewrite only
+// the <img src>; recap.txt still carries the plain URL as the "view online"
+// fallback. Local files exist in the checkout (the poster step wrote them before
+// the publish + mail steps), so we attach straight from disk.
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const attachments = [];
+const SITE = 'https://wbhamilton05-stack.github.io/mwcga/';
+const posterUrls = [...new Set((html.match(/https:\/\/wbhamilton05-stack\.github\.io\/mwcga\/[A-Za-z0-9/_.-]+\.(?:png|jpg|jpeg)/g) || []))];
+let embedded = 0;
+for (const url of posterUrls) {
+  const localPath = url.slice(SITE.length);                  // e.g. briefings/art/2026-06-17.png
+  if (!existsSync(localPath)) continue;                       // not in this checkout — leave the hot-link
+  const cid = 'poster' + embedded + '@mwcga';
+  // swap only the image source (src="url" / 'url' / url), never an <a href>
+  const before = html;
+  html = html.replace(new RegExp('(src=)(["\']?)' + escRe(url) + '\\2', 'g'), '$1$2cid:' + cid + '$2');
+  if (html === before) continue;                             // url present but not as an <img src> — skip
+  attachments.push({ filename: localPath.split('/').pop(), path: localPath, cid });
+  embedded++;
+}
+if (embedded) console.log(`Embedded ${embedded} poster image(s) inline (CID) so they render without waiting on Pages.`);
+
 const podcast = process.env.PODCAST_URL;
 if (podcast) {
   text += `\n\n🎙️ LISTEN to this briefing — MWCGA Radio: ${podcast}`;
@@ -40,5 +68,6 @@ await transporter.sendMail({
   subject,
   text,
   html,
+  attachments,
 });
 console.log(`Email sent to ${to.split(',').length} recipient(s).`);
