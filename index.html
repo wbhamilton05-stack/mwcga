@@ -807,6 +807,30 @@
   /* Mobile: drop the W-D-L column so country names get full room (must come after
      the base .gt-row rule to win on source order). */
   @media (max-width:440px){ .gt-row { grid-template-columns:22px 1fr 24px 34px 32px; } .gt-wdl { display:none; } }
+  /* ── Live score bug (broadcast-style) ── */
+  @keyframes lbPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+  .live-dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:#ff3b3b; box-shadow:0 0 7px #ff3b3b; animation:lbPulse 1.2s infinite; flex:0 0 auto; }
+  .livebug-wrap { background:linear-gradient(135deg, rgba(178,34,52,0.28), rgba(11,26,74,0.45)); border:1.5px solid #ff3b3b; border-radius:14px; padding:10px 12px 12px; margin-bottom:12px; box-shadow:0 0 18px rgba(255,59,59,0.22); }
+  .livebug-head { display:flex; align-items:center; gap:8px; font-weight:900; letter-spacing:1.5px; color:#ff7a7a; font-size:13px; }
+  .livebug { background:rgba(0,0,0,0.28); border:1px solid var(--border); border-radius:10px; padding:11px 12px; margin-top:9px; }
+  .livebug-row { display:grid; grid-template-columns:1fr 42px auto 42px 1fr; grid-template-areas:"t1 s1 clk s2 t2"; align-items:center; gap:6px; }
+  .lb-t1 { grid-area:t1; } .lb-s1 { grid-area:s1; } .lb-clock { grid-area:clk; } .lb-s2 { grid-area:s2; } .lb-team-r { grid-area:t2; }
+  @media (max-width:480px) {
+    .livebug-row { grid-template-columns:1fr 48px; grid-template-areas:"t1 s1" "clk clk" "t2 s2"; gap:3px 8px; }
+    .lb-team-r { justify-content:flex-start; }
+    .lb-clock { flex-direction:row; gap:6px; margin:3px 0; }
+    .lb-score { font-size:26px; }
+  }
+  .lb-team { display:flex; align-items:center; gap:7px; min-width:0; }
+  .lb-team-r { justify-content:flex-end; }
+  .lb-flag { font-size:22px; flex:0 0 auto; }
+  .lb-name { font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lb-score { font-size:30px; font-weight:900; text-align:center; color:#fff; font-variant-numeric:tabular-nums; }
+  .lb-clock { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:800; color:#ff7a7a; white-space:nowrap; }
+  .lb-stakes { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:9px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px; flex-wrap:wrap; }
+  .lb-mult { color:var(--accent); font-weight:800; }
+  .lb-earn { color:var(--green); font-weight:800; }
+  .live-pill { background:#b22234 !important; border-color:#ff3b3b !important; color:#fff !important; cursor:pointer; font-weight:900; letter-spacing:0.5px; }
 </style>
 </head>
 <body>
@@ -1839,6 +1863,11 @@ function applyScoreOverrides() {
     m.pens1 = o.pens1 ?? null;  m.pens2 = o.pens2 ?? null;
     // Official (API-sourced) results lock the match against hand-editing.
     m.official = o.official === true;
+    // Live (ESPN poller) fields for the live score bug. An override with state
+    // 'in' that isn't yet an official final = a match in progress right now.
+    m.live = o.live === true && o.state === 'in' && o.official !== true;
+    m.liveClock = o.clock || null;
+    m.liveState = o.state || null;
   });
 }
 
@@ -2289,6 +2318,20 @@ function renderScoreboard() {
       el('span', { class: 'pts' }, pts + ' pts')
     ));
   });
+  // LIVE indicator — appears only while a match is in progress; tap it to jump
+  // to the live score bug on the Today tab.
+  const _live = liveMatches();
+  if (_live.length) {
+    sb.appendChild(el('div', {
+      class: 'score-pill live-pill',
+      title: 'A match is in progress — tap for the live score bug',
+      onclick: () => { switchTab('today'); setTimeout(() => { const b = document.getElementById('livebug'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); }
+    },
+      el('span', { class: 'live-dot' }),
+      el('span', {}, `LIVE · ${_live.length}`)
+    ));
+  }
+
   // Cloud-sync indicator — goes loud when the cloud hasn't answered lately,
   // so nobody trusts a frozen board.
   if (cloudConfigured()) {
@@ -2305,6 +2348,65 @@ function renderScoreboard() {
       el('span', { style: 'font-size: 12px;' }, stale ? 'Reconnecting…' : 'Live')
     ));
   }
+}
+
+// ----- LIVE SCORE BUG (broadcast-style, driven by the ESPN live poller) -----
+// Matches flagged `m.live` (the poller's override state is 'in' and no official
+// final has landed) get a prominent, pulsing live readout: score + match clock
+// + the LIVE FANTASY POINTS each side is banking for its owner right this second
+// — the one thing no broadcaster's score bug can show.
+function liveMatches() {
+  return state.matches.filter(m => m.live && hasResult(m));
+}
+
+function renderLiveBug() {
+  const lm = liveMatches();
+  if (!lm.length) return null;
+  const wrap = el('div', { class: 'livebug-wrap', id: 'livebug' });
+  wrap.appendChild(el('div', { class: 'livebug-head' },
+    el('span', { class: 'live-dot' }),
+    el('span', {}, `LIVE NOW · ${lm.length} MATCH${lm.length > 1 ? 'ES' : ''}`)
+  ));
+  lm.forEach(m => wrap.appendChild(renderLiveMatch(m)));
+  return wrap;
+}
+
+function renderLiveMatch(m) {
+  const round = roundOf(m), mult = ROUND_MULT[round];
+  const t1 = mapTeamName(m.team1), t2 = mapTeamName(m.team2);
+  const o1 = ownerOfTeam(t1), o2 = ownerOfTeam(t2);
+  const sc = scoreMatch(m); // provisional live points (scores in-progress as if final)
+  const card = el('div', { class: 'livebug' });
+
+  card.appendChild(el('div', { class: 'livebug-row' },
+    el('div', { class: 'lb-team lb-t1' },
+      el('span', { class: 'lb-flag' }, TEAMS[t1]?.flag || '⚽'),
+      el('span', { class: 'lb-name' }, t1),
+      o1 >= 0 ? el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[o1]}` }) : null),
+    el('div', { class: 'lb-score lb-s1' }, String(m.score1 ?? 0)),
+    el('div', { class: 'lb-clock' },
+      el('span', { class: 'live-dot' }),
+      el('span', {}, m.liveClock || 'LIVE')),
+    el('div', { class: 'lb-score lb-s2' }, String(m.score2 ?? 0)),
+    el('div', { class: 'lb-team lb-team-r' },
+      o2 >= 0 ? el('span', { class: 'gt-owner', style: `background:${PLAYER_COLORS[o2]}` }) : null,
+      el('span', { class: 'lb-name' }, t2),
+      el('span', { class: 'lb-flag' }, TEAMS[t2]?.flag || '⚽'))
+  ));
+
+  const stakes = el('div', { class: 'lb-stakes' });
+  stakes.appendChild(el('span', { class: 'lb-mult' }, `${ROUND_NAME[round]} · ×${mult}`));
+  if (sc) {
+    const earn = [];
+    if (o1 >= 0) earn.push(`${state.players[o1]?.name || '—'} ${sc.team1.pts >= 0 ? '+' : ''}${sc.team1.pts}`);
+    if (o2 >= 0) earn.push(`${state.players[o2]?.name || '—'} ${sc.team2.pts >= 0 ? '+' : ''}${sc.team2.pts}`);
+    if (earn.length) stakes.appendChild(el('span', { class: 'lb-earn' }, '🔴 LIVE PTS: ' + earn.join(' · ')));
+  }
+  card.appendChild(stakes);
+  if (m.pens1 != null && m.pens2 != null) {
+    card.appendChild(el('div', { class: 'small', style: 'text-align:center; margin-top:5px; color:var(--accent);' }, `Shootout ${m.pens1}–${m.pens2}`));
+  }
+  return card;
 }
 
 // ----- TODAY TAB -----
@@ -2328,6 +2430,10 @@ function renderToday() {
     ));
     return;
   }
+
+  // Live score bug — front and center while any game is in progress.
+  const _liveBug = renderLiveBug();
+  if (_liveBug) root.appendChild(_liveBug);
 
   // Today / upcoming matches (viewer-local date, so evening games don't
   // vanish from "Today" when UTC rolls over at 7 PM Central)
