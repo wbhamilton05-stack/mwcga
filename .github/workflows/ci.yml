@@ -46,3 +46,6 @@ jobs:
 
       - name: Scoring self-test — locked house rules (group GD, KO multipliers, pens 6×)
         run: node scripts/ci/selftest.mjs
+
+      - name: Scoring self-test — Civil War Bounty (same-owner KO side-bet)
+        run: node scripts/ci/selftest-civil.mjs
