@@ -1,5 +1,11 @@
 [
  {
+  "date": "2026-06-20",
+  "mode": "morning",
+  "file": "briefings/2026-06-20-morning.html",
+  "mp3": "podcasts/2026-06-20-morning.mp3"
+ },
+ {
   "date": "2026-06-19",
   "mode": "night",
   "file": "briefings/2026-06-19-night.html",
