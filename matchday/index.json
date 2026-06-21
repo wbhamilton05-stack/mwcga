@@ -286,5 +286,37 @@
   "date": "2026-06-20",
   "art": "matchday/art/2026-06-20-tunisia-japan.png",
   "posterCaption": "WILL vs BARNES — A Clash of Titans in Monterrey!"
+ },
+ "2026-06-21|Belgium|Iran": {
+  "html": "matchday/2026-06-21-belgium-iran.html",
+  "mp3": "podcasts/matches/2026-06-21-belgium-iran.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Belgium vs Iran",
+  "date": "2026-06-21",
+  "art": "matchday/art/2026-06-21-belgium-iran.png",
+  "posterCaption": "BARNES vs WILL — The Prodigy takes on The Commissioner in LA!"
+ },
+ "2026-06-21|New Zealand|Egypt": {
+  "html": "matchday/2026-06-21-new-zealand-egypt.html",
+  "mp3": "podcasts/matches/2026-06-21-new-zealand-egypt.mp3",
+  "title": "⚪ Granddad vs Warner 🔵 — New Zealand vs Egypt",
+  "date": "2026-06-21",
+  "art": "matchday/art/2026-06-21-new-zealand-egypt.png",
+  "posterCaption": "GRANDDAD vs WARNER — The Veteran and the Phenom collide in Vancouver!"
+ },
+ "2026-06-21|Spain|Saudi Arabia": {
+  "html": "matchday/2026-06-21-spain-saudi-arabia.html",
+  "mp3": "podcasts/matches/2026-06-21-spain-saudi-arabia.mp3",
+  "title": "🔵 Warner vs Will 🔴 — Spain vs Saudi Arabia",
+  "date": "2026-06-21",
+  "art": "matchday/art/2026-06-21-spain-saudi-arabia.png",
+  "posterCaption": "WARNER vs WILL — Spain and Saudi Arabia: Brace for the Atlanta Showdown!"
+ },
+ "2026-06-21|Uruguay|Cape Verde": {
+  "html": "matchday/2026-06-21-uruguay-cape-verde.html",
+  "mp3": "podcasts/matches/2026-06-21-uruguay-cape-verde.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Uruguay vs Cape Verde",
+  "date": "2026-06-21",
+  "art": "matchday/art/2026-06-21-uruguay-cape-verde.png",
+  "posterCaption": "GRANDDAD vs BARNES — A generational clash under the Miami lights!"
  }
 }
