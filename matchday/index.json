@@ -318,5 +318,37 @@
   "date": "2026-06-21",
   "art": "matchday/art/2026-06-21-uruguay-cape-verde.png",
   "posterCaption": "GRANDDAD vs BARNES — A generational clash under the Miami lights!"
+ },
+ "2026-06-22|France|Iraq": {
+  "html": "matchday/2026-06-22-france-iraq.html",
+  "mp3": "podcasts/matches/2026-06-22-france-iraq.mp3",
+  "title": "🔴 Will vs Barnes 🟡 — France vs Iraq",
+  "date": "2026-06-22",
+  "art": "matchday/art/2026-06-22-france-iraq.png",
+  "posterCaption": "WILL vs BARNES — A Prodigy's Challenge to The Commissioner!"
+ },
+ "2026-06-22|Norway|Senegal": {
+  "html": "matchday/2026-06-22-norway-senegal.html",
+  "mp3": "podcasts/matches/2026-06-22-norway-senegal.mp3",
+  "title": "🔵 Warner vs Granddad ⚪ — Norway vs Senegal",
+  "date": "2026-06-22",
+  "art": "matchday/art/2026-06-22-norway-senegal.png",
+  "posterCaption": "WARNER vs GRANDDAD — The Phenomenon meets The Veteran in a NYC clash!"
+ },
+ "2026-06-22|Argentina|Austria": {
+  "html": "matchday/2026-06-22-argentina-austria.html",
+  "mp3": "podcasts/matches/2026-06-22-argentina-austria.mp3",
+  "title": "⚪ Granddad vs Barnes 🟡 — Argentina vs Austria",
+  "date": "2026-06-22",
+  "art": "matchday/art/2026-06-22-argentina-austria.png",
+  "posterCaption": "GRANDDAD vs BARNES — Two nations, one showdown in Dallas!"
+ },
+ "2026-06-22|Jordan|Algeria": {
+  "html": "matchday/2026-06-22-jordan-algeria.html",
+  "mp3": "podcasts/matches/2026-06-22-jordan-algeria.mp3",
+  "title": "🔴 Will vs Warner 🔵 — Jordan vs Algeria",
+  "date": "2026-06-22",
+  "art": "matchday/art/2026-06-22-jordan-algeria.png",
+  "posterCaption": "WILL vs WARNER — The Commissioner and the Phenom: Tied at 4-4, who breaks the deadlock?"
  }
 }
