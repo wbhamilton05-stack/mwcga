@@ -9,6 +9,13 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:category text="Sports"/>
     <item>
+      <title>☀️ Morning Show — June 22</title>
+      <description>MWCGA Radio — the official morning preview of the greatest family World Cup league on Earth. Day-by-day results, standings, and feuds. 2026-06-22.</description>
+      <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/2026-06-22-morning.mp3" length="1672320" type="audio/mpeg"/>
+      <guid isPermaLink="false">mwcga-2026-06-22-morning</guid>
+      <pubDate>Mon, 22 Jun 2026 13:05:00 GMT</pubDate>
+    </item>
+    <item>
       <title>🌙 Nightcap — June 21</title>
       <description>MWCGA Radio — the official end-of-day wrap of the greatest family World Cup league on Earth. Day-by-day results, standings, and feuds. 2026-06-21.</description>
       <enclosure url="https://wbhamilton05-stack.github.io/mwcga/podcasts/2026-06-21-night.mp3" length="1630272" type="audio/mpeg"/>
