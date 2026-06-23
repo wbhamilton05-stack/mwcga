@@ -350,5 +350,21 @@
   "date": "2026-06-22",
   "art": "matchday/art/2026-06-22-jordan-algeria.png",
   "posterCaption": "WILL vs WARNER — The Commissioner and the Phenom: Tied at 4-4, who breaks the deadlock?"
+ },
+ "2026-06-23|England|Ghana": {
+  "html": "matchday/2026-06-23-england-ghana.html",
+  "mp3": "podcasts/matches/2026-06-23-england-ghana.mp3",
+  "title": "🔵 Warner vs Barnes 🟡 — England vs Ghana",
+  "date": "2026-06-23",
+  "art": "matchday/art/2026-06-23-england-ghana.png",
+  "posterCaption": "WARNER vs BARNES — The Young Phenom meets The Prodigy in Foxborough!"
+ },
+ "2026-06-23|Panama|Croatia": {
+  "html": "matchday/2026-06-23-panama-croatia.html",
+  "mp3": "podcasts/matches/2026-06-23-panama-croatia.mp3",
+  "title": "⚪ Granddad vs Will 🔴 — Panama vs Croatia",
+  "date": "2026-06-23",
+  "art": "matchday/art/2026-06-23-panama-croatia.png",
+  "posterCaption": "GRANDDAD vs WILL — Panama and Croatia set for a titanic Toronto tussle!"
  }
 }
