@@ -366,5 +366,53 @@
   "date": "2026-06-23",
   "art": "matchday/art/2026-06-23-panama-croatia.png",
   "posterCaption": "GRANDDAD vs WILL — Panama and Croatia set for a titanic Toronto tussle!"
+ },
+ "2026-06-24|Czechia|Mexico": {
+  "html": "matchday/2026-06-24-czechia-mexico.html",
+  "mp3": "podcasts/matches/2026-06-24-czechia-mexico.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Czechia vs Mexico",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-czechia-mexico.png",
+  "posterCaption": "BARNES vs WILL — The Prodigy takes on The Commissioner in Mexico City!"
+ },
+ "2026-06-24|South Africa|South Korea": {
+  "html": "matchday/2026-06-24-south-africa-south-korea.html",
+  "mp3": "podcasts/matches/2026-06-24-south-africa-south-korea.mp3",
+  "title": "🔵 Warner vs Granddad ⚪ — South Africa vs South Korea",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-south-africa-south-korea.png",
+  "posterCaption": "WARNER vs GRANDDAD — The Young Phenom's streak meets The Veteran's grit!"
+ },
+ "2026-06-24|Switzerland|Canada": {
+  "html": "matchday/2026-06-24-switzerland-canada.html",
+  "mp3": "podcasts/matches/2026-06-24-switzerland-canada.mp3",
+  "title": "⚪ Granddad vs Will 🔴 — Switzerland vs Canada",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-switzerland-canada.png",
+  "posterCaption": "GRANDDAD vs WILL — The Veteran vs The Commissioner in a Group Stage Showdown!"
+ },
+ "2026-06-24|Bosnia-Herzegovina|Qatar": {
+  "html": "matchday/2026-06-24-bosnia-herzegovina-qatar.html",
+  "mp3": "podcasts/matches/2026-06-24-bosnia-herzegovina-qatar.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Bosnia-Herzegovina vs Qatar",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-bosnia-herzegovina-qatar.png",
+  "posterCaption": "BARNES vs WARNER — A Seattle showdown of epic proportions!"
+ },
+ "2026-06-24|Scotland|Brazil": {
+  "html": "matchday/2026-06-24-scotland-brazil.html",
+  "mp3": "podcasts/matches/2026-06-24-scotland-brazil.mp3",
+  "title": "🔵 Warner vs Barnes 🟡 — Scotland vs Brazil",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-scotland-brazil.png",
+  "posterCaption": "WARNER vs BARNES — Miami is about to explode!"
+ },
+ "2026-06-24|Morocco|Haiti": {
+  "html": "matchday/2026-06-24-morocco-haiti.html",
+  "mp3": "podcasts/matches/2026-06-24-morocco-haiti.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — Morocco vs Haiti",
+  "date": "2026-06-24",
+  "art": "matchday/art/2026-06-24-morocco-haiti.png",
+  "posterCaption": "WILL vs GRANDDAD — Atlanta awaits the clash of titans!"
  }
 }
