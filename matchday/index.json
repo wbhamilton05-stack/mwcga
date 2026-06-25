@@ -414,5 +414,53 @@
   "date": "2026-06-24",
   "art": "matchday/art/2026-06-24-morocco-haiti.png",
   "posterCaption": "WILL vs GRANDDAD — Atlanta awaits the clash of titans!"
+ },
+ "2026-06-25|Türkiye|United States": {
+  "html": "matchday/2026-06-25-turkiye-united-states.html",
+  "mp3": "podcasts/matches/2026-06-25-turkiye-united-states.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Türkiye vs United States",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-turkiye-united-states.png",
+  "posterCaption": "BARNES vs WARNER — The Prodigy takes on the Phenom!"
+ },
+ "2026-06-25|Paraguay|Australia": {
+  "html": "matchday/2026-06-25-paraguay-australia.html",
+  "mp3": "podcasts/matches/2026-06-25-paraguay-australia.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — Paraguay vs Australia",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-paraguay-australia.png",
+  "posterCaption": "WILL vs GRANDDAD — The Bay Area awaits a titan clash!"
+ },
+ "2026-06-25|Curaçao|Ivory Coast": {
+  "html": "matchday/2026-06-25-curacao-ivory-coast.html",
+  "mp3": "podcasts/matches/2026-06-25-curacao-ivory-coast.mp3",
+  "title": "🔵 Warner vs Granddad ⚪ — Curaçao vs Ivory Coast",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-curacao-ivory-coast.png",
+  "posterCaption": "WARNER vs GRANDDAD — Blue vs Orange in the City of Brotherly Love!"
+ },
+ "2026-06-25|Ecuador|Germany": {
+  "html": "matchday/2026-06-25-ecuador-germany.html",
+  "mp3": "podcasts/matches/2026-06-25-ecuador-germany.mp3",
+  "title": "🟡 Barnes vs Will 🔴 — Ecuador vs Germany",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-ecuador-germany.png",
+  "posterCaption": "BARNES vs WILL — The Prodigy challenges The Commissioner in the Big Apple!"
+ },
+ "2026-06-25|Japan|Sweden": {
+  "html": "matchday/2026-06-25-japan-sweden.html",
+  "mp3": "podcasts/matches/2026-06-25-japan-sweden.mp3",
+  "title": "🟡 Barnes vs Warner 🔵 — Japan vs Sweden",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-japan-sweden.png",
+  "posterCaption": "BARNES vs WARNER — The Prodigy meets the Phenom in Dallas!"
+ },
+ "2026-06-25|Tunisia|Netherlands": {
+  "html": "matchday/2026-06-25-tunisia-netherlands.html",
+  "mp3": "podcasts/matches/2026-06-25-tunisia-netherlands.mp3",
+  "title": "🔴 Will vs Granddad ⚪ — Tunisia vs Netherlands",
+  "date": "2026-06-25",
+  "art": "matchday/art/2026-06-25-tunisia-netherlands.png",
+  "posterCaption": "WILL vs GRANDDAD — The Veteran stands in the Commissioner's path!"
  }
 }
