@@ -21,9 +21,10 @@
 - **Branch protection on `main` is intentionally NOT enabled** — nightly content Actions (radio/previews/briefing/score-sync/civil-war) push directly to `main`. Gate by the required `gates` status check + the feat→PR convention, *not* a blanket push block. (Open decision for Will — see §R.)
 
 ## 2. Current state (what's live / pending)
+- 🛑 **2026-06-25 — ALL automated daily content REMOVED** (`chore/remove-daily-content`, Will's call — "too much"). The 4 content crons (briefing emails + radio podcasts, match previews + posters, civil-war announcer email, draft tripwire email) and their generator scripts/templates are **deleted**. The **already-generated archive is kept frozen** (`briefings/`, `podcasts/`, `matchday/`, `podcast.xml`, `match-previews.xml` + manifests) and the app's News Desk / poster UI is untouched — it just no longer grows. **Do NOT re-add content generation** without Will asking. Score Sync, `league-data.mjs`, CI, and the in-app game features were all kept. (Unused Gmail/Gemini/recipient secrets were intentionally left in place.)
 - ✅ **Task D — Civil War Bounty:** live in `index.html`.
 - ✅ **Task G1 — Crystal Ball Cup (in-app 🔮 tab):** merged & live (PR #3). `state.predictions` syncs like `state.bounties`.
-- 🔄 **Task G2 — Crystal Ball email side-leaderboard:** **[PR #5](https://github.com/wbhamilton05-stack/mwcga/pull/5) OPEN, green CI, awaiting reviewer approval.** First action next session: reviewer reviews/merges PR #5 (then Task G is fully done).
+- ✅ **Task G2 — Crystal Ball email side-leaderboard:** merged (PR #5). NOTE: this rode the now-removed `daily-recap` email path, so it no longer sends — the in-app 🔮 tab remains the live surface.
 - ✅ **CI:** 5 gates on every PR — parse scripts, parse app, cloud-writer guardrail, scoring self-test (`selftest.mjs`, gate #4, 42/42), Civil-War self-test (`selftest-civil.mjs`, gate #5, 11/11).
 
 ## 3. Next candidate build units (prioritized)
